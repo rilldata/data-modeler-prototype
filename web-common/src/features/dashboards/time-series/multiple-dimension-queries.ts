@@ -9,10 +9,6 @@ import {
 } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
 import { Readable, derived, writable } from "svelte/store";
 
-import {
-  CHECKMARK_COLORS,
-  LINE_COLORS,
-} from "@rilldata/web-common/features/dashboards/config";
 import { getDimensionFilterWithSearch } from "@rilldata/web-common/features/dashboards/dimension-table/dimension-table-utils";
 import {
   SortDirection,
@@ -30,10 +26,9 @@ import {
 import { getFilterForComparedDimension, prepareTimeSeries } from "./utils";
 
 export interface DimensionDataItem {
+  dimension: string;
   value: string | null;
   total?: number;
-  strokeClass: string;
-  fillClass: string;
   data: TimeSeriesDatum[];
   isFetching: boolean;
 }
@@ -275,13 +270,11 @@ export function getDimensionValueTimeSeries(
               if (surface === "table") {
                 total = dimensionValues?.totals[i];
               }
+
               return {
+                dimension: dimensionName,
                 value,
                 total,
-                strokeClass: "stroke-" + LINE_COLORS[i],
-                fillClass: CHECKMARK_COLORS[i]
-                  ? "fill-" + CHECKMARK_COLORS[i]
-                  : "",
                 data: prepData,
                 isFetching: timeseries.isFetching,
               };

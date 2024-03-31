@@ -28,6 +28,7 @@
   export let yAccessor: string;
   export let scrubStart;
   export let scrubEnd;
+  export let colors: string[];
 
   $: hasSubrangeSelected = Boolean(scrubStart && scrubEnd);
 
@@ -84,20 +85,22 @@
     -->
 {#key $timeRangeKey}
   {#if dimensionData?.length}
-    {#each dimensionData as d}
+    {#each dimensionData as d, i}
       {@const isHighlighted = d?.value === dimensionValue}
+
       <g
         class="transition-opacity"
         class:opacity-20={isDimValueHiglighted && !isHighlighted}
       >
         <ChunkedLine
           isComparingDimension
+          lineColor="stroke-{colors[i]}"
           delay={$timeRangeKey !== $previousTimeRangeKey ? 0 : delay}
           duration={hasSubrangeSelected ||
           $timeRangeKey !== $previousTimeRangeKey
             ? 0
             : 200}
-          lineClasses={d?.strokeClass}
+          lineClasses="stroke-{colors[i]}"
           data={d?.data || []}
           {xAccessor}
           {yAccessor}

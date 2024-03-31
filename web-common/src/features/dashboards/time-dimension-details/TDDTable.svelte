@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { CHECKMARK_COLORS } from "@rilldata/web-common/features/dashboards/config";
   import Pivot from "@rilldata/web-common/features/dashboards/pivot/RegularTable.svelte";
   import type {
     PivotPos,
@@ -31,6 +30,7 @@
   export let pinIndex: number;
   export let comparing: TDDComparison;
   export let tableData: TableData;
+  export let markerColors: string[];
 
   /** Formatter for the time axis in the table*/
   export let timeFormatter: (date: Date) => string;
@@ -151,8 +151,7 @@
       else
         return {
           icon: SelectedCheckmark(
-            "fill-" +
-              (visibleIdx < 11 ? CHECKMARK_COLORS[visibleIdx] : "gray-300"),
+            "fill-" + (visibleIdx < 11 ? markerColors[visibleIdx] : "gray-300"),
           ),
           muted: false,
         };

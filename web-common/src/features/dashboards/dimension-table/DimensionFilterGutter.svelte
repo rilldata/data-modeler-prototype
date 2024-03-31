@@ -3,31 +3,31 @@
   import Check from "@rilldata/web-common/components/icons/Check.svelte";
   import Spacer from "@rilldata/web-common/components/icons/Spacer.svelte";
   import CheckCircle from "@rilldata/web-common/components/icons/CheckCircle.svelte";
-  import { CHECKMARK_COLORS } from "@rilldata/web-common/features/dashboards/config";
-
   import StickyHeader from "@rilldata/web-common/components/virtualized-table/core/StickyHeader.svelte";
   import { getContext } from "svelte";
   import type { VirtualizedTableConfig } from "../../../components/virtualized-table/types";
   import DimensionCompareMenu from "@rilldata/web-common/features/dashboards/leaderboard/DimensionCompareMenu.svelte";
   import { getStateManagers } from "../state-managers/state-managers";
+  import { colorGetter } from "../filters/colorGetter";
+  import type { VirtualizedTableColumns } from "../../../components/virtualized-table/types";
+  import type { DimensionTableRow } from "./dimension-table-types";
+  import type { VirtualItem } from "@tanstack/svelte-virtual";
 
   export let totalHeight: number;
-  export let virtualRowItems;
+  export let virtualRowItems: VirtualItem[];
   export let selectedIndex: number[] = [];
   export let excludeMode = false;
   export let isBeingCompared = false;
+  export let column: VirtualizedTableColumns;
+  export let rows: DimensionTableRow[];
+  export let dimensionName: string;
 
   const {
+    metricsViewName,
     selectors: {
       dimensions: { dimensionTableDimName },
     },
   } = getStateManagers();
-
-  function getColor(i) {
-    const posInSelection = selectedIndex.indexOf(i);
-    if (posInSelection >= 7) return "fill-gray-300";
-    return "fill-" + CHECKMARK_COLORS[posInSelection];
-  }
 
   const config: VirtualizedTableConfig = getContext("config");
 </script>
@@ -45,6 +45,8 @@
   </div>
   {#each virtualRowItems as row (`row-${row.key}`)}
     {@const isSelected = selectedIndex.includes(row.index)}
+    {@const indexOf = selectedIndex.indexOf(row.index)}
+    {@const dimensionValue = String(rows[row.index][column.name])}
     <StickyHeader
       enableResize={false}
       position="left"
@@ -52,7 +54,15 @@
     >
       <div class="py-0.5 grid place-items-center">
         {#if isSelected && !excludeMode && isBeingCompared}
-          <CheckCircle className={getColor(row.index)} size="18px" />
+          {@const color = colorGetter.get(
+            $metricsViewName,
+            dimensionName,
+            dimensionValue,
+          )}
+          <CheckCircle
+            className="fill-{indexOf >= 7 ? 'gray-300' : color}"
+            size="18px"
+          />
         {:else if isSelected && !excludeMode}
           <Check size="20px" />
         {:else if isSelected && excludeMode}

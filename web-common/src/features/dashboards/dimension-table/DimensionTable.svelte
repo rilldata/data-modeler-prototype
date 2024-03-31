@@ -228,6 +228,9 @@ TableCells – the cell contents.
           <DimensionFilterGutter
             virtualRowItems={virtualRows}
             totalHeight={virtualHeight}
+            {rows}
+            column={dimensionColumn}
+            {dimensionName}
             {selectedIndex}
             {isBeingCompared}
             {excludeMode}

@@ -2,35 +2,27 @@
   import { FormattedDataType } from "@rilldata/web-common/components/data-types";
   import { fly, slide } from "svelte/transition";
   import BarAndLabel from "../../../components/BarAndLabel.svelte";
-
   import { LIST_SLIDE_DURATION } from "@rilldata/web-common/layout/config";
   import { slideRight } from "@rilldata/web-common/lib/transitions";
-
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
-
   import { notifications } from "@rilldata/web-common/components/notifications";
-
   import { TOOLTIP_STRING_LIMIT } from "@rilldata/web-common/layout/config";
   import { createShiftClickAction } from "@rilldata/web-common/lib/actions/shift-click-action";
-
   import LeaderboardTooltipContent from "./LeaderboardTooltipContent.svelte";
-
   import { getStateManagers } from "../state-managers/state-managers";
   import ContextColumnValue from "./ContextColumnValue.svelte";
-  import LeaderboardItemFilterIcon from "./LeaderboardItemFilterIcon.svelte";
   import LongBarZigZag from "./LongBarZigZag.svelte";
   import type { LeaderboardItemData } from "./leaderboard-utils";
+  import { colorGetter } from "../filters/colorGetter";
+  import CheckCircle from "@rilldata/web-common/components/icons/CheckCircle.svelte";
+  import Check from "@rilldata/web-common/components/icons/Check.svelte";
+  import Cancel from "@rilldata/web-common/components/icons/Cancel.svelte";
 
   export let dimensionName: string;
-
   export let itemData: LeaderboardItemData;
-  $: label = itemData.dimensionValue;
-  $: measureValue = itemData.value;
-  $: selected = itemData.selectedIndex >= 0;
-  $: comparisonValue = itemData.prevValue;
-  $: pctOfTotal = itemData.pctOfTotal;
 
   const {
+    metricsViewName,
     selectors: {
       numberFormat: { activeMeasureFormatter },
       activeMeasure: { isSummableMeasure },
@@ -41,6 +33,12 @@
       dimensionsFilter: { toggleDimensionValueSelection },
     },
   } = getStateManagers();
+
+  $: label = itemData.dimensionValue;
+  $: measureValue = itemData.value;
+  $: selected = itemData.selectedIndex >= 0;
+  $: comparisonValue = itemData.prevValue;
+  $: pctOfTotal = itemData.pctOfTotal;
 
   $: isBeingCompared = $isBeingComparedReadable(dimensionName);
   $: filterExcludeMode = $isFilterExcludeMode(dimensionName);
@@ -113,11 +111,20 @@
     transition:slide={{ duration: 200 }}
     use:shiftClickAction
   >
-    <LeaderboardItemFilterIcon
-      {excluded}
-      {isBeingCompared}
-      selectionIndex={itemData?.selectedIndex}
-    />
+    <div style:width="22px" class="grid place-items-center">
+      {#if selected && !excluded && isBeingCompared}
+        {@const color = colorGetter.get($metricsViewName, dimensionName, label)}
+        <CheckCircle
+          className="fill-{itemData.selectedIndex >= 7 ? 'gray-300' : color}"
+          size="18px"
+        />
+      {:else if selected && !excluded}
+        <Check size="20px" />
+      {:else if selected && excluded}
+        <Cancel size="20px" />
+      {/if}
+    </div>
+
     <BarAndLabel
       {color}
       justify={false}

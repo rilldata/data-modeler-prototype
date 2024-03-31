@@ -7,6 +7,7 @@ import {
 import type { V1Expression } from "@rilldata/web-common/runtime-client";
 import { getWhereFilterExpressionIndex } from "../selectors/dimension-filters";
 import type { DashboardMutables } from "./types";
+import { colorGetter } from "../../filters/colorGetter";
 
 export function toggleDimensionValueSelection(
   { dashboard }: DashboardMutables,
@@ -22,9 +23,11 @@ export function toggleDimensionValueSelection(
     dashboard.temporaryFilterName = null;
   }
 
-  const isInclude = !dashboard.dimensionFilterExcludeMode.get(dimensionName);
   const exprIdx = getWhereFilterExpressionIndex({ dashboard })(dimensionName);
+
   if (exprIdx === undefined || exprIdx === -1) {
+    const isInclude = !dashboard.dimensionFilterExcludeMode.get(dimensionName);
+
     dashboard.whereFilter.cond?.exprs?.push(
       createInExpression(dimensionName, [dimensionValue], !isInclude),
     );
@@ -48,6 +51,8 @@ export function toggleDimensionValueSelection(
     }
   } else {
     expr.cond.exprs.splice(inIdx, 1);
+    colorGetter.remove(dashboard.name, dimensionName, dimensionValue);
+
     // Only decrement pinIndex if the removed value was before the pinned value
     if (dashboard.pinIndex >= inIdx) {
       dashboard.pinIndex--;
@@ -96,6 +101,7 @@ export function removeDimensionFilter(
   const exprIdx = getWhereFilterExpressionIndex({ dashboard })(dimensionName);
   if (exprIdx === undefined || exprIdx === -1) return;
   dashboard.whereFilter?.cond?.exprs?.splice(exprIdx, 1);
+  colorGetter.removeDimension(dashboard.name, dimensionName);
 }
 
 export function selectItemsInFilter(

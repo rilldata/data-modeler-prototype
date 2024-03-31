@@ -15,6 +15,7 @@
   export let dimensionValue: string | null | undefined;
   export let validPercTotal: number | null;
   export let hovered = false;
+  export let colors: string[];
 
   $: x = point?.[xAccessor];
 
@@ -41,8 +42,9 @@
       pointsData = higlighted;
     }
   }
+
   $: yValues = pointsData.map((dimension) => {
-    if (!x) return { y: null, fillClass: undefined, name: "" };
+    if (!x) return { y: null, name: "" };
 
     const { entry: bisected } = bisectData(
       new Date(x),
@@ -50,18 +52,16 @@
       xAccessor,
       dimension?.data,
     );
-    if (bisected === undefined)
-      return { y: null, fillClass: undefined, name: "" };
+    if (bisected === undefined) return { y: null, name: "" };
     const y = bisected[yAccessor];
     return {
       y,
-      fillClass: dimension?.fillClass,
       name: dimension?.value,
     };
   });
 
   $: points = yValues
-    .map((dimension) => {
+    .map((dimension, i) => {
       const currentPointIsNull = dimension.y === null;
       const y = Number(dimension.y);
       let value = mouseoverFormat(
@@ -84,7 +84,7 @@
         yOverrideStyleClass: `fill-gray-600 italic`,
         key: dimension.name === null ? "null" : dimension.name,
         label: hovered ? truncate(dimension.name || "null") : "",
-        pointColorClass: dimension.fillClass,
+        pointColorClass: "fill-" + colors[i],
         valueStyleClass: "font-bold",
         valueColorClass: "fill-gray-600",
         labelColorClass: "fill-gray-600",

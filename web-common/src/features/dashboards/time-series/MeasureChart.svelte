@@ -62,6 +62,7 @@
   export let yAccessor = "value";
   export let mouseoverValue: DomainCoordinates | undefined = undefined;
   export let validPercTotal: number | null = null;
+  export let colors: string[];
 
   // control point for scrub functionality.
   export let isScrubbing = false;
@@ -267,6 +268,7 @@
     />
     <Body>
       <ChartBody
+        {colors}
         {data}
         {dimensionData}
         dimensionValue={$tableInteractionStore?.dimensionValue}
@@ -332,6 +334,7 @@
                   {point}
                   {xAccessor}
                   {yAccessor}
+                  {colors}
                   {dimensionData}
                   dimensionValue={$tableInteractionStore?.dimensionValue}
                   {validPercTotal}
