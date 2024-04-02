@@ -24,11 +24,11 @@ export const httpClient = async <T>(
   // Naive request interceptors
 
   // Set host
-  const host = get(runtime).host;
+  const host = get(runtime)?.host || "http://localhost:9009";
   const interceptedConfig = { ...config, baseUrl: host };
 
   // Set JWT
-  let jwt = get(runtime).jwt;
+  let jwt = get(runtime)?.jwt;
   if (jwt && jwt.token) {
     jwt = await maybeWaitForFreshJWT(jwt);
     interceptedConfig.headers = {

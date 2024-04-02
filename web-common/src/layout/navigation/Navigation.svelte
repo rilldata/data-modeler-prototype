@@ -20,12 +20,30 @@
   import OtherFiles from "../../features/project/OtherFiles.svelte";
   import TableAssets from "../../features/tables/TableAssets.svelte";
   import { useIsModelingSupportedForCurrentOlapDriver } from "../../features/tables/selectors";
-  import { createRuntimeServiceGetInstance } from "../../runtime-client";
-  import { runtime } from "../../runtime-client/runtime-store";
+  import type { V1Instance, V1Resource } from "../../runtime-client";
+
   import { DEFAULT_NAV_WIDTH } from "../config";
   import Footer from "./Footer.svelte";
   import Resizer from "../Resizer.svelte";
   import SurfaceControlButton from "./SurfaceControlButton.svelte";
+  import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
+
+  export let instance: V1Instance;
+  export let resources: V1Resource[];
+
+  $: mapped = resources.reduce((acc, resource) => {
+    if (!resource.meta?.name?.kind) return acc;
+
+    const resources = acc.get(resource.meta.name.kind as ResourceKind);
+
+    if (!resources) {
+      acc.set(resource.meta.name.kind as ResourceKind, [resource]);
+    } else {
+      resources.push(resource);
+    }
+
+    return acc;
+  }, new Map<ResourceKind, V1Resource[]>());
 
   const { customDashboards, readOnly } = featureFlags;
 
@@ -36,10 +54,9 @@
 
   $: isModelerEnabled = $readOnly === false;
 
-  $: instance = createRuntimeServiceGetInstance($runtime.instanceId);
-  $: olapConnector = $instance.data?.instance?.olapConnector;
+  $: olapConnector = instance.olapConnector;
   $: isModelingSupportedForCurrentOlapDriver =
-    useIsModelingSupportedForCurrentOlapDriver($runtime.instanceId);
+    useIsModelingSupportedForCurrentOlapDriver(instance.instanceId ?? "");
 
   function handleResize(
     e: UIEvent & {
@@ -85,7 +102,7 @@
             <SourceAssets />
           {/if}
           {#if $isModelingSupportedForCurrentOlapDriver.data}
-            <ModelAssets />
+            <ModelAssets assets={mapped.get(ResourceKind.Model) ?? []} />
           {/if}
         {/if}
         <DashboardAssets />

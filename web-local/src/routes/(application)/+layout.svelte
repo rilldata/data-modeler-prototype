@@ -14,12 +14,19 @@
   import { onMount } from "svelte";
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
 
+  import { page } from "$app/stores";
+  import Navigation from "@rilldata/web-common/layout/navigation/Navigation.svelte";
+
+  export let data;
+
   queryClient.getQueryCache().config.onError = (
     error: AxiosError,
     query: Query,
   ) => errorEventHandler?.requestErrorEventHandler(error, query);
 
   beforeNavigate(retainFeaturesFlags);
+
+  $: showNavigation = $page.route.id !== "/(application)/welcome";
 
   onMount(() => {
     const stopWatchFilesClient = startWatchFilesClient(queryClient);
@@ -39,6 +46,9 @@
 <QueryClientProvider client={queryClient}>
   <RuntimeProvider host={RuntimeUrl} instanceId="default">
     <RillDeveloperLayout>
+      {#if showNavigation}
+        <Navigation instance={data.instance} resources={data.resources} />
+      {/if}
       <slot />
     </RillDeveloperLayout>
   </RuntimeProvider>

@@ -9,52 +9,53 @@
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
 
   import { notifications } from "@rilldata/web-common/components/notifications";
-
   import { TOOLTIP_STRING_LIMIT } from "@rilldata/web-common/layout/config";
   import { createShiftClickAction } from "@rilldata/web-common/lib/actions/shift-click-action";
-
   import LeaderboardTooltipContent from "./LeaderboardTooltipContent.svelte";
 
-  import { getStateManagers } from "../state-managers/state-managers";
   import ContextColumnValue from "./ContextColumnValue.svelte";
   import LeaderboardItemFilterIcon from "./LeaderboardItemFilterIcon.svelte";
   import LongBarZigZag from "./LongBarZigZag.svelte";
   import type { LeaderboardItemData } from "./leaderboard-utils";
 
-  export let dimensionName: string;
+  import { page } from "$app/stores";
 
+  export let dimensionName: string;
+  export let formatter = (value: number) => value.toString();
   export let itemData: LeaderboardItemData;
+
   $: label = itemData.dimensionValue;
-  $: measureValue = itemData.value;
-  $: selected = itemData.selectedIndex >= 0;
+  $: measureValue = formatter(itemData.value);
+
   $: comparisonValue = itemData.prevValue;
   $: pctOfTotal = itemData.pctOfTotal;
 
-  const {
-    selectors: {
-      numberFormat: { activeMeasureFormatter },
-      activeMeasure: { isSummableMeasure },
-      dimensionFilters: { atLeastOneSelection, isFilterExcludeMode },
-      comparison: { isBeingCompared: isBeingComparedReadable },
-    },
-    actions: {
-      dimensionsFilter: { toggleDimensionValueSelection },
-    },
-  } = getStateManagers();
+  // const {
+  //   selectors: {
+  //     numberFormat: { activeMeasureFormatter },
+  //     activeMeasure: { isSummableMeasure },
+  //     dimensionFilters: { atLeastOneSelection, isFilterExcludeMode },
+  //     comparison: { isBeingCompared: isBeingComparedReadable },
+  //   },
+  //   actions: {
+  //     dimensionsFilter: { toggleDimensionValueSelection },
+  //   },
+  // } = getStateManagers();
 
-  $: isBeingCompared = $isBeingComparedReadable(dimensionName);
-  $: filterExcludeMode = $isFilterExcludeMode(dimensionName);
-  $: atLeastOneActive = $atLeastOneSelection(dimensionName);
+  $: isBeingCompared = $page.url.searchParams.get("compare") === dimensionName;
+  $: filterExcludeMode =
+    $page.url.searchParams.get(dimensionName)?.split(",")[0] === "!";
+  $: atLeastOneActive =
+    $page.url.searchParams.get(dimensionName)?.split(",")?.length > 0;
   /** for summable measures, this is the value we use to calculate the bar % to fill */
 
-  $: formattedValue = measureValue
-    ? $activeMeasureFormatter(measureValue)
-    : null;
+  $: formattedValue = measureValue ? measureValue : null;
 
   $: previousValueString =
     comparisonValue !== undefined && comparisonValue !== null
-      ? $activeMeasureFormatter(comparisonValue)
+      ? comparisonValue.toString()
       : undefined;
+
   $: showPreviousTimeValue = hovered && previousValueString !== undefined;
   // Super important special case: if there is not at least one "active" (selected) value,
   // we need to set *all* items to be included, because by default if a user has not
@@ -62,8 +63,8 @@
   $: excluded = atLeastOneActive
     ? (filterExcludeMode && selected) || (!filterExcludeMode && !selected)
     : false;
-
-  $: renderedBarValue = $isSummableMeasure && pctOfTotal ? pctOfTotal : 0;
+  let isSummableMeasure = true;
+  $: renderedBarValue = isSummableMeasure && pctOfTotal ? pctOfTotal : 0;
 
   $: color = excluded
     ? "ui-measure-bar-excluded"
@@ -90,6 +91,27 @@
   const onLeave = () => {
     hovered = false;
   };
+
+  import { goto } from "$app/navigation";
+
+  $: includedValues = searchParams.get(dimensionName)?.split(",") ?? [];
+
+  $: searchParams = $page.url.searchParams;
+  $: selected = Boolean(includedValues.includes(itemData.dimensionValue));
+
+  function createDimensionLink(dimensionName: string, dimensionValue: string) {
+    const newParams = new URLSearchParams(searchParams);
+
+    const existing = searchParams.get(dimensionName);
+    const values = existing ? existing.split(",") : [];
+    if (!values.includes(dimensionValue)) values.push(dimensionValue);
+    else values.splice(values.indexOf(dimensionValue), 1);
+
+    if (values.length === 0) newParams.delete(dimensionName);
+    else newParams.set(dimensionName, values.join(","));
+
+    return `?${newParams.toString()}`;
+  }
 </script>
 
 <Tooltip location="right">
@@ -98,12 +120,14 @@
     on:blur={onLeave}
     on:click={(e) => {
       if (e.shiftKey) return;
-      toggleDimensionValueSelection(
-        dimensionName,
-        label,
-        false,
-        e.ctrlKey || e.metaKey,
-      );
+      // toggleDimensionValueSelection(
+      //   dimensionName,
+      //   label,
+      //   false,
+      //   e.ctrlKey || e.metaKey,
+      // );
+
+      goto(createDimensionLink(dimensionName, itemData.dimensionValue));
     }}
     on:focus={onHover}
     on:keydown
@@ -116,7 +140,9 @@
     <LeaderboardItemFilterIcon
       {excluded}
       {isBeingCompared}
-      selectionIndex={itemData?.selectedIndex}
+      selectionIndex={includedValues.findIndex(
+        (value) => value === itemData.dimensionValue,
+      )}
     />
     <BarAndLabel
       {color}
@@ -169,7 +195,7 @@
               value={formattedValue || measureValue}
             />
           </div>
-          <ContextColumnValue {itemData} />
+          <!-- <ContextColumnValue {itemData} /> -->
         </div>
       </div>
     </BarAndLabel>

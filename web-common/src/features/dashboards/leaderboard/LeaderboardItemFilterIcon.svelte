@@ -4,6 +4,7 @@
   import CheckCircle from "@rilldata/web-common/components/icons/CheckCircle.svelte";
   import Spacer from "@rilldata/web-common/components/icons/Spacer.svelte";
   import { CHECKMARK_COLORS } from "@rilldata/web-common/features/dashboards/config";
+
   export let selectionIndex: number;
   export let excluded = false;
   export let isBeingCompared = false;

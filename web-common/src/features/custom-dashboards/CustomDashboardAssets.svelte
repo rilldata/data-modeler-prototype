@@ -41,7 +41,7 @@
           <li animate:flip={{ duration }} aria-label={customDashboardName}>
             <NavigationEntry
               name={customDashboardName}
-              href={`/custom-dashboard/${customDashboardName}`}
+              context="custom-dashboard"
               open={$page.url.pathname ===
                 `/custom-dashboard/${customDashboardName}`}
             >

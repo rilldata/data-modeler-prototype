@@ -2,26 +2,26 @@
   import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
   import IconSpaceFixer from "@rilldata/web-common/components/button/IconSpaceFixer.svelte";
   import CaretDownIcon from "@rilldata/web-common/components/icons/CaretDownIcon.svelte";
-  import { getStateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
-  import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
+
   import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
   import { isGrainBigger } from "@rilldata/web-common/lib/time/grains";
   import type {
     AvailableTimeGrain,
     TimeGrain,
   } from "@rilldata/web-common/lib/time/types";
-  import { createEventDispatcher } from "svelte";
+
   import type { V1TimeGrain } from "../../../runtime-client";
+  import { page } from "$app/stores";
+  import Check from "@rilldata/web-common/components/icons/Check.svelte";
 
   export let timeGrainOptions: TimeGrain[];
   export let minTimeGrain: V1TimeGrain;
 
-  const dispatch = createEventDispatcher();
-  const timeControlsStore = useTimeControlStore(getStateManagers());
+  $: searchParams = $page.url.searchParams;
 
   let open = false;
 
-  $: activeTimeGrain = $timeControlsStore.selectedTimeRange?.interval;
+  $: activeTimeGrain = searchParams.get("timeGrain") ?? "TIME_GRAIN_DAY";
   $: activeTimeGrainLabel =
     activeTimeGrain && TIME_GRAIN[activeTimeGrain as AvailableTimeGrain]?.label;
 
@@ -34,12 +34,14 @@
       };
     });
 
-  const onTimeGrainSelect = (timeGrain: V1TimeGrain) => {
-    dispatch("select-time-grain", { timeGrain });
+  $: createLink = (key: string, value: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set(key, value);
+    return `?${newParams.toString()}`;
   };
 </script>
 
-{#if activeTimeGrain && timeGrainOptions.length}
+{#if timeGrainOptions.length}
   <DropdownMenu.Root bind:open>
     <DropdownMenu.Trigger asChild let:builder>
       <button
@@ -59,16 +61,20 @@
         </IconSpaceFixer>
       </button>
     </DropdownMenu.Trigger>
-    <DropdownMenu.Content class="min-w-40" align="start">
+    <DropdownMenu.Content class="min-w-40 flex flex-col" align="start">
       {#each timeGrains as option}
-        <DropdownMenu.CheckboxItem
+        <DropdownMenu.Item
+          href={createLink("timeGrain", option.key)}
           role="menuitem"
-          checked={option.key === activeTimeGrain}
-          class="text-xs cursor-pointer"
-          on:click={() => onTimeGrainSelect(option.key)}
+          class="text-xs cursor-pointer text-black gap-x-2"
         >
-          {option.main}
-        </DropdownMenu.CheckboxItem>
+          <span class="w-4 h-4">
+            {#if option.key === activeTimeGrain}
+              <Check size="16px" />
+            {/if}
+          </span>
+          <p class:font-bold={option.key === activeTimeGrain}>{option.main}</p>
+        </DropdownMenu.Item>
       {/each}
     </DropdownMenu.Content>
   </DropdownMenu.Root>

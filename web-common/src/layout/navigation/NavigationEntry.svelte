@@ -9,12 +9,18 @@
   import { createCommandClickAction } from "../../lib/actions/command-click-action";
   import { createShiftClickAction } from "../../lib/actions/shift-click-action";
   import { emitNavigationTelemetry } from "./navigation-utils";
+  import { lastVisitedURLs } from "./last-visited-urls";
+  import Add from "@rilldata/web-common/components/icons/Add.svelte";
 
   export let name: string;
-  export let href: string;
+  export let context: string | undefined = undefined;
   export let open = false;
   export let expandable = false;
   export let showContextMenu = true;
+
+  $: lastVisitedURL = lastVisitedURLs.get(
+    `/${[context, name].filter(Boolean).join("/")}`,
+  );
 
   const { commandClickAction } = createCommandClickAction();
   const { shiftClickAction } = createShiftClickAction();
@@ -42,7 +48,7 @@
   }
 
   function handleClick() {
-    if (!open) return emitNavigationTelemetry(href, name);
+    if (!open) return emitNavigationTelemetry($lastVisitedURL, name);
 
     if (expandable) onShowDetails();
   }
@@ -60,7 +66,7 @@
     class:expandable
     class:open
     tabindex={open ? -1 : 0}
-    href={open ? undefined : href}
+    href={open ? undefined : $lastVisitedURL}
     use:shiftClickAction
     use:commandClickAction
     on:command-click

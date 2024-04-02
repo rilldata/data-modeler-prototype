@@ -25,7 +25,7 @@ export function toggleDimensionValueSelection(
   const isInclude = !dashboard.dimensionFilterExcludeMode.get(dimensionName);
   const exprIdx = getWhereFilterExpressionIndex({ dashboard })(dimensionName);
   if (exprIdx === undefined || exprIdx === -1) {
-    dashboard.whereFilter.cond?.exprs?.push(
+    dashboard?.whereFilter?.cond?.exprs?.push(
       createInExpression(dimensionName, [dimensionValue], !isInclude),
     );
     return;

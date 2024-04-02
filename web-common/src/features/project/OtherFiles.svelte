@@ -15,7 +15,6 @@
         <NavigationEntry
           showContextMenu={false}
           name={"rill.yaml"}
-          href={`/rill.yaml`}
           open={$page.url.pathname === `/rill.yaml`}
         />
       </li>

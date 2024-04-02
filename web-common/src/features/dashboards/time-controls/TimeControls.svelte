@@ -129,16 +129,6 @@
     );
   }
 
-  function onSelectTimeGrain(timeGrain: V1TimeGrain) {
-    if (baseTimeRange) {
-      makeTimeSeriesTimeRangeAndUpdateAppState(
-        baseTimeRange,
-        timeGrain,
-        $dashboardStore?.selectedComparisonTimeRange,
-      );
-    }
-  }
-
   function onSelectTimeZone(timeZone: string) {
     metricsExplorerStore.setTimeZone(metricViewName, timeZone);
     localUserPreferences.set({ timeZone });
@@ -214,10 +204,6 @@
         zone={$dashboardStore.selectedTimezone}
       />
     {/if}
-    <TimeGrainSelector
-      on:select-time-grain={(e) => onSelectTimeGrain(e.detail.timeGrain)}
-      {timeGrainOptions}
-      {minTimeGrain}
-    />
+    <TimeGrainSelector {timeGrainOptions} {minTimeGrain} />
   {/if}
 </div>

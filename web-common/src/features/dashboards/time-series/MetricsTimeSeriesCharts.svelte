@@ -16,10 +16,7 @@
   import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
   import { chartInteractionColumn } from "@rilldata/web-common/features/dashboards/time-dimension-details/time-dimension-data-store";
   import BackToOverview from "@rilldata/web-common/features/dashboards/time-series/BackToOverview.svelte";
-  import {
-    TimeSeriesDatum,
-    useTimeSeriesDataStore,
-  } from "@rilldata/web-common/features/dashboards/time-series/timeseries-data-store";
+  import { useTimeSeriesDataStore } from "@rilldata/web-common/features/dashboards/time-series/timeseries-data-store";
   import { getOrderedStartEnd } from "@rilldata/web-common/features/dashboards/time-series/utils";
   import { EntityStatus } from "@rilldata/web-common/features/entity-management/types";
   import { adjustOffsetForZone } from "@rilldata/web-common/lib/convertTimestampPreview";
@@ -33,16 +30,31 @@
   import MeasureChart from "./MeasureChart.svelte";
   import TimeSeriesChartContainer from "./TimeSeriesChartContainer.svelte";
   import type { DimensionDataItem } from "./multiple-dimension-queries";
+  import { V1MetricsViewAggregationResponse } from "@rilldata/web-common/runtime-client";
+  import { page } from "$app/stores";
+  import { prepareTimeSeries } from "@rilldata/web-common/features/dashboards/time-series/utils";
 
   export let metricViewName: string;
   export let workspaceWidth: number;
+  export let totals: void | V1MetricsViewAggregationResponse;
 
-  const {
-    selectors: {
-      measures: { isMeasureValidPercentOfTotal },
-      dimensionFilters: { includedDimensionValues },
-    },
-  } = getStateManagers();
+  $: timeSeries = $page.data.timeSeries;
+  $: timeZone = $page.data.timeZone;
+  $: timeGrain = $page.data.timeGrain;
+
+  $: formattedData = prepareTimeSeries(
+    timeSeries.data,
+    undefined,
+    TIME_GRAIN[timeGrain].duration,
+    timeZone,
+  );
+
+  // const {
+  //   selectors: {
+  //     measures: { isMeasureValidPercentOfTotal },
+  //     dimensionFilters: { includedDimensionValues },
+  //   },
+  // } = getStateManagers();
 
   const timeControlsStore = useTimeControlStore(getStateManagers());
   const timeSeriesDataStore = useTimeSeriesDataStore(getStateManagers());
@@ -54,7 +66,7 @@
   let startValue: Date;
   let endValue: Date;
 
-  let dataCopy: TimeSeriesDatum[];
+  // let dataCopy: TimeSeriesDatum[];
   let dimensionDataCopy: DimensionDataItem[] = [];
 
   $: dashboardStore = useDashboardStore(metricViewName);
@@ -79,9 +91,8 @@
   $: isPercOfTotalAsContextColumn =
     $dashboardStore?.leaderboardContextColumn ===
     LeaderboardContextColumn.PERCENT;
-  $: includedValuesForDimension = $includedDimensionValues(
-    comparisonDimension as string,
-  );
+  $: includedValuesForDimension =
+    $page.url.searchParams.get(comparisonDimension ?? "")?.split(",") ?? [];
 
   // List of measures which will be shown on the dashboard
   $: renderedMeasures = $metricsView.data?.measures?.filter(
@@ -90,19 +101,8 @@
       : (_, i) => $showHideMeasures.selectedItems[i],
   );
 
-  $: totals = $timeSeriesDataStore.total;
+  // $: totals = $timeSeriesDataStore.total;
   $: totalsComparisons = $timeSeriesDataStore.comparisonTotal;
-
-  // When changing the timeseries query and the cache is empty, $timeSeriesQuery.data?.data is
-  // temporarily undefined as results are fetched.
-  // To avoid unmounting TimeSeriesBody, which would cause us to lose our tween animations,
-  // we make a copy of the data that avoids `undefined` transition states.
-  // TODO: instead, try using svelte-query's `keepPreviousData = True` option.
-
-  $: if ($timeSeriesDataStore?.timeSeriesData) {
-    dataCopy = $timeSeriesDataStore.timeSeriesData;
-  }
-  $: formattedData = dataCopy;
 
   $: if (
     $timeSeriesDataStore?.dimensionChartData?.length ||
@@ -262,33 +262,51 @@
       {#each renderedMeasures as measure (measure.name)}
         <!-- FIXME: I can't select the big number by the measure id. -->
         <!-- for bigNum, catch nulls and convert to undefined.  -->
-        {@const bigNum = measure.name ? totals?.[measure.name] : undefined}
+        <!-- {@const bigNum = totals.data?.[0]?.[measure?.name ?? ""] ?? undefined} -->
         {@const comparisonValue = measure.name
           ? totalsComparisons?.[measure.name]
           : undefined}
         {@const isValidPercTotal = measure.name
-          ? $isMeasureValidPercentOfTotal(measure.name)
+          ? $page.data.measures?.find((m) => m.name === measure.name)
+              ?.validPercentOfTotal
           : false}
 
         <div class="flex flex-row gap-x-7">
-          <MeasureBigNumber
-            {measure}
-            value={bigNum}
-            isMeasureExpanded={!!expandedMeasureName}
-            {showComparison}
-            comparisonOption={$timeControlsStore?.selectedComparisonTimeRange
-              ?.name}
-            {comparisonValue}
-            status={$timeSeriesDataStore?.isFetching
-              ? EntityStatus.Running
-              : EntityStatus.Idle}
-            on:expand-measure={() => {
-              metricsExplorerStore.setExpandedMeasureName(
-                metricViewName,
-                measure.name,
-              );
-            }}
-          />
+          {#await totals}
+            <MeasureBigNumber
+              {measure}
+              value={undefined}
+              isMeasureExpanded={!!expandedMeasureName}
+              {showComparison}
+              comparisonOption={$timeControlsStore?.selectedComparisonTimeRange
+                ?.name}
+              {comparisonValue}
+              status={EntityStatus.Running}
+              on:expand-measure={() => {
+                metricsExplorerStore.setExpandedMeasureName(
+                  metricViewName,
+                  measure.name,
+                );
+              }}
+            />
+          {:then totalsData}
+            <MeasureBigNumber
+              {measure}
+              value={totalsData?.data?.[0]?.[measure?.name ?? ""]}
+              isMeasureExpanded={!!expandedMeasureName}
+              {showComparison}
+              comparisonOption={$timeControlsStore?.selectedComparisonTimeRange
+                ?.name}
+              {comparisonValue}
+              status={EntityStatus.Idle}
+              on:expand-measure={() => {
+                metricsExplorerStore.setExpandedMeasureName(
+                  metricViewName,
+                  measure.name,
+                );
+              }}
+            />
+          {/await}
 
           {#if $timeSeriesDataStore?.isError}
             <div class="p-5"><CrossIcon /></div>
@@ -311,7 +329,7 @@
               xMax={endValue}
               {showComparison}
               validPercTotal={isPercOfTotalAsContextColumn && isValidPercTotal
-                ? bigNum
+                ? undefined
                 : null}
               mouseoverTimeFormat={(value) => {
                 /** format the date according to the time grain */

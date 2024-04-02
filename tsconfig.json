@@ -1,26 +1,30 @@
 {
   // TODO: SvelteKit recommends extending their config, but it currently triggers type import errors throughout application that we need to fix
-  // "extends": "./.svelte-kit/tsconfig.json",
+
   "compilerOptions": {
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "module": "esnext",
+
     "lib": [
 			"esnext",
 			"DOM",
 			"DOM.Iterable"
 		],
     "target": "esnext",
+
     /**
       svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
       to enforce using \`import type\` instead of \`import\` for Types.
     */
-    "importsNotUsedAsValues": "error",
+    // "importsNotUsedAsValues": "error",
     /**
       ignoreDeprecations is recommended by the SvelteKit maintainers until SvelteKit 2.0.
       See: https://github.com/sveltejs/kit/issues/8650#issuecomment-1607282327
     */
-    "ignoreDeprecations": "5.0",
+    // "ignoreDeprecations": "5.0",
+
     "isolatedModules": true,
+
     "resolveJsonModule": true,
     /**
       To have warnings/errors of the Svelte compiler at the correct position,
@@ -29,6 +33,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "strictNullChecks": true,

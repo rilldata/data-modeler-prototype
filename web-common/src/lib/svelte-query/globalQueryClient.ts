@@ -9,6 +9,7 @@ export function createQueryClient() {
         refetchOnWindowFocus: false,
         retry: false,
         networkMode: "always",
+        staleTime: Infinity,
       },
       mutations: {
         networkMode: "always",

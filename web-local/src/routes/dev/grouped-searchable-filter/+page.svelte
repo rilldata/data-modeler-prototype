@@ -21,8 +21,6 @@
 
   let singleSelected = selectableGroups.map((s) => s.items.map(() => false));
   const multiSelected = selectableGroups.map((s) => s.items.map(() => false));
-
-  $: console.log(singleSelected);
 </script>
 
 <span class="p-2">Single Select</span>

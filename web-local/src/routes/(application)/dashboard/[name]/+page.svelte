@@ -1,105 +1,57 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { Dashboard } from "@rilldata/web-common/features/dashboards";
   import DashboardStateProvider from "@rilldata/web-common/features/dashboards/stores/DashboardStateProvider.svelte";
   import { resetSelectedMockUserAfterNavigate } from "@rilldata/web-common/features/dashboards/granular-access-policies/resetSelectedMockUserAfterNavigate";
-  import { selectedMockUserStore } from "@rilldata/web-common/features/dashboards/granular-access-policies/stores";
-  import DashboardURLStateProvider from "@rilldata/web-common/features/dashboards/proto-state/DashboardURLStateProvider.svelte";
+  // import DashboardURLStateProvider from "@rilldata/web-common/features/dashboards/proto-state/DashboardURLStateProvider.svelte";
   import StateManagersProvider from "@rilldata/web-common/features/dashboards/state-managers/StateManagersProvider.svelte";
-  import { getFilePathFromNameAndType } from "@rilldata/web-common/features/entity-management/entity-mappers";
-  import { fileArtifacts } from "@rilldata/web-common/features/entity-management/file-artifacts";
-  import { ResourceStatus } from "@rilldata/web-common/features/entity-management/resource-status-utils";
-  import { EntityType } from "@rilldata/web-common/features/entity-management/types";
-  import { featureFlags } from "@rilldata/web-common/features/feature-flags";
-  import { createRuntimeServiceGetFile } from "@rilldata/web-common/runtime-client";
-  import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
-  import { error } from "@sveltejs/kit";
+  // import { featureFlags } from "@rilldata/web-common/features/feature-flags";
   import { useQueryClient } from "@tanstack/svelte-query";
-  import { CATALOG_ENTRY_NOT_FOUND } from "../../../../lib/errors/messages";
-  import ReconcilingSpinner from "@rilldata/web-common/features/entity-management/ReconcilingSpinner.svelte";
   import DashboardThemeProvider from "@rilldata/web-common/features/dashboards/DashboardThemeProvider.svelte";
+  import { beforeNavigate } from "$app/navigation";
+  import { lastVisitedURLs } from "@rilldata/web-common/layout/navigation/last-visited-urls.js";
 
   const queryClient = useQueryClient();
 
-  const { readOnly } = featureFlags;
+  // const { readOnly } = featureFlags;
+
+  export let data;
 
   $: metricViewName = $page.params.name;
-  $: filePath = getFilePathFromNameAndType(
-    metricViewName,
-    EntityType.MetricsDefinition,
-  );
-  $: fileArtifact = fileArtifacts.getFileArtifact(filePath);
-
-  $: fileQuery = createRuntimeServiceGetFile($runtime.instanceId, filePath, {
-    query: {
-      onError: (err) => {
-        if (err.response?.data?.message.includes(CATALOG_ENTRY_NOT_FOUND)) {
-          throw error(404, "Dashboard not found");
-        }
-
-        throw error(err.response?.status || 500, err.message);
-      },
-    },
-  });
-
-  $: resourceStatusStore = fileArtifact.getResourceStatusStore(
-    queryClient,
-    $runtime.instanceId,
-    (res) => !!res?.metricsView?.state?.validSpec,
-  );
-  let showErrorPage = false;
-  $: if (metricViewName && $resourceStatusStore) {
-    showErrorPage = false;
-    if ($resourceStatusStore.status === ResourceStatus.Errored) {
-      // When the catalog entry doesn't exist, the dashboard config is invalid
-      if ($readOnly) {
-        throw error(400, "Invalid dashboard");
-      }
-
-      // When a mock user doesn't have access to the dashboard, stay on the page to show a message
-      if (
-        $selectedMockUserStore === null ||
-        $resourceStatusStore?.error?.response?.status !== 404
-      ) {
-        // On all other errors, redirect to the `/edit` page
-        goto(`/dashboard/${metricViewName}/edit`);
-      } else {
-        showErrorPage = true;
-      }
-    } else if ($resourceStatusStore.status === ResourceStatus.Idle) {
-      // Redirect to the `/edit` page if no measures are defined
-      if (
-        !$readOnly &&
-        !$resourceStatusStore.resource?.metricsView?.state?.validSpec?.measures
-          ?.length
-      ) {
-        goto(`/dashboard/${metricViewName}/edit`);
-      }
-    }
-  }
 
   resetSelectedMockUserAfterNavigate(queryClient);
+
+  beforeNavigate(() => {
+    lastVisitedURLs.update(
+      `/dashboard/${metricViewName}`,
+      $page.url.pathname + $page.url.search,
+    );
+  });
 </script>
 
 <svelte:head>
   <title>Rill Developer | {metricViewName}</title>
 </svelte:head>
 
-{#if ($fileQuery.data && $resourceStatusStore.status === ResourceStatus.Idle) || showErrorPage}
-  {#key metricViewName}
-    <StateManagersProvider metricsViewName={metricViewName}>
-      <DashboardStateProvider {metricViewName}>
-        <DashboardURLStateProvider {metricViewName}>
-          <DashboardThemeProvider>
-            <Dashboard {metricViewName} />
-          </DashboardThemeProvider>
-        </DashboardURLStateProvider>
-      </DashboardStateProvider>
-    </StateManagersProvider>
-  {/key}
-{:else if $resourceStatusStore.status === ResourceStatus.Busy}
+<!-- {#if ($resourceStatusStore.status === ResourceStatus.Idle) || showErrorPage} -->
+{#key metricViewName}
+  <StateManagersProvider metricsViewName={metricViewName}>
+    <DashboardStateProvider {metricViewName}>
+      <!-- <DashboardURLStateProvider {metricViewName}> -->
+      <DashboardThemeProvider>
+        <Dashboard
+          {metricViewName}
+          dimensions={data.dimensions}
+          totals={data.totals}
+          leaderBoards={data.leaderBoards}
+        />
+      </DashboardThemeProvider>
+      <!-- </DashboardURLStateProvider> -->
+    </DashboardStateProvider>
+  </StateManagersProvider>
+{/key}
+<!-- {:else if $resourceStatusStore.status === ResourceStatus.Busy}
   <div class="grid h-screen w-full place-content-center">
     <ReconcilingSpinner />
   </div>
-{/if}
+{/if} -->

@@ -81,5 +81,8 @@
     "yaml": "^2.1.3",
     "yup": "^0.32.11"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "devalue": "^4.3.2"
+  }
 }

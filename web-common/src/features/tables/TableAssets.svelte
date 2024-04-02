@@ -57,7 +57,7 @@
             >
               <NavigationEntry
                 name={fullyQualifiedTableName}
-                href={`/table/${fullyQualifiedTableName}`}
+                context="table"
                 open={$page.url.pathname ===
                   `/table/${fullyQualifiedTableName}`}
               >

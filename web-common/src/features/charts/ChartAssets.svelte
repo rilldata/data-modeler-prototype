@@ -34,7 +34,7 @@
           <li animate:flip={{ duration }} aria-label={chartName}>
             <NavigationEntry
               name={chartName}
-              href={`/chart/${chartName}`}
+              context="chart"
               open={$page.url.pathname === `/chart/${chartName}`}
             >
               <ChartMenuItems slot="menu-items" {chartName} />

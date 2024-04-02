@@ -21,8 +21,20 @@
   import DashboardCTAs from "./DashboardCTAs.svelte";
   import DashboardTitle from "./DashboardTitle.svelte";
   import { navigationOpen } from "@rilldata/web-common/layout/navigation/Navigation.svelte";
+  import type {
+    MetricsViewSpecDimensionV2,
+    V1MetricsViewAggregationResponse,
+    V1MetricsViewComparisonResponse,
+    V1MetricsViewToplistResponse,
+  } from "@rilldata/web-common/runtime-client";
 
   export let metricViewName: string;
+  export let dimensions: MetricsViewSpecDimensionV2[];
+  export let totals: void | V1MetricsViewAggregationResponse;
+  export let leaderBoards: Record<
+    string,
+    Promise<void | V1MetricsViewComparisonResponse>
+  >;
 
   const { cloudDataViewer, readOnly } = featureFlags;
 
@@ -30,20 +42,25 @@
 
   $: extraLeftPadding = !$navigationOpen;
 
-  $: metricsExplorer = useDashboardStore(metricViewName);
+  // $: metricsExplorer = useDashboardStore(metricViewName);
 
-  $: selectedDimensionName = $metricsExplorer?.selectedDimensionName;
-  $: expandedMeasureName = $metricsExplorer?.expandedMeasureName;
-  $: showPivot = $metricsExplorer?.pivot?.active;
-  $: metricTimeSeries = useModelHasTimeSeries(
-    $runtime.instanceId,
-    metricViewName,
-  );
-  $: hasTimeSeries = $metricTimeSeries.data;
+  // $: selectedDimensionName = $metricsExplorer?.selectedDimensionName;
+  // $: expandedMeasureName = $metricsExplorer?.expandedMeasureName;
+  // // $: showPivot = $metricsExplorer?.pivot?.active;
+  // $: metricTimeSeries = useModelHasTimeSeries(
+  //   $runtime.instanceId,
+  //   metricViewName,
+  // );
+
+  let expandedMeasureName = null;
+  let selectedDimensionName = null;
+  $: hasTimeSeries = true;
+
+  let showPivot = false;
 
   $: isRillDeveloper = $readOnly === false;
 
-  // Check if the mock user (if selected) has access to the dashboard
+  // // Check if the mock user (if selected) has access to the dashboard
   $: dashboard = useDashboard($runtime.instanceId, metricViewName);
   $: mockUserHasNoAccess =
     $selectedMockUserStore && $dashboard.error?.response?.status === 404;
@@ -79,7 +96,7 @@
 
         {#key metricViewName}
           <section class="flex justify-between gap-x-4">
-            <Filters />
+            <!-- <Filters /> -->
             <div class="flex flex-col justify-end">
               <TabBar />
             </div>
@@ -105,6 +122,7 @@
           {#key metricViewName}
             {#if hasTimeSeries}
               <MetricsTimeSeriesCharts
+                {totals}
                 {metricViewName}
                 workspaceWidth={exploreContainerWidth}
               />
@@ -118,7 +136,7 @@
           {:else if selectedDimensionName}
             <DimensionDisplay />
           {:else}
-            <LeaderboardDisplay />
+            <LeaderboardDisplay {dimensions} {leaderBoards} />
           {/if}
         </div>
       {/if}

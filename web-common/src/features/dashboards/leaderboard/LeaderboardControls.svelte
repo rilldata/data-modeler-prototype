@@ -15,7 +15,9 @@
   import { getStateManagers } from "../state-managers/state-managers";
   import LeaderboardContextColumnMenu from "./LeaderboardContextColumnMenu.svelte";
 
-  export let metricViewName;
+  export let metricsViewName: string;
+  export let selectedDimensions: boolean[];
+  export let dimensions: MetricsViewSpecMeasureV2[];
 
   const {
     actions: {
@@ -24,12 +26,12 @@
     },
   } = getStateManagers();
 
-  $: metricsView = useMetricsView($runtime.instanceId, metricViewName);
+  $: metricsView = useMetricsView($runtime.instanceId, metricsViewName);
 
   $: measures = $metricsView.data?.measures;
 
   let metricsExplorer: MetricsExplorerEntity;
-  $: metricsExplorer = $metricsExplorerStore.entities[metricViewName];
+  $: metricsExplorer = $metricsExplorerStore.entities[metricsViewName];
 
   function handleMeasureUpdate(event: CustomEvent) {
     setLeaderboardMeasureName(event.detail.key);
@@ -102,13 +104,10 @@
   }
 
   $: showHideDimensions = createShowHideDimensionsStore(
-    metricViewName,
+    metricsViewName,
     metricsView,
   );
 
-  const toggleDimensionVisibility = (e) => {
-    showHideDimensions.toggleVisibility(e.detail.name);
-  };
   const setAllDimensionsNotVisible = () => {
     showHideDimensions.setAllToNotVisible();
   };
@@ -125,9 +124,9 @@
       style:max-width="450px"
     >
       <SearchableFilterButton
-        selectableItems={$showHideDimensions.selectableItems}
-        selectedItems={$showHideDimensions.selectedItems}
-        on:item-clicked={toggleDimensionVisibility}
+        selectableItems={dimensions}
+        selectedItems={selectedDimensions}
+        on:item-clicked
         on:deselect-all={setAllDimensionsNotVisible}
         on:select-all={setAllDimensionsVisible}
         label="Dimensions"

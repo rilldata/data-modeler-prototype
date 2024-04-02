@@ -18,6 +18,7 @@
   import NavigationHeader from "../../layout/navigation/NavigationHeader.svelte";
   import { runtime } from "../../runtime-client/runtime-store";
   import AddAssetButton from "../entity-management/AddAssetButton.svelte";
+  import { lastVisitedURLs } from "@rilldata/web-common/layout/navigation/last-visited-urls.js";
   import RenameAssetModal from "../entity-management/RenameAssetModal.svelte";
 
   $: instanceId = $runtime.instanceId;
@@ -76,6 +77,8 @@
     showGenerateChartModal = true;
     generateChartMetricsView = metricsView;
   }
+
+  const lastVisited = new Map();
 </script>
 
 <div class="h-fit flex flex-col">
@@ -88,7 +91,7 @@
             <NavigationEntry
               showContextMenu={!$readOnly}
               name={dashboardName}
-              href={`/dashboard/${dashboardName}`}
+              context="dashboard"
               open={$page.url.pathname === `/dashboard/${dashboardName}` ||
                 $page.url.pathname === `/dashboard/${dashboardName}/edit`}
             >
