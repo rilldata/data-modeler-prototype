@@ -25,7 +25,7 @@ describe("generateAlertName", () => {
     {
       title: "value criteria without comparison",
       formValues: {
-        measure: "total_records",
+        measures: ["total_records"],
         criteria: [
           {
             measure: "total_records",
@@ -41,7 +41,7 @@ describe("generateAlertName", () => {
     {
       title: "absolute change criteria with comparison",
       formValues: {
-        measure: "total_records",
+        measures: ["total_records"],
         criteria: [
           {
             measure: "total_records",
@@ -60,7 +60,7 @@ describe("generateAlertName", () => {
     {
       title: "percent change criteria with comparison",
       formValues: {
-        measure: "total_records",
+        measures: ["total_records"],
         criteria: [
           {
             measure: "total_records",

@@ -57,19 +57,21 @@
     title="Alert data"
   >
     <Select
-      bind:value={$form["measure"]}
-      id="measure"
-      label="Measure"
+      bind:value={$form["measures"]}
+      id="measures"
+      label="Measure(s)"
       options={measureOptions}
       placeholder="Select a measure"
+      multiple
     />
     <Select
-      bind:value={$form["splitByDimension"]}
-      id="splitByDimension"
-      label="Split by dimension"
+      bind:value={$form["dimensions"]}
+      id="dimensions"
+      label="Split by dimension(s)"
       optional
       options={dimensionOptions}
       placeholder="Select a dimension"
+      multiple
     />
   </FormSection>
   <FormSection

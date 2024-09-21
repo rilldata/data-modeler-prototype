@@ -9,8 +9,9 @@ import { MeasureFilterType } from "@rilldata/web-common/features/dashboards/filt
 import { mergeDimensionAndMeasureFilter } from "@rilldata/web-common/features/dashboards/filters/measure-filters/measure-filter-utils";
 import { sanitiseExpression } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
 import { DimensionThresholdFilter } from "@rilldata/web-common/features/dashboards/stores/metrics-explorer-entity";
-import type {
+import {
   V1Expression,
+  V1MetricsViewAggregationMeasure,
   V1MetricsViewAggregationRequest,
   V1Operation,
   V1TimeRange,
@@ -19,8 +20,8 @@ import * as yup from "yup";
 
 export type AlertFormValues = {
   name: string;
-  measure: string;
-  splitByDimension: string;
+  measures: string[];
+  dimensions: string[];
   criteria: MeasureFilterEntry[];
   criteriaOperation: V1Operation;
   evaluationInterval: string;
@@ -42,38 +43,38 @@ export type AlertFormValues = {
 export function getAlertQueryArgsFromFormValues(
   formValues: AlertFormValues,
 ): V1MetricsViewAggregationRequest {
+  const measures: V1MetricsViewAggregationMeasure[] = [];
+  formValues.measures.filter(Boolean).forEach((measure) => {
+    measures.push({ name: measure });
+    if (formValues.comparisonTimeRange) {
+      measures.push(
+        {
+          name: measure + ComparisonDeltaAbsoluteSuffix,
+          comparisonDelta: { measure },
+        },
+        {
+          name: measure + ComparisonDeltaRelativeSuffix,
+          comparisonRatio: { measure },
+        },
+      );
+    }
+    if (
+      formValues.criteria.some(
+        (c) =>
+          c.measure === measure && c.type === MeasureFilterType.PercentOfTotal,
+      )
+    ) {
+      measures.push({
+        name: measure + ComparisonPercentOfTotal,
+        percentOfTotal: { measure },
+      });
+    }
+  });
+
   return {
     metricsView: formValues.metricsViewName,
-    measures: [
-      {
-        name: formValues.measure,
-      },
-      ...(formValues.comparisonTimeRange
-        ? [
-            {
-              name: formValues.measure + ComparisonDeltaAbsoluteSuffix,
-              comparisonDelta: { measure: formValues.measure },
-            },
-            {
-              name: formValues.measure + ComparisonDeltaRelativeSuffix,
-              comparisonRatio: { measure: formValues.measure },
-            },
-          ]
-        : []),
-      ...(formValues.criteria.some(
-        (c) => c.type === MeasureFilterType.PercentOfTotal,
-      )
-        ? [
-            {
-              name: formValues.measure + ComparisonPercentOfTotal,
-              percentOfTotal: { measure: formValues.measure },
-            },
-          ]
-        : []),
-    ],
-    dimensions: formValues.splitByDimension
-      ? [{ name: formValues.splitByDimension }]
-      : [],
+    measures,
+    dimensions: formValues.dimensions.map((d) => ({ name: d })),
     where: sanitiseExpression(
       mergeDimensionAndMeasureFilter(
         formValues.whereFilter,
@@ -94,12 +95,10 @@ export function getAlertQueryArgsFromFormValues(
       timeZone: formValues.timeRange.timeZone,
       roundToGrain: formValues.timeRange.roundToGrain,
     },
-    sort: [
-      {
-        name: formValues.measure,
-        desc: false,
-      },
-    ],
+    sort: formValues.measures.filter(Boolean).map((m) => ({
+      name: m,
+      desc: false,
+    })),
     ...(formValues.comparisonTimeRange
       ? {
           comparisonTimeRange: {
@@ -113,7 +112,7 @@ export function getAlertQueryArgsFromFormValues(
 
 export const alertFormValidationSchema = yup.object({
   name: yup.string().required("Required"),
-  measure: yup.string().required("Required"),
+  measures: yup.array().of(yup.string()).min(1),
   criteria: yup.array().of(
     yup.object().shape({
       measure: yup.string().required("Required"),
@@ -150,7 +149,7 @@ export const alertFormValidationSchema = yup.object({
   ),
 });
 export const FieldsByTab: (keyof AlertFormValues)[][] = [
-  ["measure"],
+  ["measures"],
   ["criteria", "criteriaOperation"],
   ["name", "snooze", "slackUsers", "emailRecipients"],
 ];
@@ -164,8 +163,8 @@ export function checkIsTabValid(
   let hasErrors: boolean;
 
   if (tabIndex === 0) {
-    hasRequiredFields = formValues.measure !== "";
-    hasErrors = !!errors.measure;
+    hasRequiredFields = formValues.measures.length > 0;
+    hasErrors = !!errors.measures;
   } else if (tabIndex === 1) {
     hasRequiredFields = true;
     formValues.criteria.forEach((criteria) => {

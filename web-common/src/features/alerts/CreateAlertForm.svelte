@@ -55,6 +55,13 @@
     dimension = $dashboardStore.selectedDimensionName ?? "";
   }
 
+  let measure = "";
+  if ($dashboardStore.tdd.expandedMeasureName) {
+    measure = $dashboardStore.tdd.expandedMeasureName;
+  } else if ($dashboardStore.leaderboardMeasureName) {
+    measure = $dashboardStore.leaderboardMeasureName;
+  }
+
   // TODO: get metrics view spec
   const timeRange = mapTimeRange(timeControls, {});
   const comparisonTimeRange = mapComparisonTimeRange(
@@ -66,16 +73,13 @@
   const formState = createForm<AlertFormValues>({
     initialValues: {
       name: "",
-      measure:
-        $dashboardStore.tdd.expandedMeasureName ??
-        $dashboardStore.leaderboardMeasureName ??
-        "",
-      splitByDimension: dimension,
+      measures: measure ? [measure] : [],
+      dimensions: dimension ? [dimension] : [],
       evaluationInterval: "",
       criteria: [
         {
           ...getEmptyMeasureFilterEntry(),
-          measure: $dashboardStore.leaderboardMeasureName ?? "",
+          measure,
         },
       ],
       criteriaOperation: V1Operation.OPERATION_AND,

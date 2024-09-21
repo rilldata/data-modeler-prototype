@@ -3,9 +3,11 @@ import {
   ComparisonDeltaRelativeSuffix,
   ComparisonPercentOfTotal,
 } from "@rilldata/web-common/features/dashboards/filters/measure-filters/measure-filter-entry";
+import { MeasureFilterType } from "@rilldata/web-common/features/dashboards/filters/measure-filters/measure-filter-options";
 import {
   createInExpression,
   forEachIdentifier,
+  getAllIdentifiers,
 } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
 import type { MetricsExplorerEntity } from "@rilldata/web-common/features/dashboards/stores/metrics-explorer-entity";
 import { PreviousCompleteRangeMap } from "@rilldata/web-common/features/dashboards/time-controls/time-range-mappers";
@@ -20,6 +22,7 @@ import {
   queryServiceMetricsViewAggregation,
   type QueryServiceMetricsViewAggregationBody,
   type V1Expression,
+  V1MetricsViewAggregationMeasure,
   type V1TimeRange,
   type V1TimeRangeSummary,
 } from "@rilldata/web-common/runtime-client";
@@ -116,48 +119,46 @@ export async function convertExprToToplist(
   queryClient: QueryClient,
   instanceId: string,
   metricsView: string,
-  dimensionName: string,
-  measureName: string,
+  dimensionNames: string[],
+  measureNames: string[],
   timeRange: V1TimeRange | undefined,
   comparisonTimeRange: V1TimeRange | undefined,
   executionTime: string,
   where: V1Expression | undefined,
   having: V1Expression,
 ) {
-  let hasPercentOfTotals = false;
+  const havingIdentifiers = getAllIdentifiers(having);
   forEachIdentifier(having, (_, ident) => {
     if (ident?.endsWith(ComparisonPercentOfTotal)) {
       hasPercentOfTotals = true;
     }
   });
+  const measures: V1MetricsViewAggregationMeasure[] = [];
+  measureNames.forEach((measure) => {
+    measures.push({ name: measure });
+    if (comparisonTimeRange) {
+      measures.push(
+        {
+          name: measure + ComparisonDeltaAbsoluteSuffix,
+          comparisonDelta: { measure },
+        },
+        {
+          name: measure + ComparisonDeltaRelativeSuffix,
+          comparisonRatio: { measure },
+        },
+      );
+    }
+    if (havingIdentifiers.includes(measure + ComparisonPercentOfTotal)) {
+      measures.push({
+        name: measure + ComparisonPercentOfTotal,
+        percentOfTotal: { measure },
+      });
+    }
+  });
 
   const toplistBody: QueryServiceMetricsViewAggregationBody = {
-    measures: [
-      {
-        name: measureName,
-      },
-      ...(comparisonTimeRange
-        ? [
-            {
-              name: measureName + ComparisonDeltaAbsoluteSuffix,
-              comparisonDelta: { measure: measureName },
-            },
-            {
-              name: measureName + ComparisonDeltaRelativeSuffix,
-              comparisonRatio: { measure: measureName },
-            },
-          ]
-        : []),
-      ...(hasPercentOfTotals
-        ? [
-            {
-              name: measureName + ComparisonPercentOfTotal,
-              percentOfTotal: { measure: measureName },
-            },
-          ]
-        : []),
-    ],
-    dimensions: [{ name: dimensionName }],
+    measures,
+    dimensions: dimensionNames.map((d) => ({ name: d })),
     ...(timeRange
       ? {
           timeRange: {
@@ -176,12 +177,10 @@ export async function convertExprToToplist(
       : {}),
     where,
     having,
-    sort: [
-      {
-        name: measureName,
-        desc: false,
-      },
-    ],
+    sort: measures.map((m) => ({
+      name: m,
+      desc: false,
+    })),
     limit: "250",
   };
   const toplist = await queryClient.fetchQuery({

@@ -21,17 +21,13 @@
     $form["metricsViewName"],
   );
 
-  $: measure = $metricsView.data?.measures?.find(
-    (m) => m.name === $form["measure"],
-  );
-  $: measureOptions = [
-    {
-      value: $form["measure"],
-      label: measure?.label?.length
-        ? measure.label
-        : measure?.expression ?? $form["measure"],
-    },
-  ];
+  $: measureOptions =
+    $metricsView.data?.measures
+      ?.filter((m) => $form["measures"].includes(m.name ?? ""))
+      .map((m) => ({
+        value: m.name!,
+        label: m.label?.length ? m.label : m.expression ?? m.name ?? "",
+      })) ?? [];
   $: selectedMeasure = $metricsView.data?.measures?.find(
     (m) => m.name === $form["criteria"][index].measure,
   );

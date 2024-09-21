@@ -72,8 +72,11 @@ export async function getDashboardFromAggregationRequest({
   if (req.having?.cond?.exprs?.length && req.dimensions?.[0]?.name) {
     const dimension = req.dimensions[0].name;
     if (
+      // we only support 1-1 map from measure filter to dimension
       req.having.cond.exprs.length > 1 ||
+      // we do not support comparison based measure filter
       exprHasComparison(req.having) ||
+      // there is already measure filter from dashboard during alert creation
       dashboard.dimensionThresholdFilters.length > 0
     ) {
       const expr = await convertExprToToplist(

@@ -24,8 +24,8 @@ export type AlertFormValuesSubset = Pick<
   | "dimensionThresholdFilters"
   | "timeRange"
   | "comparisonTimeRange"
-  | "measure"
-  | "splitByDimension"
+  | "measures"
+  | "dimensions"
   | "criteria"
   | "criteriaOperation"
 >;
@@ -66,8 +66,8 @@ export function extractAlertFormValues(
   );
 
   return {
-    measure: measures[0]?.name ?? "",
-    splitByDimension: dimensions[0]?.name ?? "",
+    measures: measures.map((m) => m.name ?? ""),
+    dimensions: dimensions.map((d) => d.name ?? ""),
 
     criteria: (queryArgs.having?.cond?.exprs?.map(
       mapExprToMeasureFilter,

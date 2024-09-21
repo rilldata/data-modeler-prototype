@@ -19,7 +19,7 @@
   function handleAddCriteria() {
     $form["criteria"] = $form["criteria"].concat({
       ...getEmptyMeasureFilterEntry(),
-      measure: $form.measure,
+      measure: $form.measures[0],
     });
   }
 </script>

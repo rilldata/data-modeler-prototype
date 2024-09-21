@@ -6,7 +6,7 @@
 
   const dispatch = createEventDispatcher();
 
-  export let value: string;
+  export let value: string | string[];
   export let id: string;
   export let label: string;
   export let options: {
@@ -19,8 +19,11 @@
   export let optional: boolean = false;
   export let tooltip: string = "";
   export let width: number | null = null;
+  export let multiple = false;
 
-  $: selected = options.find((option) => option.value === value);
+  $: selected = multiple
+    ? options.filter((option) => value.includes(option.value))
+    : options.find((option) => option.value === value);
 </script>
 
 <div class="flex flex-col gap-y-2">
@@ -49,10 +52,15 @@
     {selected}
     onSelectedChange={(newSelection) => {
       if (!newSelection) return;
-      value = newSelection.value;
-      dispatch("change", newSelection.value);
+      if (Array.isArray(newSelection)) {
+        value = newSelection.map((v) => v.value);
+      } else {
+        value = newSelection.value;
+      }
+      dispatch("change", value);
     }}
     items={options}
+    {multiple}
   >
     <Select.Trigger class="px-3 gap-x-2 {width && `w-[${width}px]`}">
       <Select.Value

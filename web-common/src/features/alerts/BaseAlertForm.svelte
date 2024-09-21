@@ -74,11 +74,14 @@
     $form.name = name;
   }
 
-  $: measure = $form.measure;
-  function measureUpdated(mes: string) {
-    $form.criteria.forEach((c) => (c.measure = mes));
+  $: measures = $form.measures;
+  function measureUpdated(measures: string[]) {
+    $form.criteria.forEach((c) => {
+      if (measures.includes(c.measure)) return;
+      c.measure = measures[0];
+    });
   }
-  $: measureUpdated(measure);
+  $: measureUpdated(measures);
 </script>
 
 <!-- 802px = 1px border on each side of the form + 3 tabs with a 200px fixed-width -->

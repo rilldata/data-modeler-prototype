@@ -46,7 +46,10 @@ export function getTypeOptions(
     );
   }
 
-  if (selectedMeasure?.validPercentOfTotal && formValues.splitByDimension) {
+  if (
+    selectedMeasure?.validPercentOfTotal &&
+    formValues.dimensions.length > 0
+  ) {
     options.push(MeasureFilterPercentOfTotalOption);
   } else {
     options.push({
