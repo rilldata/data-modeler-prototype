@@ -79,10 +79,13 @@ export const useMetricsView = <T = V1MetricsViewSpec>(
   selector?: (meta: V1MetricsViewSpec) => T,
 ) => {
   return useResource<T>(instanceId, metricViewName, ResourceKind.MetricsView, {
-    select: (data) =>
-      selector
-        ? selector(data.resource?.metricsView?.state?.validSpec)
-        : (data.resource?.metricsView?.state?.validSpec as T),
+    select: (data) => {
+      const validSpec = data.resource?.metricsView?.state?.validSpec;
+      if (!validSpec) {
+        throw new Error("Metrics view is not valid");
+      }
+      return selector ? selector(validSpec) : (validSpec as T);
+    },
   });
 };
 

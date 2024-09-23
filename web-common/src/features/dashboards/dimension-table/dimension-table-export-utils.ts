@@ -37,7 +37,10 @@ export function getDimensionTableExportArgs(
     ([metricViewName, dashboardState, timeControlState, metricsView]) => {
       if (!metricsView.data || !timeControlState.ready) return undefined;
 
-      const timeRange = mapTimeRange(timeControlState, metricsView.data);
+      const timeRange = mapTimeRange(
+        timeControlState,
+        metricsView.data.defaultTimeRange,
+      );
       if (!timeRange) return undefined;
 
       const comparisonTimeRange = mapComparisonTimeRange(

@@ -22,6 +22,7 @@ import type {
 } from "@rilldata/web-common/lib/time/types";
 import { DashboardState_ActivePage } from "@rilldata/web-common/proto/gen/rill/ui/v1/dashboard_pb";
 import type {
+  MetricsViewSpecMeasureV2,
   V1Expression,
   V1MetricsViewSpec,
   V1MetricsViewTimeRangeResponse,
@@ -204,7 +205,7 @@ const metricViewReducers = {
       }
       metricsExplorer.dimensionFilterExcludeMode =
         includeExcludeModeFromFilters(partial.whereFilter);
-      AdvancedMeasureCorrector.correct(metricsExplorer, metricsView);
+      AdvancedMeasureCorrector.correct(metricsExplorer, metricsView.measures);
     });
   },
 
@@ -460,7 +461,10 @@ const metricViewReducers = {
   ) {
     updateMetricsExplorerByName(name, (metricsExplorer) => {
       metricsExplorer.selectedComparisonTimeRange = comparisonTimeRange;
-      AdvancedMeasureCorrector.correct(metricsExplorer, metricsViewSpec);
+      AdvancedMeasureCorrector.correct(
+        metricsExplorer,
+        metricsViewSpec.measures,
+      );
     });
   },
 
@@ -491,7 +495,7 @@ const metricViewReducers = {
     timeRange: TimeRange,
     timeGrain: V1TimeGrain,
     comparisonTimeRange: DashboardTimeControls | undefined,
-    metricsViewSpec: V1MetricsViewSpec,
+    measures: MetricsViewSpecMeasureV2[],
   ) {
     updateMetricsExplorerByName(name, (metricsExplorer) => {
       if (!timeRange.name) return;
@@ -506,7 +510,7 @@ const metricViewReducers = {
 
       metricsExplorer.selectedComparisonTimeRange = comparisonTimeRange;
 
-      AdvancedMeasureCorrector.correct(metricsExplorer, metricsViewSpec);
+      AdvancedMeasureCorrector.correct(metricsExplorer, measures);
     });
   },
 

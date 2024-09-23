@@ -8,6 +8,7 @@ import "rill/runtime/v1/export_format.proto";
 import "rill/runtime/v1/expression.proto";
 import "rill/runtime/v1/schema.proto";
 import "rill/runtime/v1/time_grain.proto";
+import "google/api/field_behavior.proto";
 
 enum ReconcileStatus {
   RECONCILE_STATUS_UNSPECIFIED = 0;
@@ -153,14 +154,14 @@ message ModelState {
 }
 
 message MetricsViewV2 {
-  MetricsViewSpec spec = 1;
-  MetricsViewState state = 2;
+  MetricsViewSpec spec = 1 [(google.api.field_behavior) = REQUIRED];
+  MetricsViewState state = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 message MetricsViewSpec {
   // Dimensions are columns to filter and group by
   message DimensionV2 {
-    string name = 1;
+    string name = 1 [(google.api.field_behavior) = REQUIRED];
     string column = 2;
     string expression = 6;
     string label = 3;
@@ -192,8 +193,8 @@ message MetricsViewSpec {
   }
   // Measures are aggregated computed values
   message MeasureV2 {
-    string name = 1;
-    string expression = 2;
+    string name = 1 [(google.api.field_behavior) = REQUIRED];
+    string expression = 2 [(google.api.field_behavior) = REQUIRED];
     MeasureType type = 8;
     MeasureWindow window = 9;
     repeated DimensionSelector per_dimensions = 10;
@@ -227,9 +228,9 @@ message MetricsViewSpec {
   // Expression to evaluate a watermark for the metrics view. If not set, the watermark defaults to max(time_dimension).
   string watermark_expression = 20;
   // Dimensions in the metrics view
-  repeated DimensionV2 dimensions = 6;
+  repeated DimensionV2 dimensions = 6 [(google.api.field_behavior) = REQUIRED];
   // Measures in the metrics view
-  repeated MeasureV2 measures = 7;
+  repeated MeasureV2 measures = 7 [(google.api.field_behavior) = REQUIRED];
   // Security for the metrics view
   repeated SecurityRule security_rules = 23;
   // ISO 8601 weekday number to use as the base for time aggregations by week. Defaults to 1 (Monday).
@@ -311,7 +312,7 @@ message SecurityRuleRowFilter {
 
 message MetricsViewState {
   // Valid spec is a (potentially previous) version of the spec that is known to currently be valid.
-  MetricsViewSpec valid_spec = 1;
+  MetricsViewSpec valid_spec = 1 [(google.api.field_behavior) = REQUIRED];
   // Streaming is true if the underlying data may change without the metrics view's spec/state version changing.
   // It's set to true if the metrics view is based on an externally managed table.
   bool streaming = 2;

@@ -34,7 +34,7 @@
 
   $: dashboardStore = useDashboardStore(metricViewName);
   $: metricsViewQuery = useMetricsView(instanceId, metricViewName);
-  $: metricsView = $metricsViewQuery.data ?? {};
+  $: metricsView = $metricsViewQuery.data;
 
   $: ({ minTimeGrain, timeStart, timeEnd, selectedTimeRange } =
     $timeControlsStore);
@@ -92,13 +92,14 @@
      */
     comparisonTimeRange: DashboardTimeControls | undefined,
   ) {
-    metricsExplorerStore.selectTimeRange(
-      metricViewName,
-      timeRange,
-      timeGrain,
-      comparisonTimeRange,
-      metricsView,
-    );
+    if (metricsView)
+      metricsExplorerStore.selectTimeRange(
+        metricViewName,
+        timeRange,
+        timeGrain,
+        comparisonTimeRange,
+        metricsView.measures,
+      );
   }
 </script>
 

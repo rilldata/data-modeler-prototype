@@ -5,11 +5,8 @@
     extractAlertFormValues,
     extractAlertNotification,
   } from "@rilldata/web-common/features/alerts/extract-alert-form-values";
-  import {
-    useMetricsView,
-    useMetricsViewTimeRange,
-  } from "@rilldata/web-common/features/dashboards/selectors";
-  import { useQueryClient } from "@tanstack/svelte-query";
+  import { useMetricsViewTimeRange } from "@rilldata/web-common/features/dashboards/selectors";
+  import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
   import { createEventDispatcher } from "svelte";
   import { createForm } from "svelte-forms-lib";
   import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
@@ -31,25 +28,22 @@
 
   export let alertSpec: V1AlertSpec;
   export let metricsViewName: string;
+  export let defaultTimeRange: string | undefined;
 
   const editAlert = createAdminServiceEditAlert();
-  const queryClient = useQueryClient();
   const dispatch = createEventDispatcher();
 
-  $: organization = $page.params.organization;
-  $: project = $page.params.project;
-  $: alertName = $page.params.alert;
+  $: ({ instanceId } = $runtime);
+
+  $: ({ project, alert: alertName, organization } = $page.params);
   const queryArgsJson = JSON.parse(
     (alertSpec.resolverProperties?.query_args_json ??
       alertSpec.queryArgsJson) as string,
   ) as V1MetricsViewAggregationRequest;
 
-  $: metricsViewSpec = useMetricsView($runtime?.instanceId, metricsViewName);
-  $: timeRange = useMetricsViewTimeRange(
-    $runtime?.instanceId,
-    metricsViewName,
-    { query: { queryClient } },
-  );
+  $: timeRange = useMetricsViewTimeRange(instanceId, metricsViewName, {
+    query: { queryClient },
+  });
 
   const formState = createForm<AlertFormValues>({
     initialValues: {
@@ -59,7 +53,7 @@
       ...extractAlertNotification(alertSpec),
       ...extractAlertFormValues(
         queryArgsJson,
-        $metricsViewSpec?.data ?? {},
+        defaultTimeRange,
         $timeRange?.data ?? {},
       ),
     },
@@ -112,10 +106,10 @@
     },
   });
   const { form } = formState;
-  $: if ($metricsViewSpec?.data && $timeRange?.data) {
+  $: if ($timeRange?.data) {
     const formValues = extractAlertFormValues(
       queryArgsJson,
-      $metricsViewSpec.data,
+      defaultTimeRange,
       $timeRange.data,
     );
     for (const fk in formValues) {

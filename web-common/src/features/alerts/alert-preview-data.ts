@@ -39,8 +39,8 @@ export function getAlertPreviewData(
 ): CreateQueryResult<AlertPreviewResponse> {
   return derived(
     [useMetricsView(get(runtime).instanceId, formValues.metricsViewName)],
-    ([metricsViewResp], set) =>
-      createQueryServiceMetricsViewAggregation(
+    ([metricsViewResp], set) => {
+      return createQueryServiceMetricsViewAggregation(
         get(runtime).instanceId,
         formValues.metricsViewName,
         getAlertPreviewQueryRequest(formValues),
@@ -51,7 +51,8 @@ export function getAlertPreviewData(
             metricsViewResp.data,
           ),
         },
-      ).subscribe(set),
+      ).subscribe(set);
+    },
   );
 }
 
@@ -88,7 +89,9 @@ function getAlertPreviewQueryOptions(
       return {
         rows: resp.data as V1MetricsViewAggregationResponseDataItem[],
         schema: (resp.schema?.fields
-          ?.map((field) => getSchemaEntryForField(metricsViewSpec ?? {}, field))
+          ?.map((field) =>
+            getSchemaEntryForField(metricsViewSpec as V1MetricsViewSpec, field),
+          )
           .filter(Boolean) ?? []) as VirtualizedTableColumns[],
       };
     },

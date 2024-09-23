@@ -34,6 +34,8 @@
 
   $: metricsView = useMetricsView($runtime.instanceId, metricViewName);
 
+  $: validSpec = $metricsView?.data;
+
   $: ({ selectedScrubRange } = $dashboardStore);
 
   $: selectedSubRange =
@@ -99,13 +101,14 @@
         } as DashboardTimeControls) // FIXME wrong typecasting across application
       : undefined;
 
-    metricsExplorerStore.selectTimeRange(
-      metricViewName,
-      timeRange,
-      timeGrain,
-      comparisonTimeRange,
-      $metricsView.data ?? {},
-    );
+    if (validSpec)
+      metricsExplorerStore.selectTimeRange(
+        metricViewName,
+        timeRange,
+        timeGrain,
+        comparisonTimeRange,
+        validSpec.measures,
+      );
   }
 
   function zoomScrub() {

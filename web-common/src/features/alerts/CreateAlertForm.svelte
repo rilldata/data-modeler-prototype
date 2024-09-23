@@ -28,22 +28,29 @@
   import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
   import { runtime } from "../../runtime-client/runtime-store";
   import BaseAlertForm from "./BaseAlertForm.svelte";
+  import { useMetricsView } from "../dashboards/selectors";
 
   const user = createAdminServiceGetCurrentUser();
   const createAlert = createAdminServiceCreateAlert();
-  $: organization = $page.params.organization;
-  $: project = $page.params.project;
+
   const queryClient = useQueryClient();
   const dispatch = createEventDispatcher();
 
   const {
     metricsViewName,
     dashboardStore,
+
     selectors: {
       timeRangeSelectors: { timeControlsState },
     },
   } = getStateManagers();
   const timeControls = get(timeControlsState);
+
+  $: ({ organization, project } = $page.params);
+
+  $: metricsViewQuery = useMetricsView($runtime.instanceId, $metricsViewName);
+
+  $: metricsView = $metricsViewQuery.data;
 
   // Set defaults depending on UI state
   // if in TDD take active measure and comparison dimension
@@ -56,14 +63,14 @@
   }
 
   // TODO: get metrics view spec
-  const timeRange = mapTimeRange(timeControls, {});
-  const comparisonTimeRange = mapComparisonTimeRange(
+  $: timeRange = mapTimeRange(timeControls, metricsView?.defaultTimeRange);
+  $: comparisonTimeRange = mapComparisonTimeRange(
     $dashboardStore,
     timeControls,
     timeRange,
   );
 
-  const formState = createForm<AlertFormValues>({
+  $: formState = createForm<AlertFormValues>({
     initialValues: {
       name: "",
       measure:
@@ -158,7 +165,7 @@
     },
   });
 
-  const { form } = formState;
+  $: form = formState.form;
   $: hasSlackNotifier = getHasSlackConnection($runtime.instanceId);
   $: if ($hasSlackNotifier.data) {
     $form["enableSlackNotification"] = true;

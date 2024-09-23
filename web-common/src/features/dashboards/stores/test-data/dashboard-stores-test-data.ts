@@ -76,13 +76,15 @@ export const AD_BIDS_THREE_MEASURES = [
     expression: "count_distinct(publisher)",
   },
 ];
-export const AD_BIDS_ADVANCED_MEASURES = [
+export const AD_BIDS_ADVANCED_MEASURES: MetricsViewSpecMeasureV2[] = [
   {
     name: AD_BIDS_IMPRESSIONS_MEASURE,
     expression: "count(*)",
+    requiredDimensions: [],
   },
   {
     name: AD_BIDS_IMPRESSIONS_MEASURE_DAY_GRAIN,
+    expression: "",
     requiredDimensions: [
       {
         name: AD_BIDS_TIMESTAMP_DIMENSION,
@@ -92,6 +94,7 @@ export const AD_BIDS_ADVANCED_MEASURES = [
   },
   {
     name: AD_BIDS_IMPRESSIONS_MEASURE_NO_GRAIN,
+    expression: "",
     requiredDimensions: [
       {
         name: AD_BIDS_TIMESTAMP_DIMENSION,
@@ -101,9 +104,11 @@ export const AD_BIDS_ADVANCED_MEASURES = [
   },
   {
     name: AD_BIDS_IMPRESSIONS_MEASURE_WINDOW,
+    expression: "",
     window: {
       partition: true,
     },
+    requiredDimensions: [],
   },
 ];
 export const AD_BIDS_INIT_DIMENSIONS = [

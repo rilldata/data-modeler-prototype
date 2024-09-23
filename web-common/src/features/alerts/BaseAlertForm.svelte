@@ -65,11 +65,16 @@
     }
     currentTabIndex += 1;
 
-    if (isEditForm || currentTabIndex !== 2 || $touched.name) {
+    if (
+      isEditForm ||
+      currentTabIndex !== 2 ||
+      $touched.name ||
+      !$metricsView.data
+    ) {
       return;
     }
     // if the user came to the delivery tab and name was not changed then auto generate it
-    const name = generateAlertName($form, $metricsView.data ?? {});
+    const name = generateAlertName($form, $metricsView.data);
     if (!name) return;
     $form.name = name;
   }

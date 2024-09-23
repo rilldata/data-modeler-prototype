@@ -2886,6 +2886,8 @@ definitions:
       uri:
         type: string
     title: Dimensions are columns to filter and group by
+    required:
+      - name
   MetricsViewSpecMeasureType:
     type: string
     enum:
@@ -2931,6 +2933,9 @@ definitions:
       validPercentOfTotal:
         type: boolean
     title: Measures are aggregated computed values
+    required:
+      - name
+      - expression
   MetricsViewSpecMeasureWindow:
     type: object
     properties:
@@ -4730,6 +4735,7 @@ definitions:
     type: object
     properties:
       dimensionValue:
+        type: string
         title: Not optional, not null
       measureValues:
         type: array
@@ -4737,6 +4743,9 @@ definitions:
           type: object
           $ref: '#/definitions/v1MetricsViewComparisonValue'
         title: Not optional, not null
+    required:
+      - dimensionValue
+      - measureValues
   v1MetricsViewComparisonSort:
     type: object
     properties:
@@ -4978,6 +4987,9 @@ definitions:
         description: |-
           Available time zones list preferred time zones using IANA location identifiers.
           Deprecated: Now defined in the Explore resource.
+    required:
+      - dimensions
+      - measures
   v1MetricsViewState:
     type: object
     properties:
@@ -4989,6 +5001,8 @@ definitions:
         description: |-
           Streaming is true if the underlying data may change without the metrics view's spec/state version changing.
           It's set to true if the metrics view is based on an externally managed table.
+    required:
+      - validSpec
   v1MetricsViewTimeRangeResponse:
     type: object
     properties:
@@ -5162,6 +5176,9 @@ definitions:
         $ref: '#/definitions/v1MetricsViewSpec'
       state:
         $ref: '#/definitions/v1MetricsViewState'
+    required:
+      - spec
+      - state
   v1Migration:
     type: object
     properties:

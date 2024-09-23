@@ -54,7 +54,10 @@ export function getTDDAggregationRequest(
   )
     return undefined;
 
-  const timeRange = mapTimeRange(timeControlState, metricsView);
+  const timeRange = mapTimeRange(
+    timeControlState,
+    metricsView.defaultTimeRange,
+  );
   if (!timeRange) return undefined;
 
   const comparisonTimeRange = mapComparisonTimeRange(

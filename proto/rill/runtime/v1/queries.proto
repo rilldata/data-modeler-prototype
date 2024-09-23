@@ -9,6 +9,7 @@ import "rill/runtime/v1/expression.proto";
 import "rill/runtime/v1/schema.proto";
 import "rill/runtime/v1/time_grain.proto";
 import "validate/validate.proto";
+import "google/api/field_behavior.proto";
 
 service QueryService {
   // Query runs a SQL query against the instance's OLAP datastore.
@@ -561,9 +562,9 @@ message MetricsViewComparisonSort {
 
 message MetricsViewComparisonRow {
   // Not optional, not null
-  google.protobuf.Value dimension_value = 1;
+  string dimension_value = 1 [(google.api.field_behavior) = REQUIRED];
   // Not optional, not null
-  repeated MetricsViewComparisonValue measure_values = 2;
+  repeated MetricsViewComparisonValue measure_values = 2 [(google.api.field_behavior) = REQUIRED];
 }
 
 message MetricsViewComparisonValue {

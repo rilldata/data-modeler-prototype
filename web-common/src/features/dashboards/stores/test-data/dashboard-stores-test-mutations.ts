@@ -66,7 +66,7 @@ export const AD_BIDS_SET_P7D_TIME_RANGE_FILTER: TestDashboardMutation = () =>
     { name: TimeRangePreset.LAST_7_DAYS } as any,
     V1TimeGrain.TIME_GRAIN_DAY,
     undefined,
-    AD_BIDS_INIT,
+    AD_BIDS_INIT.measures,
   );
 export const AD_BIDS_SET_P4W_TIME_RANGE_FILTER: TestDashboardMutation = () =>
   metricsExplorerStore.selectTimeRange(
@@ -74,7 +74,7 @@ export const AD_BIDS_SET_P4W_TIME_RANGE_FILTER: TestDashboardMutation = () =>
     { name: TimeRangePreset.LAST_4_WEEKS } as any,
     V1TimeGrain.TIME_GRAIN_WEEK,
     undefined,
-    AD_BIDS_INIT,
+    AD_BIDS_INIT.measures,
   );
 
 export const AD_BIDS_OPEN_PUB_DIMENSION_TABLE: TestDashboardMutation = (mut) =>

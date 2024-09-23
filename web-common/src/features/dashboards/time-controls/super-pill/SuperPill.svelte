@@ -61,7 +61,7 @@
 
   $: availableTimeZones = $metricsView?.data?.availableTimeZones ?? [];
 
-  $: metricsViewSpec = $metricsView.data ?? {};
+  $: metricsViewSpec = $metricsView.data;
 
   $: ({
     latestWindowTimeRanges,
@@ -182,13 +182,14 @@
      */
     comparisonTimeRange: DashboardTimeControls | undefined,
   ) {
-    metricsExplorerStore.selectTimeRange(
-      metricViewName,
-      timeRange,
-      timeGrain,
-      comparisonTimeRange,
-      metricsViewSpec,
-    );
+    if (metricsViewSpec)
+      metricsExplorerStore.selectTimeRange(
+        metricViewName,
+        timeRange,
+        timeGrain,
+        comparisonTimeRange,
+        metricsViewSpec.measures,
+      );
   }
 
   function onPan(direction: "left" | "right") {
@@ -206,13 +207,13 @@
       name: TimeComparisonOption.CONTIGUOUS,
     } as DashboardTimeControls; // FIXME wrong typecasting across application
 
-    if (!activeTimeGrain) return;
+    if (!activeTimeGrain || !metricsViewSpec) return;
     metricsExplorerStore.selectTimeRange(
       metricViewName,
       timeRange as TimeRange,
       activeTimeGrain,
       comparisonTimeRange,
-      metricsViewSpec,
+      metricsViewSpec.measures,
     );
   }
 </script>

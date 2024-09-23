@@ -21,7 +21,7 @@
   export let selectedComparisonTimeRange: DashboardTimeControls | undefined;
 
   const ctx = getStateManagers();
-  const metricsView = useMetricsView(ctx);
+  const metricsViewQuery = useMetricsView(ctx);
   const {
     metricsViewName,
     selectors: {
@@ -42,7 +42,7 @@
       )
     : Interval.fromDateTimes(allTimeRange.start, allTimeRange.end);
 
-  $: metricsViewSpec = $metricsView.data ?? {};
+  $: metricsViewSpec = $metricsViewQuery.data;
 
   $: activeTimeGrain = selectedTimeRange?.interval;
 
@@ -57,15 +57,16 @@
         !showTimeComparison,
       );
     }
-    metricsExplorerStore.setSelectedComparisonRange(
-      metricViewName,
-      {
-        name,
-        start,
-        end,
-      },
-      metricsViewSpec,
-    );
+    if (metricsViewSpec)
+      metricsExplorerStore.setSelectedComparisonRange(
+        metricViewName,
+        {
+          name,
+          start,
+          end,
+        },
+        metricsViewSpec,
+      );
   }
 </script>
 

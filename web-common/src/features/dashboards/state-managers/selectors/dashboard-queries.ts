@@ -53,9 +53,11 @@ function measuresForDimensionTable(dashData: DashboardDataSources) {
     ...selectedMeasureNames(dashData),
     ...additionalMeasures(dashData),
   ]);
-  return getIndependentMeasures(dashData.metricsSpecQueryResult.data ?? {}, [
-    ...allMeasures,
-  ]);
+  const validSpec = dashData.metricsSpecQueryResult.data;
+  if (!validSpec) {
+    throw new Error("No valid metrics spec");
+  }
+  return getIndependentMeasures(validSpec, [...allMeasures]);
 }
 
 export function dimensionTableTotalQueryBody(
@@ -75,13 +77,15 @@ export function dimensionTableTotalQueryBody(
 export function leaderboardSortedQueryBody(
   dashData: DashboardDataSources,
 ): (dimensionName: string) => QueryServiceMetricsViewAggregationBody {
+  const validSpec = dashData.metricsSpecQueryResult.data;
+  if (!validSpec) {
+    throw new Error("No valid metrics spec");
+  }
+
   return (dimensionName: string) =>
     prepareSortedQueryBody(
       dimensionName,
-      getIndependentMeasures(
-        dashData.metricsSpecQueryResult.data ?? {},
-        additionalMeasures(dashData),
-      ),
+      getIndependentMeasures(validSpec, additionalMeasures(dashData)),
       timeControlsState(dashData),
       sortingSelectors.sortMeasure(dashData),
       sortingSelectors.sortType(dashData),

@@ -107,13 +107,14 @@ export function getPivotExportArgs(ctx: StateManagers) {
       const comparisonTime = configStore.comparisonTime;
       const pivotState = configStore.pivot;
 
-      const metricsViewSpec = metricsView.data ?? {};
-      const timeRange = mapTimeRange(timeControlState, metricsViewSpec);
+      const metricsViewSpec = metricsView.data;
+      const defaultTimeRange = metricsViewSpec?.defaultTimeRange;
+      const timeRange = mapTimeRange(timeControlState, defaultTimeRange);
       if (!timeRange) return undefined;
 
       return getPivotAggregationRequest(
         metricsViewName,
-        metricsViewSpec.timeDimension ?? "",
+        metricsViewSpec?.timeDimension ?? "",
         dashboardState,
         timeRange,
         rows,

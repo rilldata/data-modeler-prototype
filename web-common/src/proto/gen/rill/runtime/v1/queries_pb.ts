@@ -2034,9 +2034,9 @@ export class MetricsViewComparisonRow extends Message<MetricsViewComparisonRow> 
   /**
    * Not optional, not null
    *
-   * @generated from field: google.protobuf.Value dimension_value = 1;
+   * @generated from field: string dimension_value = 1;
    */
-  dimensionValue?: Value;
+  dimensionValue = "";
 
   /**
    * Not optional, not null
@@ -2053,7 +2053,7 @@ export class MetricsViewComparisonRow extends Message<MetricsViewComparisonRow> 
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "rill.runtime.v1.MetricsViewComparisonRow";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "dimension_value", kind: "message", T: Value },
+    { no: 1, name: "dimension_value", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "measure_values", kind: "message", T: MetricsViewComparisonValue, repeated: true },
   ]);
 
