@@ -7,7 +7,6 @@
   import { Button } from "@rilldata/web-common/components/button";
   import Label from "@rilldata/web-common/components/forms/Label.svelte";
   import Switch from "@rilldata/web-common/components/forms/Switch.svelte";
-  import FilterChipsReadOnly from "@rilldata/web-common/features/dashboards/filters/FilterChipsReadOnly.svelte";
   import { getStateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
   import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
   import type { HTTPError } from "@rilldata/web-common/runtime-client/fetchWrapper";
@@ -21,6 +20,7 @@
     getSanitizedDashboardStateParam,
     hasDashboardWhereFilter,
   } from "./form-utils";
+  import Filters from "@rilldata/web-common/features/dashboards/filters/Filters.svelte";
 
   const queryClient = useQueryClient();
   const {
@@ -144,15 +144,7 @@
 
       <!-- Filters -->
       {#if hasWhereFilter}
-        <div>
-          <FilterChipsReadOnly
-            metricsViewName={$metricsViewName}
-            filters={$dashboardStore.whereFilter}
-            dimensionThresholdFilters={[]}
-            timeRange={undefined}
-            comparisonTimeRange={undefined}
-          />
-        </div>
+        <Filters readOnly timePills={false} />
       {/if}
     </div>
 

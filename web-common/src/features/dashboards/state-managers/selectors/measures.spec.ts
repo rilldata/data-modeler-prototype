@@ -82,6 +82,7 @@ describe("measures selectors", () => {
       },
     ];
     const MetricsView: V1MetricsViewSpec = {
+      dimensions: [],
       measures: [
         {
           name: "mes",
@@ -89,6 +90,7 @@ describe("measures selectors", () => {
         },
         {
           name: "mes_time_no_grain",
+          expression: "",
           requiredDimensions: [
             {
               name: "time",
@@ -98,6 +100,7 @@ describe("measures selectors", () => {
         },
         {
           name: "mes_time_day_grain",
+          expression: "",
           requiredDimensions: [
             {
               name: "time",
@@ -107,6 +110,7 @@ describe("measures selectors", () => {
         },
         {
           name: "mes_time_week_grain",
+          expression: "",
           requiredDimensions: [
             {
               name: "time",

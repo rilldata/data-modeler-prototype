@@ -1,13 +1,13 @@
 <script lang="ts">
-  import WithTogglableFloatingElement from "@rilldata/web-common/components/floating-element/WithTogglableFloatingElement.svelte";
   import Add from "@rilldata/web-common/components/icons/Add.svelte";
-  import SearchableFilterDropdown from "@rilldata/web-common/components/searchable-filter-menu/SearchableFilterDropdown.svelte";
+  import SearchableMenuContent from "@rilldata/web-common/components/searchable-filter-menu/SearchableMenuContent.svelte";
   import type { SearchableFilterSelectableGroup } from "@rilldata/web-common/components/searchable-filter-menu/SearchableFilterSelectableItem";
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
   import TooltipContent from "@rilldata/web-common/components/tooltip/TooltipContent.svelte";
   import { getDimensionDisplayName } from "@rilldata/web-common/features/dashboards/filters/getDisplayName";
   import { getStateManagers } from "../state-managers/state-managers";
   import { getMeasureDisplayName } from "./getDisplayName";
+  import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
 
   const {
     selectors: {
@@ -43,37 +43,29 @@
           .filter((d) => !$dimensionHasFilter(d.name)) ?? [],
     },
   ];
+
+  let open = false;
 </script>
 
-<WithTogglableFloatingElement
-  alignment="start"
-  distance={8}
-  let:active
-  let:toggleFloatingElement
->
-  <Tooltip distance={8} suppress={active}>
-    <button class:active on:click={toggleFloatingElement}>
-      <Add size="17px" />
-    </button>
-    <TooltipContent slot="tooltip-content">Add filter</TooltipContent>
-  </Tooltip>
+<DropdownMenu.Root bind:open typeahead={false}>
+  <DropdownMenu.Trigger asChild let:builder>
+    <Tooltip distance={8} suppress={open}>
+      <button class:active={open} use:builder.action {...builder}>
+        <Add size="17px" />
+      </button>
+      <TooltipContent slot="tooltip-content">Add filter</TooltipContent>
+    </Tooltip>
+  </DropdownMenu.Trigger>
 
-  <SearchableFilterDropdown
+  <SearchableMenuContent
     allowMultiSelect={false}
-    let:toggleFloatingElement
-    on:click-outside={toggleFloatingElement}
-    on:escape={toggleFloatingElement}
-    on:focus
-    on:hover
-    on:item-clicked={(e) => {
-      toggleFloatingElement();
-      setTemporaryFilterName(e.detail.name);
+    onSelect={(name) => {
+      setTemporaryFilterName(name);
     }}
     {selectableGroups}
     selectedItems={[]}
-    slot="floating-element"
   />
-</WithTogglableFloatingElement>
+</DropdownMenu.Root>
 
 <style lang="postcss">
   button {

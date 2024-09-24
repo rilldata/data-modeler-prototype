@@ -19,6 +19,7 @@
   export let showDefaultItem: boolean;
   export let grain: string;
   export let defaultTimeRange: NamedRange | ISODurationString | undefined;
+  export let hideRanges = false;
   export let onSelectRange: (range: NamedRange | ISODurationString) => void;
   export let applyCustomRange: (range: Interval<true>) => void;
 
@@ -45,16 +46,18 @@
       class="flex gap-x-1"
       aria-label="Select time range"
     >
-      <b class="mr-1 line-clamp-1 flex-none">{getRangeLabel(selected)}</b>
-      {#if interval.isValid}
-        <RangeDisplay {interval} {grain} />
+      <b class=" line-clamp-1 flex-none">{getRangeLabel(selected)}</b>
+      {#if interval.isValid && (selected === "CUSTOM" || !hideRanges)}
+        <span class="ml-1">
+          <RangeDisplay {interval} {grain} />
+        </span>
       {/if}
       <span class="flex-none transition-transform" class:-rotate-180={open}>
         <CaretDownIcon />
       </span>
     </button>
   </DropdownMenu.Trigger>
-  <DropdownMenu.Content align="start" class="p-0 overflow-hidden">
+  <DropdownMenu.Content align="start" class="p-0 overflow-y-auto  !bg-white">
     <div class="flex">
       <div class="flex flex-col w-48 p-1">
         <TimeRangeMenu
@@ -84,8 +87,3 @@
     </div>
   </DropdownMenu.Content>
 </DropdownMenu.Root>
-
-<style lang="postcss">
-  button {
-  }
-</style>

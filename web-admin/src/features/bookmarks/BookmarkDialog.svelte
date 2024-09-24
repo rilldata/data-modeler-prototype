@@ -105,15 +105,16 @@
   onOpenChange={(o) => {
     if (!o) onClose();
   }}
+  closeOnOutsideClick={false}
 >
-  <Dialog.Content>
+  <Dialog.Content class="w-full max-w-[620px]">
     <Dialog.Header>
       <Dialog.Title>
         {bookmark ? "Edit bookmark" : "Bookmark current view"}
       </Dialog.Title>
     </Dialog.Header>
 
-    <BaseBookmarkForm {formState} {metricsViewName} />
+    <BaseBookmarkForm {formState} />
 
     <div class="flex flex-row mt-4 gap-2">
       <div class="grow" />

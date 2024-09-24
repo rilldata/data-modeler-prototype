@@ -4,11 +4,7 @@ import {
   TimeComparisonOption,
   TimeRangePreset,
 } from "@rilldata/web-common/lib/time/types";
-import {
-  V1MetricsViewSpec,
-  V1TimeGrain,
-  V1TimeRange,
-} from "@rilldata/web-common/runtime-client";
+import { V1TimeGrain, V1TimeRange } from "@rilldata/web-common/runtime-client";
 
 // Temporary fix to split previous complete ranges to duration and round to grain to get it working on backend
 // TODO: Eventually we should support this in the backend.
@@ -42,14 +38,14 @@ export const PreviousCompleteRangeMap: Partial<
  */
 export function mapTimeRange(
   timeControlState: TimeControlState,
-  metricsView: V1MetricsViewSpec,
+  defaultTimeRange: string | undefined,
 ) {
   if (!timeControlState.selectedTimeRange?.name) return undefined;
 
   const timeRange: V1TimeRange = {};
   switch (timeControlState.selectedTimeRange.name) {
     case TimeRangePreset.DEFAULT:
-      timeRange.isoDuration = metricsView.defaultTimeRange;
+      timeRange.isoDuration = defaultTimeRange;
       break;
 
     case TimeRangePreset.CUSTOM:

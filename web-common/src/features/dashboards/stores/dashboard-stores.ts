@@ -204,7 +204,7 @@ const metricViewReducers = {
       }
       metricsExplorer.dimensionFilterExcludeMode =
         includeExcludeModeFromFilters(partial.whereFilter);
-      AdvancedMeasureCorrector.correct(metricsExplorer, metricsView);
+      AdvancedMeasureCorrector.correct(metricsExplorer, metricsView.measures);
     });
   },
 
@@ -460,7 +460,10 @@ const metricViewReducers = {
   ) {
     updateMetricsExplorerByName(name, (metricsExplorer) => {
       metricsExplorer.selectedComparisonTimeRange = comparisonTimeRange;
-      AdvancedMeasureCorrector.correct(metricsExplorer, metricsViewSpec);
+      AdvancedMeasureCorrector.correct(
+        metricsExplorer,
+        metricsViewSpec.measures,
+      );
     });
   },
 
@@ -506,7 +509,10 @@ const metricViewReducers = {
 
       metricsExplorer.selectedComparisonTimeRange = comparisonTimeRange;
 
-      AdvancedMeasureCorrector.correct(metricsExplorer, metricsViewSpec);
+      AdvancedMeasureCorrector.correct(
+        metricsExplorer,
+        metricsViewSpec.measures,
+      );
     });
   },
 

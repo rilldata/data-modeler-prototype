@@ -3,7 +3,6 @@
   import SimpleDataGraphic from "@rilldata/web-common/components/data-graphic/elements/SimpleDataGraphic.svelte";
   import { Axis } from "@rilldata/web-common/components/data-graphic/guides";
   import { bisectData } from "@rilldata/web-common/components/data-graphic/utils";
-  import SearchableFilterButton from "@rilldata/web-common/components/searchable-filter-menu/SearchableFilterButton.svelte";
   import { LeaderboardContextColumn } from "@rilldata/web-common/features/dashboards/leaderboard-context-column";
   import ReplacePivotDialog from "@rilldata/web-common/features/dashboards/pivot/ReplacePivotDialog.svelte";
   import {
@@ -11,7 +10,6 @@
     PivotChipType,
   } from "@rilldata/web-common/features/dashboards/pivot/types";
   import { useMetricsView } from "@rilldata/web-common/features/dashboards/selectors";
-  import { createShowHideMeasuresStore } from "@rilldata/web-common/features/dashboards/show-hide-selectors";
   import { getStateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
   import {
     metricsExplorerStore,
@@ -48,6 +46,7 @@
     getOrderedStartEnd,
     updateChartInteractionStore,
   } from "./utils";
+  import DashboardVisibilityDropdown from "@rilldata/web-common/components/menu/shadcn/DashboardVisibilityDropdown.svelte";
 
   export let metricViewName: string;
   export let workspaceWidth: number;
@@ -55,10 +54,16 @@
   const {
     selectors: {
       measures: {
+        allMeasures,
+        visibleMeasures,
         isMeasureValidPercentOfTotal,
         getFilteredMeasuresAndDimensions,
+        getMeasureByName,
       },
       dimensionFilters: { includedDimensionValues },
+    },
+    actions: {
+      measures: { toggleMeasureVisibility, setVisibleMeasures },
     },
   } = getStateManagers();
 
@@ -81,11 +86,6 @@
   // query the `/meta` endpoint to get the measures and the default time grain
   $: metricsView = useMetricsView(instanceId, metricViewName);
 
-  $: showHideMeasures = createShowHideMeasuresStore(
-    metricViewName,
-    metricsView,
-  );
-
   $: expandedMeasureName = $dashboardStore?.tdd?.expandedMeasureName;
   $: isInTimeDimensionView = Boolean(expandedMeasureName);
   $: comparisonDimension = $dashboardStore?.selectedComparisonDimension;
@@ -107,15 +107,13 @@
   );
   $: isAlternateChart = tddChartType !== TDDChart.DEFAULT;
 
+  $: expandedMeasure = $getMeasureByName(expandedMeasureName);
+
   // List of measures which will be shown on the dashboard
   let renderedMeasures: MetricsViewSpecMeasureV2[];
   $: {
-    renderedMeasures =
-      $metricsView.data?.measures?.filter(
-        expandedMeasureName
-          ? (measure) => measure.name === expandedMeasureName
-          : (_, i) => $showHideMeasures.selectedItems[i],
-      ) ?? [];
+    renderedMeasures = expandedMeasure ? [expandedMeasure] : $visibleMeasures;
+
     const { measures } = $getFilteredMeasuresAndDimensions(
       $metricsView.data ?? {},
       renderedMeasures.map((m) => m.name ?? ""),
@@ -234,16 +232,6 @@
     );
   }
 
-  const toggleMeasureVisibility = (e) => {
-    showHideMeasures.toggleVisibility(e.detail.name);
-  };
-  const setAllMeasuresNotVisible = () => {
-    showHideMeasures.setAllToNotVisible();
-  };
-  const setAllMeasuresVisible = () => {
-    showHideMeasures.setAllToVisible();
-  };
-
   $: hasTotalsError = Object.hasOwn($timeSeriesDataStore?.error, "totals");
   $: hasTimeseriesError = Object.hasOwn(
     $timeSeriesDataStore?.error,
@@ -251,6 +239,15 @@
   );
 
   $: activeTimeGrain = $timeControlsStore.selectedTimeRange?.interval;
+
+  $: visibleMeasureNames = $visibleMeasures
+    .map(({ name }) => name)
+    .filter(isDefined);
+  $: allMeasureNames = $allMeasures.map(({ name }) => name).filter(isDefined);
+
+  function isDefined(value: string | undefined): value is string {
+    return value !== undefined;
+  }
 
   let showReplacePivotModal = false;
   function startPivotForTimeseries() {
@@ -316,14 +313,22 @@
         chartType={tddChartType}
       />
     {:else}
-      <SearchableFilterButton
-        label="Measures"
-        on:deselect-all={setAllMeasuresNotVisible}
-        on:item-clicked={toggleMeasureVisibility}
-        on:select-all={setAllMeasuresVisible}
-        selectableItems={$showHideMeasures.selectableItems}
-        selectedItems={$showHideMeasures.selectedItems}
+      <DashboardVisibilityDropdown
+        category="Measures"
         tooltipText="Choose measures to display"
+        onSelect={(name) => toggleMeasureVisibility(name)}
+        selectableItems={$allMeasures.map(({ name, label }) => ({
+          name,
+          label: label ?? name,
+        }))}
+        selectedItems={visibleMeasureNames}
+        onToggleSelectAll={() => {
+          const deselectAll =
+            visibleMeasureNames.length === allMeasureNames.length;
+          setVisibleMeasures(
+            allMeasureNames.slice(0, deselectAll ? 1 : undefined),
+          );
+        }}
       />
 
       <button
@@ -369,7 +374,6 @@
       class:pb-4={!isInTimeDimensionView}
       class="flex flex-col gap-y-2 overflow-y-scroll h-full max-h-fit"
     >
-      <!-- FIXME: this is pending the remaining state work for show/hide measures and dimensions -->
       {#each renderedMeasures as measure (measure.name)}
         <!-- FIXME: I can't select the big number by the measure id. -->
         <!-- for bigNum, catch nulls and convert to undefined.  -->

@@ -6,28 +6,17 @@
   import Button from "../../button/Button.svelte";
   import CaretDownIcon from "../../icons/CaretDownIcon.svelte";
   import TooltipContent from "../../tooltip/TooltipContent.svelte";
-  import SearchableMenuContent from "./SearchableMenuContent.svelte";
+  import SearchableMenuContent from "../../searchable-filter-menu/SearchableMenuContent.svelte";
 
   export let selectableItems: SearchableFilterSelectableItem[];
-  export let selectedItems: boolean[];
+  export let selectedItems: string[];
   export let tooltipText: string;
-  export let ariaLabel: string;
   export let category: string;
   export let disabled = false;
+  export let onSelect: (name: string) => void;
+  export let onToggleSelectAll: () => void;
 
   let active = false;
-
-  $: {
-    if (
-      selectableItems?.length > 0 &&
-      selectedItems?.length > 0 &&
-      selectableItems?.length !== selectedItems?.length
-    ) {
-      throw new Error(
-        "SearchableFilterButton component requires props `selectableItems` and `selectedItems` to be arrays of equal length",
-      );
-    }
-  }
 
   $: numAvailable = selectableItems?.length ?? 0;
   $: numShown = selectedItems?.filter((x) => x).length ?? 0;
@@ -49,7 +38,7 @@
       location="bottom"
       suppress={active}
     >
-      <Button builders={[builder]} type="text" label={ariaLabel} on:click>
+      <Button builders={[builder]} type="text" label={tooltipText} on:click>
         <div
           class="flex items-center gap-x-0.5 px-1 text-gray-700 hover:text-inherit"
         >
@@ -73,9 +62,12 @@
   </DropdownMenu.Trigger>
 
   <SearchableMenuContent
-    on:deselect-all
-    on:item-clicked
-    on:select-all
+    allowMultiSelect
+    showHiddenSelectionsCount
+    fadeUnselected
+    requireSelection
+    {onSelect}
+    {onToggleSelectAll}
     selectableGroups={[{ name: "", items: selectableItems }]}
     selectedItems={[selectedItems]}
   />

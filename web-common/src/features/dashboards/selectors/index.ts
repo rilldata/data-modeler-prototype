@@ -2,14 +2,12 @@ import {
   createInExpression,
   createLikeExpression,
 } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
-import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
 import {
   ResourceKind,
   useResource,
 } from "@rilldata/web-common/features/entity-management/resource-selectors";
 import {
   RpcStatus,
-  V1MetricsViewComparisonResponse,
   V1MetricsViewSpec,
   V1MetricsViewTimeRangeResponse,
   createQueryServiceMetricsViewComparison,
@@ -53,55 +51,44 @@ export const useModelHasTimeSeries = (ctx: StateManagers) =>
     (meta) => !!meta?.timeDimension,
   ) as CreateQueryResult<boolean>;
 
-export const getFilterSearchList = (
-  ctx: StateManagers,
-  {
-    dimension,
-    addNull,
-    searchText,
-  }: {
-    dimension: string;
+export function getFilterSearchListQuery(
+  searchText: string,
+  props: {
+    instanceId: string;
+    metricsViewName: string;
+    dimensionName: string;
+    leaderboardMeasureName: string;
+    timeStart: string | undefined;
+    timeEnd: string | undefined;
     addNull: boolean;
-    searchText: string;
+    enabled: boolean;
   },
-): Readable<
-  QueryObserverResult<V1MetricsViewComparisonResponse, RpcStatus>
-> => {
-  return derived(
-    [
-      ctx.dashboardStore,
-      useTimeControlStore(ctx),
-      ctx.metricsViewName,
-      ctx.runtime,
-    ],
-    ([metricsExplorer, timeControls, metricViewName, runtime], set) => {
-      return createQueryServiceMetricsViewComparison(
-        runtime.instanceId,
-        metricViewName,
-        {
-          dimension: { name: dimension },
-          measures: [{ name: metricsExplorer.leaderboardMeasureName }],
-          timeRange: {
-            start: timeControls.timeStart,
-            end: timeControls.timeEnd,
-          },
-          limit: "100",
-          offset: "0",
-          sort: [{ name: dimension }],
-          where: addNull
-            ? createInExpression(dimension, [null])
-            : createLikeExpression(dimension, `%${searchText}%`),
-        },
-        {
-          query: {
-            queryClient: ctx.queryClient,
-            enabled: timeControls.ready,
-          },
-        },
-      ).subscribe(set);
+) {
+  return createQueryServiceMetricsViewComparison(
+    props.instanceId,
+    props.metricsViewName,
+    {
+      dimension: { name: props.dimensionName },
+      measures: [{ name: props.leaderboardMeasureName }],
+      timeRange: {
+        start: props.timeStart,
+        end: props.timeEnd,
+      },
+      limit: "100",
+      offset: "0",
+      sort: [{ name: props.dimensionName }],
+      where: props.addNull
+        ? createInExpression(props.dimensionName, [null])
+        : createLikeExpression(props.dimensionName, `%${searchText}%`),
+    },
+    {
+      query: {
+        enabled: props.enabled,
+        keepPreviousData: true,
+      },
     },
   );
-};
+}
 
 export function createTimeRangeSummary(
   ctx: StateManagers,

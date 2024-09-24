@@ -79,10 +79,13 @@ export const useMetricsView = <T = V1MetricsViewSpec>(
   selector?: (meta: V1MetricsViewSpec) => T,
 ) => {
   return useResource<T>(instanceId, metricViewName, ResourceKind.MetricsView, {
-    select: (data) =>
-      selector
-        ? selector(data.resource?.metricsView?.state?.validSpec)
-        : (data.resource?.metricsView?.state?.validSpec as T),
+    select: (data) => {
+      const validSpec = data.resource?.metricsView?.state?.validSpec;
+      if (!validSpec) {
+        throw new Error("Metrics view is not valid");
+      }
+      return selector ? selector(validSpec) : (validSpec as T);
+    },
   });
 };
 
@@ -140,7 +143,7 @@ export const useMetaDimension = (
     return {
       ...dim,
       // this is for backwards compatibility when we used `name` as `column`
-      column: dim.column ?? dim.name,
+      column: dim?.column ?? dim?.name,
     };
   });
 
@@ -149,7 +152,7 @@ export const useMetaDimension = (
  * the filters for the specified dimension name.
  */
 export const getFiltersForOtherDimensions = (
-  filters: V1Expression,
+  filters: V1Expression | undefined,
   dimensionName: string,
 ) => {
   if (!filters) return undefined;

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import type { BookmarkFormValues } from "@rilldata/web-admin/features/bookmarks/form-utils";
-  import { getPrettySelectedTimeRange } from "@rilldata/web-admin/features/bookmarks/selectors";
   import ProjectAccessControls from "@rilldata/web-admin/features/projects/ProjectAccessControls.svelte";
   import Select from "@rilldata/web-common/components/forms/Select.svelte";
   import Label from "@rilldata/web-common/components/forms/Label.svelte";
@@ -9,31 +8,11 @@
   import Input from "@rilldata/web-common/components/forms/Input.svelte";
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
   import TooltipContent from "@rilldata/web-common/components/tooltip/TooltipContent.svelte";
-  import FilterChipsReadOnly from "@rilldata/web-common/features/dashboards/filters/FilterChipsReadOnly.svelte";
-  import { useDashboardStore } from "@rilldata/web-common/features/dashboards/stores/dashboard-stores";
-  import type { V1TimeRange } from "@rilldata/web-common/runtime-client";
-  import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import type { createForm } from "svelte-forms-lib";
   import { InfoIcon } from "lucide-svelte";
-  import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
+  import Filters from "@rilldata/web-common/features/dashboards/filters/Filters.svelte";
 
-  export let metricsViewName: string;
   export let formState: ReturnType<typeof createForm<BookmarkFormValues>>;
-
-  $: dashboardStore = useDashboardStore(metricsViewName);
-
-  let timeRange: V1TimeRange;
-  $: timeRange = {
-    isoDuration: $dashboardStore.selectedTimeRange?.name,
-    start: $dashboardStore.selectedTimeRange?.start?.toISOString() ?? "",
-    end: $dashboardStore.selectedTimeRange?.end?.toISOString() ?? "",
-  };
-
-  $: selectedTimeRange = getPrettySelectedTimeRange(
-    queryClient,
-    $runtime?.instanceId,
-    metricsViewName,
-  );
 
   const { form, errors } = formState;
 
@@ -49,6 +28,12 @@ Managed bookmarks will be available to all viewers of this dashboard.`;
     /* Switch was triggering this causing clicking on them submitting the form */
   }}
 >
+  <div class="flex flex-col gap-y-2">
+    <Label class="flex flex-col gap-y-1 text-sm">
+      <div class="text-gray-800 font-medium">Filters</div>
+    </Label>
+    <Filters hideRanges hideIcons bookmarks />
+  </div>
   <Input
     bind:value={$form["displayName"]}
     errors={$errors["displayName"]}
@@ -62,18 +47,7 @@ Managed bookmarks will be available to all viewers of this dashboard.`;
     label="Description"
     optional
   />
-  <div class="flex flex-col gap-y-2">
-    <Label class="flex flex-col gap-y-1 text-sm">
-      <div class="text-gray-800 font-medium">Filters</div>
-      <div class="text-gray-500">Inherited from underlying dashboard view.</div>
-    </Label>
-    <FilterChipsReadOnly
-      dimensionThresholdFilters={$dashboardStore.dimensionThresholdFilters}
-      filters={$dashboardStore.whereFilter}
-      {metricsViewName}
-      {timeRange}
-    />
-  </div>
+
   <ProjectAccessControls
     organization={$page.params.organization}
     project={$page.params.project}
@@ -105,26 +79,6 @@ Managed bookmarks will be available to all viewers of this dashboard.`;
           dashboard layout and state.
         </TooltipContent>
       </Tooltip>
-    </Label>
-  </div>
-  <div class="flex items-center space-x-2">
-    <Switch bind:checked={$form["absoluteTimeRange"]} id="absoluteTimeRange" />
-    <Label class="flex flex-col font-normal" for="absoluteTimeRange">
-      <div class="text-left text-sm flex gap-x-1 items-center">
-        <span>Absolute time range</span>
-        <Tooltip distance={8}>
-          <InfoIcon class="text-gray-500" size="14px" strokeWidth={2} />
-          <TooltipContent
-            class="whitespace-pre-line"
-            maxWidth="600px"
-            slot="tooltip-content"
-          >
-            The bookmark will use the dashboard's relative time if this toggle
-            is off.
-          </TooltipContent>
-        </Tooltip>
-      </div>
-      <div class="text-gray-500 text-sm">{$selectedTimeRange}</div>
     </Label>
   </div>
 </form>

@@ -41,11 +41,10 @@ import type { DimensionTableConfig } from "./DimensionTableConfig";
 
 /** Returns an updated filter set for a given dimension on search */
 export function updateFilterOnSearch(
-  filterForDimension: V1Expression | undefined,
+  filterForDimension: V1Expression,
   searchText: string,
   dimensionName: string,
-): V1Expression | undefined {
-  if (!filterForDimension) return undefined;
+): V1Expression {
   // create a copy
   const addNull = "null".includes(searchText);
   if (searchText !== "") {
@@ -86,12 +85,16 @@ export function getDimensionFilterWithSearch(
   searchText: string,
   dimensionName: string,
 ) {
-  let filterForDimension = getFiltersForOtherDimensions(filters, dimensionName);
-  if (filters && !filterForDimension) {
-    filterForDimension = createAndExpression([]); // create an empty query for consistency
-  }
+  const filterForDimension = getFiltersForOtherDimensions(
+    filters,
+    dimensionName,
+  );
 
-  return updateFilterOnSearch(filterForDimension, searchText, dimensionName);
+  return updateFilterOnSearch(
+    filterForDimension ?? createAndExpression([]),
+    searchText,
+    dimensionName,
+  );
 }
 
 export function computePercentOfTotal(
@@ -421,10 +424,9 @@ export function prepareDimensionTableRows(
 ): DimensionTableRow[] {
   if (!queryRows || !queryRows.length) return [];
 
-  const formattersForMeasures: { [key: string]: (val: number) => string } =
-    Object.fromEntries(
-      allMeasuresForSpec.map((m) => [m.name, createMeasureValueFormatter(m)]),
-    );
+  const formattersForMeasures = Object.fromEntries(
+    allMeasuresForSpec.map((m) => [m.name, createMeasureValueFormatter(m)]),
+  );
 
   const tableRows: DimensionTableRow[] = queryRows
     .filter(

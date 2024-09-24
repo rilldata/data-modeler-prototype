@@ -106,7 +106,8 @@ export function createTimeSeriesDataStore(
   return derived(
     [useMetricsView(ctx), useTimeControlStore(ctx), ctx.dashboardStore],
     ([metricsView, timeControls, dashboardStore], set) => {
-      if (!timeControls.ready || timeControls.isFetching) {
+      const validSpec = metricsView.data;
+      if (!timeControls.ready || timeControls.isFetching || !validSpec) {
         set({
           isFetching: true,
           isError: false,
@@ -136,11 +137,8 @@ export function createTimeSeriesDataStore(
 
       const { measures: filteredMeasures } = getFilteredMeasuresAndDimensions({
         dashboard: dashboardStore,
-      })(metricsView.data ?? {}, measures);
-      const independentMeasures = getIndependentMeasures(
-        metricsView.data ?? {},
-        measures,
-      );
+      })(validSpec, measures);
+      const independentMeasures = getIndependentMeasures(validSpec, measures);
 
       const primaryTimeSeries =
         measures.length > 0

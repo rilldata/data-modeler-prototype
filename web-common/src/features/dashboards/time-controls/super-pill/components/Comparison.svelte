@@ -29,6 +29,7 @@
     start: Date,
     end: Date,
   ) => void;
+  export let hideRanges = false;
 
   let open = false;
   let showSelector = false;
@@ -104,7 +105,7 @@
           <p>no comparison period</p>
         {:else}
           <b class="line-clamp-1">{label}</b>
-          {#if interval?.isValid}
+          {#if interval?.isValid && (selectedComparison?.name === "CUSTOM_COMPARISON_RANGE" || !hideRanges)}
             <RangeDisplay {interval} {grain} />
           {/if}
         {/if}

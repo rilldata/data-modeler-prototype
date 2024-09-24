@@ -24,6 +24,7 @@
   import type { TDDComparison, TableData } from "./types";
 
   export let metricViewName: string;
+  export let expandedMeasureName: string;
 
   const stateManagers = getStateManagers();
   const {
@@ -46,7 +47,7 @@
 
   $: metricsView = useMetricsView(stateManagers);
   $: dimensionName = $dashboardStore?.selectedComparisonDimension ?? "";
-  $: expandedMeasureName = $dashboardStore?.tdd.expandedMeasureName;
+
   $: comparing = $timeDimensionDataStore?.comparing;
 
   $: pinIndex = $dashboardStore?.tdd.pinIndex;
@@ -195,6 +196,7 @@
 
 <div class="h-full w-full flex flex-col">
   <TDDHeader
+    {expandedMeasureName}
     {areAllTableRowsSelected}
     {comparing}
     {dimensionName}

@@ -19,6 +19,7 @@
   export let selectedTimeRange: DashboardTimeControls | undefined;
   export let showTimeComparison: boolean;
   export let selectedComparisonTimeRange: DashboardTimeControls | undefined;
+  export let hideRanges = false;
 
   const ctx = getStateManagers();
   const metricsView = useMetricsView(ctx);
@@ -69,7 +70,7 @@
   }
 </script>
 
-<div class="wrapper">
+<div class="pill-wrapper">
   <button
     class="flex gap-x-1.5 cursor-pointer"
     on:click={() => {
@@ -96,42 +97,43 @@
       grain={activeTimeGrain}
       zone={activeTimeZone}
       {onSelectComparisonRange}
+      {hideRanges}
     />
   {/if}
 </div>
 
 <style lang="postcss">
-  .wrapper {
+  .pill-wrapper {
     @apply flex w-fit;
     @apply h-7 rounded-full;
     @apply overflow-hidden;
   }
 
-  :global(.wrapper > button) {
+  :global(.pill-wrapper > button) {
     @apply border;
   }
 
-  :global(.wrapper > button:not(:first-child)) {
+  :global(.pill-wrapper > button:not(:first-child)) {
     @apply -ml-[1px];
   }
 
-  :global(.wrapper > button) {
+  :global(.pill-wrapper > button) {
     @apply border;
     @apply px-2 flex items-center justify-center bg-white;
   }
 
-  :global(.wrapper > button:first-child) {
+  :global(.pill-wrapper > button:first-of-type) {
     @apply pl-2.5 rounded-l-full;
   }
-  :global(.wrapper > button:last-child) {
+  :global(.pill-wrapper > button:last-of-type) {
     @apply pr-2.5 rounded-r-full;
   }
 
-  :global(.wrapper > button:hover:not(:disabled)) {
+  :global(.pill-wrapper > button:hover:not(:disabled)) {
     @apply bg-gray-50 cursor-pointer;
   }
 
-  :global(.wrapper > [data-state="open"]) {
+  :global(.pill-wrapper > button[data-state="open"]) {
     @apply bg-gray-50 border-gray-400 z-50;
   }
 </style>

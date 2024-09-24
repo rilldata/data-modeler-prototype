@@ -10,10 +10,13 @@ import { describe, expect, it } from "vitest";
 const MetricsView: V1MetricsViewSpec = {
   measures: [
     {
+      expression: "",
       name: "total_records",
       label: "Total records",
+      expression: "",
     },
   ],
+  dimensions: [],
 };
 
 describe("generateAlertName", () => {

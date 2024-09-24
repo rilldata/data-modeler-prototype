@@ -22,10 +22,10 @@ import {
 import { describe, expect, it } from "vitest";
 
 describe("AdvancedMeasureCorrector", () => {
-  const MetricsView = {
+  const MetricsView: V1MetricsViewSpec = {
     ...AD_BIDS_INIT,
     measures: AD_BIDS_ADVANCED_MEASURES,
-  } as V1MetricsViewSpec;
+  };
 
   it("changing grain while in TDD for measure based on timestamp", () => {
     const dashboard = getDefaultMetricsExplorerEntity(
@@ -35,7 +35,7 @@ describe("AdvancedMeasureCorrector", () => {
     );
     dashboard.tdd.expandedMeasureName = AD_BIDS_IMPRESSIONS_MEASURE_NO_GRAIN;
 
-    AdvancedMeasureCorrector.correct(dashboard, MetricsView);
+    AdvancedMeasureCorrector.correct(dashboard, MetricsView.measures);
     expect(dashboard.tdd.expandedMeasureName).toEqual(
       AD_BIDS_IMPRESSIONS_MEASURE_NO_GRAIN,
     );
@@ -44,13 +44,13 @@ describe("AdvancedMeasureCorrector", () => {
     dashboard.selectedTimeRange = {
       interval: V1TimeGrain.TIME_GRAIN_DAY,
     } as DashboardTimeControls;
-    AdvancedMeasureCorrector.correct(dashboard, MetricsView);
+    AdvancedMeasureCorrector.correct(dashboard, MetricsView.measures);
     expect(dashboard.tdd.expandedMeasureName).toEqual(
       AD_BIDS_IMPRESSIONS_MEASURE_NO_GRAIN,
     );
 
     dashboard.tdd.expandedMeasureName = AD_BIDS_IMPRESSIONS_MEASURE_DAY_GRAIN;
-    AdvancedMeasureCorrector.correct(dashboard, MetricsView);
+    AdvancedMeasureCorrector.correct(dashboard, MetricsView.measures);
     expect(dashboard.tdd.expandedMeasureName).toEqual(
       AD_BIDS_IMPRESSIONS_MEASURE_DAY_GRAIN,
     );
@@ -59,7 +59,7 @@ describe("AdvancedMeasureCorrector", () => {
     dashboard.selectedTimeRange = {
       interval: V1TimeGrain.TIME_GRAIN_WEEK,
     } as DashboardTimeControls;
-    AdvancedMeasureCorrector.correct(dashboard, MetricsView);
+    AdvancedMeasureCorrector.correct(dashboard, MetricsView.measures);
     expect(dashboard.tdd.expandedMeasureName).toEqual("");
   });
 
@@ -85,49 +85,51 @@ describe("AdvancedMeasureCorrector", () => {
       },
     ];
 
-    AdvancedMeasureCorrector.correct(dashboard, MetricsView);
+    AdvancedMeasureCorrector.correct(dashboard, MetricsView.measures);
     expect(dashboard.leaderboardMeasureName).toEqual(
       AD_BIDS_IMPRESSIONS_MEASURE,
     );
     expect(dashboard.dimensionThresholdFilters[0]?.filters.length).toEqual(1);
 
     // metrics view spec updated to make AD_BIDS_IMPRESSIONS_MEASURE an advanced measure
-    AdvancedMeasureCorrector.correct(dashboard, {
-      ...MetricsView,
-      measures: [
-        {
-          name: AD_BIDS_IMPRESSIONS_MEASURE,
-          expression: "count(*)",
-          window: {
-            partition: true,
+    AdvancedMeasureCorrector.correct(dashboard, [
+      {
+        name: AD_BIDS_IMPRESSIONS_MEASURE,
+        expression: "count(*)",
+        window: {
+          partition: true,
+        },
+        requiredDimensions: [],
+      },
+      {
+        name: AD_BIDS_IMPRESSIONS_MEASURE_DAY_GRAIN,
+        expression: "",
+        requiredDimensions: [
+          {
+            name: AD_BIDS_TIMESTAMP_DIMENSION,
+            timeGrain: V1TimeGrain.TIME_GRAIN_DAY,
           },
-        },
-        {
-          name: AD_BIDS_IMPRESSIONS_MEASURE_DAY_GRAIN,
-          requiredDimensions: [
-            {
-              name: AD_BIDS_TIMESTAMP_DIMENSION,
-              timeGrain: V1TimeGrain.TIME_GRAIN_DAY,
-            },
-          ],
-        },
-        {
-          name: AD_BIDS_IMPRESSIONS_MEASURE_NO_GRAIN,
-          requiredDimensions: [
-            {
-              name: AD_BIDS_TIMESTAMP_DIMENSION,
-              timeGrain: V1TimeGrain.TIME_GRAIN_UNSPECIFIED,
-            },
-          ],
-        },
-        {
-          name: AD_BIDS_IMPRESSIONS_MEASURE_WINDOW,
-          window: {
-            partition: true,
+        ],
+      },
+      {
+        name: AD_BIDS_IMPRESSIONS_MEASURE_NO_GRAIN,
+        expression: "",
+        requiredDimensions: [
+          {
+            name: AD_BIDS_TIMESTAMP_DIMENSION,
+            timeGrain: V1TimeGrain.TIME_GRAIN_UNSPECIFIED,
           },
+        ],
+      },
+      {
+        name: AD_BIDS_IMPRESSIONS_MEASURE_WINDOW,
+        expression: "",
+        window: {
+          partition: true,
         },
-      ],
-    });
+        requiredDimensions: [],
+      },
+    ]);
     expect(dashboard.leaderboardMeasureName).toEqual(
       AD_BIDS_IMPRESSIONS_MEASURE_NO_GRAIN,
     );

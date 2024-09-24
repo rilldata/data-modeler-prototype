@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { useMetricsView } from "@rilldata/web-common/features/dashboards/selectors";
-  import { createShowHideMeasuresStore } from "@rilldata/web-common/features/dashboards/show-hide-selectors";
   import { getStateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
   import { sanitiseExpression } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
   import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
@@ -9,10 +7,9 @@
   import { runtime } from "../../../runtime-client/runtime-store";
   import { MEASURE_CONFIG } from "../config";
   import MeasureBigNumber from "./MeasureBigNumber.svelte";
+  import DashboardVisibilityDropdown from "@rilldata/web-common/components/menu/shadcn/DashboardVisibilityDropdown.svelte";
 
-  import SearchableFilterButton from "@rilldata/web-common/components/searchable-filter-menu/SearchableFilterButton.svelte";
-
-  export let metricViewName;
+  export let metricViewName: string;
   export let exploreContainerWidth;
 
   const MEASURE_HEIGHT = 60;
@@ -36,14 +33,18 @@
   const {
     dashboardStore,
     selectors: {
+      measures: { allMeasures, visibleMeasures },
       activeMeasure: { selectedMeasureNames },
+    },
+    actions: {
+      measures: { toggleMeasureVisibility, setVisibleMeasures },
     },
   } = getStateManagers();
 
-  $: instanceId = $runtime.instanceId;
+  $: ({ instanceId } = $runtime);
 
   // query the `/meta` endpoint to get the measures and the default time grain
-  $: metricsView = useMetricsView(instanceId, metricViewName);
+
   const timeControlsStore = useTimeControlStore(getStateManagers());
 
   let metricsContainerHeight: number;
@@ -147,20 +148,14 @@
     calculateGridColumns();
   }
 
-  $: showHideMeasures = createShowHideMeasuresStore(
-    metricViewName,
-    metricsView,
-  );
+  $: visibleMeasureNames = $visibleMeasures
+    .map(({ name }) => name)
+    .filter(isDefined);
+  $: allMeasureNames = $allMeasures.map(({ name }) => name).filter(isDefined);
 
-  const toggleMeasureVisibility = (e) => {
-    showHideMeasures.toggleVisibility(e.detail.name);
-  };
-  const setAllMeasuresNotVisible = () => {
-    showHideMeasures.setAllToNotVisible();
-  };
-  const setAllMeasuresVisible = () => {
-    showHideMeasures.setAllToVisible();
-  };
+  function isDefined(value: string | undefined): value is string {
+    return value !== undefined;
+  }
 </script>
 
 <svelte:window on:resize={() => calculateGridColumns()} />
@@ -176,37 +171,44 @@
     style:column-gap="{COLUMN_GAP}px"
   >
     <div class="bg-white sticky top-0">
-      <SearchableFilterButton
-        label="Measures"
-        on:deselect-all={setAllMeasuresNotVisible}
-        on:item-clicked={toggleMeasureVisibility}
-        on:select-all={setAllMeasuresVisible}
-        selectableItems={$showHideMeasures.selectableItems}
-        selectedItems={$showHideMeasures.selectedItems}
+      <DashboardVisibilityDropdown
+        category="Measures"
         tooltipText="Choose measures to display"
+        onSelect={(name) => toggleMeasureVisibility(name)}
+        selectableItems={$allMeasures.map(({ name, label }) => ({
+          name,
+          label: label ?? name,
+        }))}
+        selectedItems={visibleMeasureNames}
+        onToggleSelectAll={() => {
+          const deselectAll =
+            visibleMeasureNames.length === allMeasureNames.length;
+          setVisibleMeasures(
+            allMeasureNames.slice(0, deselectAll ? 1 : undefined),
+          );
+        }}
       />
     </div>
-    {#if $metricsView.data?.measures}
-      {#each $metricsView.data?.measures.filter((_, i) => $showHideMeasures.selectedItems[i]) as measure, index (measure.name)}
-        <div
-          bind:this={measureNodes[index]}
-          style:width="{MEASURE_WIDTH}px"
-          style:height="{measureGridHeights[index]}px"
-          style:margin-top="{MARGIN_TOP}px"
-          class="inline-grid"
-        >
-          <!-- FIXME: I can't select the big number by the measure id. -->
-          <MeasureBigNumber
-            {measure}
-            value={// catch nulls and pass only undefined to the component
-            $totalsQuery?.data?.data?.[0][measure?.name ?? ""] ?? undefined}
-            withTimeseries={false}
-            status={$totalsQuery?.isFetching
-              ? EntityStatus.Running
-              : EntityStatus.Idle}
-          />
-        </div>
-      {/each}
-    {/if}
+
+    {#each $visibleMeasures as measure, index (measure.name)}
+      <div
+        bind:this={measureNodes[index]}
+        style:width="{MEASURE_WIDTH}px"
+        style:height="{measureGridHeights[index]}px"
+        style:margin-top="{MARGIN_TOP}px"
+        class="inline-grid"
+      >
+        <!-- FIXME: I can't select the big number by the measure id. -->
+        <MeasureBigNumber
+          {measure}
+          value={// catch nulls and pass only undefined to the component
+          $totalsQuery?.data?.data?.[0][measure?.name ?? ""] ?? undefined}
+          withTimeseries={false}
+          status={$totalsQuery?.isFetching
+            ? EntityStatus.Running
+            : EntityStatus.Idle}
+        />
+      </div>
+    {/each}
   </div>
 </div>

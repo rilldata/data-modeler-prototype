@@ -33,9 +33,15 @@
 </script>
 
 <form class="relative w-full">
-  <div class="flex absolute inset-y-0 items-center pl-2 ui-copy-icon">
+  <button
+    type="button"
+    class="flex absolute inset-y-0 items-center pl-2 ui-copy-icon"
+    on:click={() => {
+      ref?.focus();
+    }}
+  >
     <Search />
-  </div>
+  </button>
   <input
     bind:this={ref}
     type="text"

@@ -4,7 +4,6 @@ import { DashboardState_ActivePage } from "@rilldata/web-common/proto/gen/rill/u
 import {
   MetricsViewSpecMeasureType,
   MetricsViewSpecMeasureV2,
-  V1MetricsViewSpec,
   V1TimeGrain,
 } from "@rilldata/web-common/runtime-client";
 
@@ -18,15 +17,12 @@ export class AdvancedMeasureCorrector {
 
   private constructor(
     private readonly dashboard: MetricsExplorerEntity,
-    private readonly metricsViewSpec: V1MetricsViewSpec,
+    private readonly measures: MetricsViewSpecMeasureV2[],
   ) {
-    this.measuresMap = getMapFromArray(
-      metricsViewSpec.measures ?? [],
-      (m) => m.name ?? "",
-    );
+    this.measuresMap = getMapFromArray(this.measures, (m) => m.name);
     this.measuresGrains = getMapFromArray(
-      metricsViewSpec.measures ?? [],
-      (m) => m.name ?? "",
+      this.measures,
+      (m) => m.name,
       (m) => {
         const d = m.requiredDimensions?.find(
           (d) =>
@@ -39,9 +35,9 @@ export class AdvancedMeasureCorrector {
 
   public static correct(
     dashboard: MetricsExplorerEntity,
-    metricsViewSpec: V1MetricsViewSpec,
+    measures: MetricsViewSpecMeasureV2[],
   ) {
-    new AdvancedMeasureCorrector(dashboard, metricsViewSpec).correct();
+    new AdvancedMeasureCorrector(dashboard, measures).correct();
   }
 
   private correct() {
@@ -76,9 +72,9 @@ export class AdvancedMeasureCorrector {
     }
 
     this.dashboard.leaderboardMeasureName = "";
-    for (const measure of this.metricsViewSpec.measures ?? []) {
-      if (!this.measureIsValidForComponent(measure.name ?? "", true, false)) {
-        this.dashboard.leaderboardMeasureName = measure.name ?? "";
+    for (const measure of this.measures) {
+      if (!this.measureIsValidForComponent(measure.name, true, false)) {
+        this.dashboard.leaderboardMeasureName = measure.name;
         break;
       }
     }

@@ -13,18 +13,15 @@
 
   const dispatch = createEventDispatcher();
 
-  function selectBookmark(e) {
-    if (e.skipSelection) return;
+  function selectBookmark() {
     dispatch("select", bookmark);
   }
 
-  function editBookmark(e) {
-    e.skipSelection = true;
+  function editBookmark() {
     dispatch("edit", bookmark);
   }
 
-  function deleteBookmark(e) {
-    e.skipSelection = true;
+  function deleteBookmark() {
     dispatch("delete", bookmark);
   }
 
@@ -33,7 +30,7 @@
 
 <DropdownMenuItem class="py-2">
   <div
-    class="flex justify-between gap-x-2 w-full"
+    class="flex justify-between gap-x-2 w-full h-7 items-center"
     on:click={selectBookmark}
     on:keydown={(e) => e.key === "Enter" && e.currentTarget.click()}
     on:mouseenter={() => (hovered = true)}
@@ -41,7 +38,7 @@
     role="menuitem"
     tabindex="-1"
   >
-    <div class="flex flex-row gap-x-2">
+    <div class="flex flex-row gap-x-2 items-center">
       {#if bookmark.resource.default}
         <HomeBookmark size="16px" />
       {:else if bookmark.filtersOnly}
@@ -49,7 +46,7 @@
       {:else}
         <BookmarkIcon size="16px" />
       {/if}
-      <div class="flex flex-col gap-y-0.5">
+      <div class="flex flex-col">
         <div
           class="text-xs font-medium text-gray-700 h-4 text-ellipsis overflow-hidden"
         >

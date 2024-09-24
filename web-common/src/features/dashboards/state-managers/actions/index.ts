@@ -13,6 +13,7 @@ import type {
   DashboardUpdaters,
 } from "./types";
 import { dimensionActions } from "./dimensions";
+import { measureActions } from "./measures";
 import { comparisonActions } from "./comparison";
 import { dimensionFilterActions } from "./dimension-filters";
 
@@ -54,6 +55,11 @@ export const createStateManagerActions = (
      * Actions related to dimensions.
      */
     dimensions: createDashboardUpdaters(actionArgs, dimensionActions),
+
+    /**
+     * Actions related to dimensions.
+     */
+    measures: createDashboardUpdaters(actionArgs, measureActions),
 
     /**
      * Common filter actions
