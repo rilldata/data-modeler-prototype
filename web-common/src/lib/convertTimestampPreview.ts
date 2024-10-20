@@ -2,6 +2,7 @@ import {
   addZoneOffset,
   removeLocalTimezoneOffset as remove,
 } from "@rilldata/web-common/lib/time/timezone";
+
 export function convertTimestampPreviewFcn(
   ts,
   removeLocalTimezoneOffset = false,
@@ -22,7 +23,7 @@ export function convertTimestampPreview(d, removeLocalTimezoneOffset = false) {
 export function adjustOffsetForZone(
   ts: Date | string | undefined,
   zone: string,
-) {
-  if (!ts) return ts;
+): Date | undefined {
+  if (!ts) return undefined;
   return addZoneOffset(remove(new Date(ts)), zone);
 }

@@ -14,7 +14,7 @@
     "build": "npm run build -w web-local",
     "dev": "sh -c 'npm run dev-runtime & npm run dev-web & wait'",
     "dev-web": "npm run dev -w web-local",
-    "dev-runtime": "go run cli/main.go start dev-project --no-ui --allowed-origins http://localhost:3001",
+    "dev-runtime": "go run cli/main.go start dev-project --no-ui --allowed-origins http://localhost:3001 --allowed-origins http://localhost:4001",
     "clean": "rm -rf dev-project",
     "test": "npm run test -w web-common & npm run test -w web-auth & PLAYWRIGHT_TEST=true make cli && npm run test -w web-local"
   },

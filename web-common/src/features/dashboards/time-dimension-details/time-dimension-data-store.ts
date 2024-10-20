@@ -1,23 +1,14 @@
 import { createSparkline } from "@rilldata/web-common/components/data-graphic/marks/sparkline";
-import { selectedDimensionValues } from "@rilldata/web-common/features/dashboards/state-managers/selectors/dimension-filters";
 import type { StateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
-import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
 import {
   getDimensionValueTimeSeries,
   type DimensionDataItem,
 } from "@rilldata/web-common/features/dashboards/time-series/multiple-dimension-queries";
-import {
-  type TimeSeriesDatum,
-  useTimeSeriesDataStore,
-} from "@rilldata/web-common/features/dashboards/time-series/timeseries-data-store";
+import { type TimeSeriesDatum } from "@rilldata/web-common/features/dashboards/time-series/timeseries-data-store";
 import { formatMeasurePercentageDifference } from "@rilldata/web-common/lib/number-formatting/percentage-formatter";
 import { formatProperFractionAsPercent } from "@rilldata/web-common/lib/number-formatting/proper-fraction-formatter";
 import { numberPartsToString } from "@rilldata/web-common/lib/number-formatting/utils/number-parts-utils";
-import {
-  DEFAULT_TIME_RANGES,
-  TIME_COMPARISON,
-} from "@rilldata/web-common/lib/time/config";
-import { TimeRangePreset } from "@rilldata/web-common/lib/time/types";
+
 import type { MetricsViewSpecMeasureV2 } from "@rilldata/web-common/runtime-client";
 import { derived, writable, type Readable } from "svelte/store";
 import { memoizeMetricsStore } from "../state-managers/memoize-metrics-store";
@@ -86,7 +77,7 @@ function getHeaderDataForRow(
  * Add rest of dimension values from dimension table data
  * Transpose the data to columnar format
  */
-function prepareDimensionData(
+export function prepareDimensionData(
   totalsData: TimeSeriesDatum[] | undefined,
   data: DimensionDataItem[],
   total: number,
@@ -206,10 +197,10 @@ function prepareDimensionData(
  * Add Current, Previous, Percentage Change, Absolute Change rows for time comparison
  * Transpose the data to columnar format
  */
-function prepareTimeData(
+export function prepareTimeData(
   data: TimeSeriesDatum[] | undefined,
   total: number,
-  comparisonTotal: number,
+  comparisonTotal: number | undefined,
   currentLabel: string,
   comparisonLabel: string,
   measure: MetricsViewSpecMeasureV2 | undefined,
@@ -360,114 +351,6 @@ function createDimensionTableData(
 export const useDimensionTableData = memoizeMetricsStore<
   Readable<DimensionDataItem[]>
 >((ctx: StateManagers) => createDimensionTableData(ctx));
-
-export function createTimeDimensionDataStore(
-  ctx: StateManagers,
-): TimeSeriesDataStore {
-  return derived(
-    [
-      ctx.dashboardStore,
-      ctx.validSpecStore,
-      useTimeControlStore(ctx),
-      useTimeSeriesDataStore(ctx),
-      useDimensionTableData(ctx),
-    ],
-    ([
-      dashboardStore,
-      validSpec,
-      timeControls,
-      timeSeries,
-      tableDimensionData,
-    ]) => {
-      if (timeSeries?.isError) return { isFetching: false, isError: true };
-      if (
-        !validSpec.data ||
-        !timeControls.ready ||
-        timeControls?.isFetching ||
-        timeSeries?.isFetching
-      )
-        return { isFetching: true };
-
-      const measureName = dashboardStore?.tdd?.expandedMeasureName;
-
-      if (!measureName) {
-        return { isFetching: false };
-      }
-
-      const pinIndex = dashboardStore?.tdd.pinIndex;
-      const dimensionName = dashboardStore?.selectedComparisonDimension;
-
-      // Fix types in V1MetricsViewAggregationResponseDataItem
-      const total = timeSeries?.total && timeSeries?.total[measureName];
-      const unfilteredTotal =
-        timeSeries?.unfilteredTotal && timeSeries?.unfilteredTotal[measureName];
-      const comparisonTotal =
-        timeSeries?.comparisonTotal && timeSeries?.comparisonTotal[measureName];
-      const isAllTime =
-        timeControls?.selectedTimeRange?.name === TimeRangePreset.ALL_TIME;
-
-      const measure = validSpec.data?.metricsView?.measures?.find(
-        (m) => m.name === measureName,
-      );
-
-      let comparing;
-      let data: TableData | undefined = undefined;
-
-      if (dimensionName) {
-        comparing = "dimension";
-
-        const selectedValues = selectedDimensionValues({
-          dashboard: dashboardStore,
-        })(dimensionName);
-
-        data = prepareDimensionData(
-          timeSeries?.timeSeriesData,
-          tableDimensionData,
-          total,
-          unfilteredTotal,
-          measure,
-          selectedValues,
-          isAllTime,
-          pinIndex,
-        );
-      } else {
-        comparing = timeControls.showTimeComparison ? "time" : "none";
-        const currentRange = timeControls?.selectedTimeRange?.name;
-
-        let currentLabel = "Custom Range";
-        if (currentRange && currentRange in DEFAULT_TIME_RANGES)
-          currentLabel = DEFAULT_TIME_RANGES[currentRange].label;
-
-        const comparisonRange = timeControls?.selectedComparisonTimeRange?.name;
-        let comparisonLabel = "Custom Range";
-
-        if (comparisonRange && comparisonRange in TIME_COMPARISON)
-          comparisonLabel = TIME_COMPARISON[comparisonRange].label;
-
-        data = prepareTimeData(
-          timeSeries?.timeSeriesData,
-          total,
-          comparisonTotal,
-          currentLabel,
-          comparisonLabel,
-          measure,
-          comparing === "time",
-          isAllTime,
-        );
-      }
-
-      return { isFetching: false, comparing, data };
-    },
-  );
-}
-
-/**
- * Memoized version of the store. Currently, memoized by metrics view name.
- */
-export const useTimeDimensionDataStore =
-  memoizeMetricsStore<TimeSeriesDataStore>((ctx: StateManagers) =>
-    createTimeDimensionDataStore(ctx),
-  );
 
 /**
  * Stores for handling interactions between chart and table

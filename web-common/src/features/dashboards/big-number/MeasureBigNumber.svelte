@@ -29,6 +29,7 @@
   export let errorMessage: string | undefined = undefined;
   export let withTimeseries = true;
   export let isMeasureExpanded = false;
+  export let onExpandMeasure: () => void = () => {};
 
   $: comparisonPercChange =
     comparisonValue && value !== undefined && value !== null
@@ -88,7 +89,7 @@
   const handleExpandMeasure = () => {
     if (!isMeasureExpanded) {
       isMeasureExpanded = true;
-      dispatch("expand-measure");
+      onExpandMeasure();
     }
   };
 </script>

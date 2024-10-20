@@ -12,6 +12,7 @@
   import type { V1TimeGrain } from "@rilldata/web-common/runtime-client";
   import { DateTime, Interval } from "luxon";
   import RangeDisplay from "../time-controls/super-pill/components/RangeDisplay.svelte";
+  import { scrubRangeStore } from "@rilldata/web-common/components/time-series-chart/Chart.svelte";
 
   export let exploreName: string;
   export let showComparison = false;
@@ -19,6 +20,8 @@
 
   let priorRange: DashboardTimeControls | null = null;
   let button: HTMLButtonElement;
+
+  const { validRange } = scrubRangeStore;
 
   const StateManagers = getStateManagers();
   const {
@@ -31,17 +34,10 @@
 
   $: activeTimeZone = $dashboardStore?.selectedTimezone;
 
-  $: ({ selectedScrubRange } = $dashboardStore);
-
-  $: selectedSubRange =
-    selectedScrubRange?.start && selectedScrubRange?.end
-      ? getOrderedStartEnd(selectedScrubRange.start, selectedScrubRange.end)
-      : null;
-
-  $: subInterval = selectedSubRange
+  $: subInterval = $validRange
     ? Interval.fromDateTimes(
-        DateTime.fromJSDate(selectedSubRange.start).setZone(activeTimeZone),
-        DateTime.fromJSDate(selectedSubRange.end).setZone(activeTimeZone),
+        DateTime.fromJSDate($validRange.start).setZone(activeTimeZone),
+        DateTime.fromJSDate($validRange.end).setZone(activeTimeZone),
       )
     : null;
 
@@ -107,22 +103,24 @@
 
   function zoomScrub() {
     if (
-      selectedScrubRange?.start instanceof Date &&
-      selectedScrubRange?.end instanceof Date
+      $validRange?.start instanceof Date &&
+      $validRange?.end instanceof Date
     ) {
       if ($dashboardStore.selectedTimeRange) {
         priorRange = $dashboardStore.selectedTimeRange;
       }
 
       const { start, end } = getOrderedStartEnd(
-        selectedScrubRange.start,
-        selectedScrubRange.end,
+        $validRange.start,
+        $validRange.end,
       );
       metricsExplorerStore.setSelectedTimeRange(exploreName, {
         name: TimeRangePreset.CUSTOM,
         start,
         end,
       });
+
+      scrubRangeStore.reset();
 
       window.addEventListener("click", cancelUndo, true);
     }

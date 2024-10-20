@@ -27,7 +27,7 @@
   import { lastKnownPosition } from "./time-dimension-data-store";
   import type { TDDComparison, TableData, TablePosition } from "./types";
 
-  export let dimensionLabel: string;
+  export let dimensionLabel: string | undefined;
   export let measureLabel: string;
   export let excludeMode: boolean;
   export let sortDirection: boolean;

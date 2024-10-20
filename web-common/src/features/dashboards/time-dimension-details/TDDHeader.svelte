@@ -25,7 +25,6 @@
   import { fly } from "svelte/transition";
   import { featureFlags } from "../../feature-flags";
   import { PivotChipType } from "../pivot/types";
-  import type { TDDComparison } from "./types";
   import TimeGrainSelector from "../time-controls/TimeGrainSelector.svelte";
   import exportTDD from "./export-tdd";
   import ExportMenu from "../../exports/ExportMenu.svelte";
@@ -36,9 +35,9 @@
   import { getTDDExportArgs } from "./getTDDExportArgs";
 
   export let exploreName: string;
-  export let dimensionName: string;
+  export let dimensionName: string | undefined;
+  export let excludeMode: boolean;
   export let isFetching = false;
-  export let comparing: TDDComparison | undefined;
   export let areAllTableRowsSelected = false;
   export let isRowsEmpty = false;
   export let expandedMeasureName: string;
@@ -79,9 +78,6 @@
     $allMeasures.find((m) => m.name === expandedMeasureName)?.label ??
     expandedMeasureName;
 
-  $: excludeMode =
-    $dashboardStore?.dimensionFilterExcludeMode.get(dimensionName) ?? false;
-
   $: filterKey = excludeMode ? "exclude" : "include";
   $: otherFilterKey = excludeMode ? "include" : "exclude";
 
@@ -106,7 +102,7 @@
   }
 
   function toggleFilterMode() {
-    toggleDimensionFilterMode(dimensionName);
+    if (dimensionName) toggleDimensionFilterMode(dimensionName);
   }
 
   function switchMeasure(measureName: string) {
@@ -206,7 +202,7 @@
     {/if}
   </div>
 
-  {#if comparing === "dimension"}
+  {#if dimensionName}
     <div class="flex items-center mr-4 gap-x-3" style:cursor="pointer">
       {#if !isRowsEmpty}
         <SelectAllButton {areAllTableRowsSelected} on:toggle-all-search-items />

@@ -1,7 +1,7 @@
 import type { ScaleLinear, ScaleTime } from "d3-scale";
 import type { Readable } from "svelte/store";
 
-export interface ExtremumResolutionTweenProps {
+export interface ExtremumResolutionTweenProps<T> {
   delay?: number;
   duration?: number | ((from: T, to: T) => number);
   easing?: (t: number) => number;
@@ -11,7 +11,7 @@ export interface ExtremumResolutionTweenProps {
 export interface ExtremumResolutionStore extends Readable<number | Date> {
   setWithKey: (arg0: string, arg1: number | Date, arg2?: boolean) => void;
   removeKey: (arg0: string) => void;
-  setTweenProps: (arg0: ExtremumResolutionTweenProps) => void;
+  setTweenProps: (arg0: ExtremumResolutionTweenProps<number>) => void;
 }
 
 export type GraphicScale =

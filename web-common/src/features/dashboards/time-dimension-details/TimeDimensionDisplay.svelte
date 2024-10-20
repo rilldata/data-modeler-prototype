@@ -9,7 +9,6 @@
   import { metricsExplorerStore } from "@rilldata/web-common/features/dashboards/stores/dashboard-stores";
   import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
   import { debounce } from "@rilldata/web-common/lib/create-debouncer";
-  import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
   import { timeFormat } from "d3-time-format";
   import { onDestroy } from "svelte";
   import TDDHeader from "./TDDHeader.svelte";
@@ -17,20 +16,43 @@
   import {
     chartInteractionColumn,
     tableInteractionStore,
-    useTimeDimensionDataStore,
+    prepareDimensionData,
+    prepareTimeData,
   } from "./time-dimension-data-store";
-  import type { TDDComparison, TableData } from "./types";
+  import type { TableData } from "./types";
+  import {
+    DEFAULT_TIME_RANGES,
+    TIME_COMPARISON,
+    TIME_GRAIN,
+  } from "@rilldata/web-common/lib/time/config";
+  import type {
+    MetricsViewSpecDimensionV2,
+    MetricsViewSpecMeasureV2,
+  } from "@rilldata/web-common/runtime-client";
+  import { TimeRangePreset } from "@rilldata/web-common/lib/time/types";
+  import { selectedDimensionValues } from "../state-managers/selectors/dimension-filters";
+  import { useDimensionTableData } from "./time-dimension-data-store";
+  import type { TimeSeriesDatum } from "../time-series/timeseries-data-store";
+  import type { HTTPError } from "@rilldata/web-common/runtime-client/fetchWrapper";
 
   export let exploreName: string;
-  export let expandedMeasureName: string;
+  export let formattedTimeSeriesData: TimeSeriesDatum[];
+  export let primaryTotal: number;
+  export let unfilteredTotal: number;
+  export let comparisonTotal: number | undefined;
+  export let measure: MetricsViewSpecMeasureV2;
+  export let comparisonDimension: MetricsViewSpecDimensionV2 | undefined;
+  export let showTimeComparison: boolean;
+  export let error: HTTPError | null;
 
   const stateManagers = getStateManagers();
+  const timeControlsStore = useTimeControlStore(stateManagers);
+  const tableDimensionData = useDimensionTableData(stateManagers);
+
   const {
     dashboardStore,
     selectors: {
-      dimensions: { allDimensions },
-      dimensionFilters: { unselectedDimensionValues },
-      measures: { allMeasures },
+      dimensionFilters: { unselectedDimensionValues, isFilterExcludeMode },
     },
     actions: {
       dimensionsFilter: {
@@ -42,57 +64,75 @@
     },
   } = getStateManagers();
 
-  const timeDimensionDataStore = useTimeDimensionDataStore(stateManagers);
   const timeControlStore = useTimeControlStore(stateManagers);
 
-  $: dimensionName = $dashboardStore?.selectedComparisonDimension ?? "";
-  $: comparing = $timeDimensionDataStore?.comparing;
+  let timeDimensionData: TableData | undefined;
+  let highlitedRowIndex: number | undefined;
+
+  $: ({ selectedTimeRange, selectedComparisonTimeRange } = $timeControlsStore);
+  $: dimensionName = comparisonDimension?.name;
+  $: dimensionLabel = comparisonDimension
+    ? comparisonDimension.label
+    : showTimeComparison
+      ? "Time"
+      : "No Comparison";
 
   $: pinIndex = $dashboardStore?.tdd.pinIndex;
 
   $: timeGrain = $timeControlStore.selectedTimeRange?.interval;
 
-  $: measure = $allMeasures.find((m) => m.name === expandedMeasureName);
-
   $: measureLabel = measure?.label ?? "";
 
-  let dimensionLabel = "";
-  $: if (comparing === "dimension") {
-    dimensionLabel =
-      $allDimensions.find((d) => d.name === dimensionName)?.label ?? "";
-  } else if (comparing === "time") {
-    dimensionLabel = "Time";
-  } else if (comparing === "none") {
-    dimensionLabel = "No Comparison";
-  }
+  $: isAllTime = selectedTimeRange?.name === TimeRangePreset.ALL_TIME;
 
-  // Create a copy of the data to avoid flashing of table in transient states
-  let timeDimensionDataCopy: TableData;
-  let comparisonCopy: TDDComparison | undefined;
-  $: if (
-    $timeDimensionDataStore?.data &&
-    $timeDimensionDataStore?.data?.columnHeaderData
-  ) {
-    comparisonCopy = comparing;
-    timeDimensionDataCopy = $timeDimensionDataStore.data;
+  $: if (comparisonDimension && dimensionName && $tableDimensionData?.length) {
+    const selectedValues = selectedDimensionValues({
+      dashboard: $dashboardStore,
+    })(dimensionName);
+    timeDimensionData = prepareDimensionData(
+      formattedTimeSeriesData,
+      $tableDimensionData,
+      primaryTotal,
+      unfilteredTotal,
+      measure,
+      selectedValues,
+      isAllTime,
+      pinIndex,
+    );
+  } else if (!comparisonDimension && !dimensionName) {
+    const currentRange = selectedTimeRange?.name;
+    let currentLabel = "Custom Range";
+    if (currentRange && currentRange in DEFAULT_TIME_RANGES)
+      currentLabel = DEFAULT_TIME_RANGES[currentRange].label;
+    const comparisonRange = selectedComparisonTimeRange?.name;
+    let comparisonLabel = "Custom Range";
+    if (comparisonRange && comparisonRange in TIME_COMPARISON)
+      comparisonLabel = TIME_COMPARISON[comparisonRange].label;
+    timeDimensionData = prepareTimeData(
+      formattedTimeSeriesData,
+      primaryTotal,
+      comparisonTotal,
+      currentLabel,
+      comparisonLabel,
+      measure,
+      showTimeComparison,
+      isAllTime,
+    );
   }
-  $: formattedData = timeDimensionDataCopy;
-  $: excludeMode =
-    $dashboardStore?.dimensionFilterExcludeMode.get(dimensionName) ?? false;
 
   $: rowHeaderLabels =
-    formattedData?.rowHeaderData?.slice(1)?.map((row) => row[0]?.value) ?? [];
-
+    timeDimensionData?.rowHeaderData?.slice(1)?.map((row) => row[0]?.value) ??
+    [];
   $: areAllTableRowsSelected = rowHeaderLabels?.every(
-    (val) => val !== undefined && formattedData?.selectedValues?.includes(val),
+    (val) =>
+      val !== undefined && timeDimensionData?.selectedValues?.includes(val),
   );
 
-  $: columnHeaders = formattedData?.columnHeaderData?.flat();
+  $: columnHeaders = timeDimensionData?.columnHeaderData?.flat();
 
-  let highlitedRowIndex: number | undefined;
-  $: if (formattedData?.rowCount) {
+  $: if (timeDimensionData?.rowCount) {
     highlitedRowIndex = undefined;
-    formattedData.rowHeaderData.forEach((row, index) => {
+    timeDimensionData.rowHeaderData.forEach((row, index) => {
       if (row[0]?.value === $chartInteractionColumn?.yHover) {
         highlitedRowIndex = index;
       }
@@ -107,7 +147,7 @@
   function highlightCell(e) {
     const { x, y } = e.detail;
 
-    const dimensionValue = formattedData?.rowHeaderData[y]?.[0]?.value;
+    const dimensionValue = timeDimensionData?.rowHeaderData[y]?.[0]?.value;
     let time: Date | undefined = undefined;
 
     const colHeader = columnHeaders?.[x]?.value;
@@ -123,8 +163,8 @@
 
   const debounceHighlightCell = debounce(highlightCell, 50);
 
-  function toggleFilter(e) {
-    toggleDimensionValueSelection(dimensionName, e.detail);
+  function toggleFilter(e: CustomEvent<string>) {
+    if (dimensionName) toggleDimensionValueSelection(dimensionName, e.detail);
   }
 
   function toggleAllSearchItems() {
@@ -132,7 +172,7 @@
       (label) => label === undefined,
     );
 
-    if (headerHasUndefined) return;
+    if (headerHasUndefined || !dimensionName) return;
 
     if (areAllTableRowsSelected) {
       deselectItemsInFilter(
@@ -159,22 +199,29 @@
   function togglePin() {
     let newPinIndex = -1;
 
+    const length = timeDimensionData?.selectedValues?.length ?? 0;
+
     // Pin if some selected items are not pinned yet
-    if (pinIndex > -1 && pinIndex < formattedData?.selectedValues?.length - 1) {
-      newPinIndex = formattedData?.selectedValues?.length - 1;
+    if (pinIndex > -1 && pinIndex < length - 1) {
+      newPinIndex = length - 1;
     }
     // Pin if no items are pinned yet
     else if (pinIndex === -1) {
-      newPinIndex = formattedData?.selectedValues?.length - 1;
+      newPinIndex = length - 1;
     }
     metricsExplorerStore.setPinIndex(exploreName, newPinIndex);
   }
 
-  function handleKeyDown(e) {
-    if (comparisonCopy !== "dimension") return;
+  function handleKeyDown(
+    e: KeyboardEvent & {
+      currentTarget: EventTarget & Window;
+    },
+  ) {
+    if (!comparisonDimension) return;
     // Select all items on Meta+A
     if ((e.ctrlKey || e.metaKey) && e.key === "a") {
-      if (e.target.tagName === "INPUT") return;
+      if (e.target instanceof HTMLElement && e.target.tagName === "INPUT")
+        return;
       e.preventDefault();
       if (areAllTableRowsSelected) return;
       toggleAllSearchItems();
@@ -187,15 +234,16 @@
       time: undefined,
     });
   });
+  $: excludeMode = $isFilterExcludeMode(dimensionName ?? "");
 </script>
 
 <div class="h-full w-full flex flex-col">
   <TDDHeader
+    {excludeMode}
     {areAllTableRowsSelected}
-    {comparing}
-    {expandedMeasureName}
+    expandedMeasureName={measure.name ?? ""}
     {dimensionName}
-    isFetching={!$timeDimensionDataStore?.data?.columnHeaderData}
+    isFetching={!timeDimensionData?.columnHeaderData}
     isRowsEmpty={!rowHeaderLabels.length}
     {exploreName}
     on:search={(e) => {
@@ -204,7 +252,7 @@
     on:toggle-all-search-items={() => toggleAllSearchItems()}
   />
 
-  {#if $timeDimensionDataStore?.isError}
+  {#if error}
     <div
       style:height="calc(100% - 200px)"
       class="w-full flex items-center justify-center text-sm"
@@ -223,7 +271,7 @@
         </div>
       </div>
     </div>
-  {:else if formattedData && comparisonCopy && measure}
+  {:else if timeDimensionData && measure}
     <TDDTable
       {measure}
       {excludeMode}
@@ -231,9 +279,13 @@
       {measureLabel}
       sortDirection={$dashboardStore.sortDirection === SortDirection.ASCENDING}
       sortType={$dashboardStore.dashboardSortType}
-      comparing={comparisonCopy}
+      comparing={comparisonDimension
+        ? "dimension"
+        : showTimeComparison
+          ? "time"
+          : "none"}
       {timeFormatter}
-      tableData={formattedData}
+      tableData={timeDimensionData}
       highlightedRow={highlitedRowIndex}
       highlightedCol={$chartInteractionColumn?.xHover}
       {pinIndex}
@@ -252,7 +304,7 @@
     />
   {/if}
 
-  {#if comparing === "none"}
+  {#if !comparisonDimension && !showTimeComparison}
     <!-- Get height by subtracting table and header heights -->
     <div class="w-full" style:height="calc(100% - 200px)">
       <div class="flex flex-col items-center justify-center h-full text-sm">
@@ -265,7 +317,7 @@
         </div>
       </div>
     </div>
-  {:else if comparing === "dimension" && formattedData?.rowCount === 1}
+  {:else if comparisonDimension && timeDimensionData?.rowCount === 1}
     <div class="w-full h-full">
       <div class="flex flex-col items-center h-full text-sm">
         <div class="text-gray-600">No search results to show</div>

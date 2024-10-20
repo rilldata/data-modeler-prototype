@@ -335,31 +335,32 @@ export function getAdjustedFetchTime(
 ) {
   if (!startTime || !endTime || !interval)
     return { start: startTime?.toISOString(), end: endTime?.toISOString() };
-  const offsetedStartTime = getOffset(
-    startTime,
-    TIME_GRAIN[interval].duration,
-    TimeOffsetType.SUBTRACT,
-  );
+  // const offsetedStartTime = getOffset(
+  //   startTime,
+  //   TIME_GRAIN[interval].duration,
+  //   TimeOffsetType.SUBTRACT,
+  // );
 
   // the data point previous to the first date inside the chart.
   const fetchStartTime = getStartOfPeriod(
-    offsetedStartTime,
+    startTime,
     TIME_GRAIN[interval].duration,
     zone,
   );
 
-  const offsetedEndTime = getOffset(
+  const endOfPeriod = getEndOfPeriod(
     endTime,
+    TIME_GRAIN[interval].duration,
+    zone,
+  );
+
+  const fetchEndTime = getOffset(
+    endOfPeriod,
     TIME_GRAIN[interval].duration,
     TimeOffsetType.ADD,
   );
 
   // the data point after the last complete date.
-  const fetchEndTime = getStartOfPeriod(
-    offsetedEndTime,
-    TIME_GRAIN[interval].duration,
-    zone,
-  );
 
   return {
     start: fetchStartTime.toISOString(),

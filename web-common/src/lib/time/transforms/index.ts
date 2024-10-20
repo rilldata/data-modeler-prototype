@@ -42,7 +42,7 @@ export function getEndOfPeriod(
   zone = "UTC",
 ): Date {
   const date = DateTime.fromJSDate(referenceTime, { zone });
-  return date.endOf(TimeUnit[period]).toJSDate();
+  return date.minus({ millisecond: 1 }).endOf(TimeUnit[period]).toJSDate();
 }
 
 /** Offsets a date by a certain ISO duration amount. */
