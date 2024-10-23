@@ -25,7 +25,7 @@
   import File from "../../components/icons/File.svelte";
   import NavigationMenuSeparator from "../../layout/navigation/NavigationMenuSeparator.svelte";
   import { fileArtifacts } from "../entity-management/file-artifacts";
-  import { getTopLevelFolder } from "../entity-management/file-path-utils";
+  import { getTopLevelFolder } from "@rilldata/utils";
   import {
     resourceColorMapping,
     resourceIconMapping,

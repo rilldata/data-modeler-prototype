@@ -6,7 +6,7 @@
   import UndoIcon from "@rilldata/web-common/components/icons/UndoIcon.svelte";
   import type { Extension } from "@codemirror/state";
   import { EditorView } from "@codemirror/view";
-  import { debounce } from "../../lib/create-debouncer";
+  import { debounce } from "@rilldata/utils";
   import { FILE_SAVE_DEBOUNCE_TIME } from "./config";
   import { FileArtifact } from "../entity-management/file-artifact";
   import Codespace from "./Codespace.svelte";

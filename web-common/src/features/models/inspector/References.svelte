@@ -3,7 +3,7 @@
   import TooltipShortcutContainer from "@rilldata/web-common/components/tooltip/TooltipShortcutContainer.svelte";
   import CollapsibleSectionTitle from "@rilldata/web-common/layout/CollapsibleSectionTitle.svelte";
   import { LIST_SLIDE_DURATION } from "@rilldata/web-common/layout/config";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { formatCompactInteger } from "@rilldata/web-common/lib/formatters";
   import {
     type V1Resource,
@@ -90,7 +90,7 @@
 
                 <div class="text-gray-500">
                   {#if reference?.totalRows}
-                    {`${formatCompactInteger(reference.totalRows)} rows` || ""}
+                    {`${formatCompactInteger(reference.totalRows)} rows`}
                   {/if}
                 </div>
               </a>

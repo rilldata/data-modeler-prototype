@@ -9,8 +9,8 @@
   import { parseUpdateOrgError } from "@rilldata/web-admin/features/organizations/settings/errors";
   import SettingsContainer from "@rilldata/web-admin/features/organizations/settings/SettingsContainer.svelte";
   import { Button } from "@rilldata/web-common/components/button";
-  import { sanitizeOrgName } from "@rilldata/web-common/features/organization/sanitizeOrgName";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { sanitizeName } from "@rilldata/utils";
+  import { eventBus } from "@rilldata/events";
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
   import type { AxiosError } from "axios";
   import { defaults, superForm } from "sveltekit-superforms";
@@ -45,7 +45,7 @@
         if (!form.valid) return;
         const values = form.data;
 
-        const newOrg = sanitizeOrgName(values.name);
+        const newOrg = sanitizeName(values.name);
 
         try {
           await $updateOrgMutation.mutateAsync({
@@ -111,7 +111,7 @@
       errors={$errors?.name}
       id="name"
       label="Name"
-      description={`Your org URL will be https://ui.rilldata.com/${sanitizeOrgName($form.name)}, to comply with our naming rules.`}
+      description={`Your org URL will be https://ui.rilldata.com/${sanitizeName($form.name)}, to comply with our naming rules.`}
       alwaysShowError
     />
     <Input

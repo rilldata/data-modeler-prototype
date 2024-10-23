@@ -16,7 +16,7 @@
   import { useExploreStore } from "@rilldata/web-common/features/dashboards/stores/dashboard-stores";
   import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
   import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
   import { createForm } from "svelte-forms-lib";
   import * as yup from "yup";

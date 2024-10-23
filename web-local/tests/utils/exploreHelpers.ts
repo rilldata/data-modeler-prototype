@@ -1,9 +1,6 @@
 import type { Page } from "playwright";
-import {
-  clickMenuButton,
-  openFileNavEntryContextMenu,
-} from "web-local/tests/utils/commonHelpers";
-import { waitForFileNavEntry } from "web-local/tests/utils/waitHelpers";
+import { clickMenuButton, openFileNavEntryContextMenu } from "./commonHelpers";
+import { waitForFileNavEntry } from "./waitHelpers";
 
 export async function createExploreFromSource(
   page: Page,

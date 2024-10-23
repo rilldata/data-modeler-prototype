@@ -4,7 +4,7 @@
     COLUMN_PROFILE_CONFIG,
     LIST_SLIDE_DURATION,
   } from "@rilldata/web-common/layout/config";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+  import { modified } from "@rilldata/actions";
   import { createEventDispatcher } from "svelte";
   import { slide } from "svelte/transition";
 

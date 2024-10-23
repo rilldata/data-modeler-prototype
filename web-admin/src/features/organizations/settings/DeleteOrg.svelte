@@ -6,7 +6,7 @@
   } from "@rilldata/web-admin/client";
   import SettingsContainer from "@rilldata/web-admin/features/organizations/settings/SettingsContainer.svelte";
   import { Button } from "@rilldata/web-common/components/button";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
   import AlertDialogGuardedConfirmation from "@rilldata/web-common/components/alert-dialog/alert-dialog-guarded-confirmation.svelte";
 

@@ -9,7 +9,7 @@
   import { EntityStatus } from "@rilldata/web-common/features/entity-management/types";
   import AccessRequestContainer from "@rilldata/web-admin/features/access-request/AccessRequestContainer.svelte";
   import Spinner from "@rilldata/web-common/features/entity-management/Spinner.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import type { AxiosError } from "axios";
 
   $: organization = $page.params.organization;

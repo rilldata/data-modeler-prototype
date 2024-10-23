@@ -1,5 +1,5 @@
 const SAMPLE_SIZE = 30;
-import { clamp } from "@rilldata/web-common/lib/clamp";
+import { clamp } from "@rilldata/utils";
 import type { VirtualizedTableColumns } from "@rilldata/web-common/components/virtualized-table/types";
 import { type V1MetricsViewColumn } from "@rilldata/web-common/runtime-client";
 
@@ -43,7 +43,7 @@ export function initColumnWidths<K>(params: {
   return columns.map((column) => {
     if (!resizableColumns) return minWidth;
 
-    const columnName = String(column[columnAccessor]) ?? "";
+    const columnName = String(column[columnAccessor]);
 
     const columnNameLength = columnName.length ?? 8;
 

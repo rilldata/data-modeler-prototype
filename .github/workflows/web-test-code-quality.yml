@@ -47,7 +47,7 @@ jobs:
         if: steps.filter.outputs.common == 'true'
         run: |-
           npx eslint web-common --quiet
-          npx svelte-check --workspace web-common --no-tsconfig --ignore "src/features/dashboards/time-series/(MetricsTimeSeriesCharts.svelte|MeasureChart.svelte),src/features/dashboards/time-controls/TimeControls.svelte,src/components/data-graphic/elements/GraphicContext.svelte,src/components/data-graphic/guides/(Axis.svelte|DynamicallyPlacedLabel.svelte|Grid.svelte),src/components/data-graphic/compositions/timestamp-profile/TimestampDetail.svelte,src/components/data-graphic/marks/(ChunkedLine.svelte|HistogramPrimitive.svelte|Line.svelte|MultiMetricMouseoverLabel.svelte),src/features/column-profile/column-types/details/SummaryNumberPlot.svelte"
+          npm run check -w web-common
 
       - name: lint and type checks for web local
         if: steps.filter.outputs.local == 'true'
@@ -59,13 +59,13 @@ jobs:
         if: steps.filter.outputs.admin == 'true'
         run: |-
           npx eslint web-admin --quiet
-          npx svelte-check --workspace web-admin --no-tsconfig
+          npm run check -w web-admin
 
       - name: lint and type checks for web  auth
         if: steps.filter.outputs.auth == 'true'
         run: |-
           npx eslint web-auth --quiet
-          npx svelte-check --workspace web-auth --no-tsconfig
+          npm run check -w web-auth
 
       - name: type check non-svelte files (with temporary whitelist)
         run: |-

@@ -6,7 +6,7 @@ import {
   filterExpressions,
   sanitiseExpression,
 } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
-import { createBatches } from "@rilldata/web-common/lib/arrayUtils";
+import { createBatches } from "@rilldata/utils";
 import { type Readable, derived } from "svelte/store";
 
 import { COMPARIONS_COLORS } from "@rilldata/web-common/features/dashboards/config";

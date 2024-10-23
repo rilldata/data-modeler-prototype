@@ -2,7 +2,7 @@
   import { Button } from "@rilldata/web-common/components/button";
   import Link from "@rilldata/web-common/components/icons/Link.svelte";
   import Check from "@rilldata/web-common/components/icons/Check.svelte";
-  import { isClipboardApiSupported } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { isClipboardApiSupported } from "@rilldata/actions";
 
   export let copyLink: string;
 

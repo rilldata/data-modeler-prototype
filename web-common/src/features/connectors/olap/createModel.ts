@@ -1,10 +1,9 @@
 import { fileArtifacts } from "@rilldata/web-common/features/entity-management/file-artifacts";
-import { getName } from "@rilldata/web-common/features/entity-management/name-utils";
 import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
-import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+import { eventBus } from "@rilldata/events";
 import { QueryClient } from "@tanstack/svelte-query";
 import { get } from "svelte/store";
-import { hasSpaces } from "../../../lib/string-utils";
+import { hasSpaces, getName } from "@rilldata/utils";
 import {
   getRuntimeServiceAnalyzeConnectorsQueryKey,
   getRuntimeServiceGetInstanceQueryKey,

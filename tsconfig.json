@@ -1,13 +1,8 @@
 {
-
   "compilerOptions": {
     "moduleResolution": "bundler",
     "module": "esnext",
-    "lib": [
-			"esnext",
-			"DOM",
-			"DOM.Iterable"
-		],
+    "lib": ["esnext", "DOM", "DOM.Iterable"],
     "target": "esnext",
 
     /**
@@ -28,21 +23,15 @@
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "strictNullChecks": true,
-    "baseUrl": ".",
     "allowJs": true,
     "checkJs": true,
     "paths": {
-      "@rilldata/web-admin/*": ["web-admin/src/*"],
-      "@rilldata/web-auth/*": ["web-auth/src/*"],
-      "@rilldata/web-common/*": ["web-common/src/*"],
-      "@rilldata/web-local/lib/*": ["web-local/src/lib/*"]
+      "@rilldata/web-admin/*": ["./web-admin/src/*"],
+      "@rilldata/web-auth/*": ["./web-auth/src/*"],
+      "@rilldata/web-common/*": ["./web-common/src/*"],
+      "@rilldata/web-local/lib/*": ["./web-local/src/lib/*"]
     },
     "outDir": "dist"
   },
-  "include": [
-    "**/*.d.ts",
-    "**/*.ts",
-    "**/*.svelte",
-    "**/rollup.config.js",
-  ]
+  "include": ["**/*.d.ts", "**/*.ts", "**/*.svelte", "**/rollup.config.js"]
 }

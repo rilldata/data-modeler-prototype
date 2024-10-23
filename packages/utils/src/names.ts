@@ -43,3 +43,29 @@ export function isDuplicateName(
 export function sanitizeEntityName(entityName: string): string {
   return entityName.replace(INVALID_CHARS, "_");
 }
+
+export function duplicateNameChecker(
+  name: string,
+  models: Array<string>,
+  sources: Array<string>,
+) {
+  const lowerName = name.toLowerCase();
+  return (
+    models.some((model) => model.toLowerCase() === lowerName) ||
+    sources.some((source) => source.toLowerCase() === lowerName)
+  );
+}
+
+export function incrementedNameGetter(
+  name: string,
+  models: Array<string>,
+  sources: Array<string>,
+) {
+  return getName(name, [...models, ...sources]);
+}
+
+const nameSanitiserRegex = /[^\w-]/g;
+
+export function sanitizeName(name: string) {
+  return name.replace(nameSanitiserRegex, "-");
+}

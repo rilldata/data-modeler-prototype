@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { useDashboardFlowTestSetup } from "web-local/tests/explores/dashboard-flow-test-setup";
+import { useDashboardFlowTestSetup } from "./dashboard-flow-test-setup";
 import { test } from "../utils/test";
 import { clickMenuButton } from "../utils/commonHelpers";
 

@@ -1,4 +1,4 @@
-import { createBatches } from "@rilldata/web-common/lib/arrayUtils";
+import { createBatches } from "../src/index";
 import { describe, expect, it } from "vitest";
 
 describe("createBatches", () => {

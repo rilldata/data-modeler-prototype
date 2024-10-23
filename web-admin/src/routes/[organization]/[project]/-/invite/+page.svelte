@@ -14,7 +14,7 @@
   import { Button } from "@rilldata/web-common/components/button";
   import Label from "@rilldata/web-common/components/forms/Label.svelte";
   import Switch from "@rilldata/web-common/components/forms/Switch.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import type { AxiosError } from "axios";
 
   $: organization = $page.params.organization;

@@ -7,7 +7,7 @@ import type {
   V1TimeRangeSummary,
 } from "@rilldata/web-common/runtime-client";
 import { afterAll, beforeAll, vi } from "vitest";
-import { asyncWait } from "../../lib/waitUtils";
+import { asyncWait } from "@rilldata/utils";
 
 export class DashboardFetchMocks {
   private responses = new Map<string, any>();

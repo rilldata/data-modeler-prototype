@@ -4,9 +4,9 @@
   import ExternalLink from "@rilldata/web-common/components/icons/ExternalLink.svelte";
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
   import { TOOLTIP_STRING_LIMIT } from "@rilldata/web-common/layout/config";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
-  import { clamp } from "@rilldata/web-common/lib/clamp";
+  import { copyToClipboard } from "@rilldata/actions";
+  import { modified } from "@rilldata/actions";
+  import { clamp } from "@rilldata/utils";
   import { formatMeasurePercentageDifference } from "@rilldata/web-common/lib/number-formatting/percentage-formatter";
   import { slide } from "svelte/transition";
   import { getStateManagers } from "../state-managers/state-managers";

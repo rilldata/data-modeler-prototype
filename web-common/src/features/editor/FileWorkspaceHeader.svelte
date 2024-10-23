@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { splitFolderAndFileName } from "@rilldata/web-common/features/entity-management/file-path-utils";
+  import { splitFolderAndFileName } from "@rilldata/utils";
   import { useFileNamesInDirectory } from "@rilldata/web-common/features/entity-management/file-selectors";
   import { handleEntityRename } from "@rilldata/web-common/features/entity-management/ui-actions";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";

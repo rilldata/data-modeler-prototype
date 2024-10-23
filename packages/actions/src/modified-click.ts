@@ -1,4 +1,4 @@
-import { type Events, eventBus } from "../event-bus/event-bus";
+import { type Events, eventBus } from "@rilldata/events";
 
 type Handler = (e: MouseEvent) => void | Promise<void>;
 type Modifier = "command" | "shift" | "shift-command" | "click";

@@ -1,4 +1,4 @@
-import { asyncWaitUntil } from "@rilldata/web-common/lib/waitUtils";
+import { asyncWaitUntil } from "@rilldata/utils";
 import type { Page } from "playwright";
 
 export async function openFileNavEntryContextMenu(

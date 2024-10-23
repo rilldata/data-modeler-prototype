@@ -9,7 +9,7 @@
   } from "@rilldata/web-admin/client";
   import { page } from "$app/stores";
   import { useQueryClient } from "@tanstack/svelte-query";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
 
   export let email: string;
   export let role: string;

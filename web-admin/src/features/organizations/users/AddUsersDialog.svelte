@@ -13,7 +13,7 @@
   import MultiInput from "@rilldata/web-common/components/forms/MultiInput.svelte";
   import UserRoleSelect from "@rilldata/web-admin/features/projects/user-invite/UserRoleSelect.svelte";
   import { RFC5322EmailRegex } from "@rilldata/web-common/components/forms/validation";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { useQueryClient } from "@tanstack/svelte-query";
   import {
     createAdminServiceAddOrganizationMemberUser,

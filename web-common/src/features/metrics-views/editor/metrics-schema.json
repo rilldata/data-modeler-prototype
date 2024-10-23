@@ -25,7 +25,17 @@
     },
     "smallest_time_grain": {
       "type": "string",
-      "enum": ["millisecond", "second", "minute", "hour", "day", "week", "month", "quarter", "year"],
+      "enum": [
+        "millisecond",
+        "second",
+        "minute",
+        "hour",
+        "day",
+        "week",
+        "month",
+        "quarter",
+        "year"
+      ],
       "description": "The smallest time granularity allowed for viewing in the dashboard."
     },
     "available_time_zones": {
@@ -116,7 +126,14 @@
           },
           "format_preset": {
             "type": "string",
-            "enum": ["humanize", "none", "currency_usd", "currency_eur", "percentage", "interval_ms"],
+            "enum": [
+              "humanize",
+              "none",
+              "currency_usd",
+              "currency_eur",
+              "percentage",
+              "interval_ms"
+            ],
             "description": "Controls the formatting of this measure in the dashboard."
           },
           "format_d3": {
@@ -137,9 +154,6 @@
       "description": "Numeric aggregates of columns from your data model."
     }
   },
-  "oneOf": [
-    { "required": ["model"] },
-    { "required": ["table"] }
-  ],
+  "oneOf": [{ "required": ["model"] }, { "required": ["table"] }],
   "required": ["dimensions", "measures"]
 }

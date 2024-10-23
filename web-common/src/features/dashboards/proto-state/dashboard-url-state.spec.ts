@@ -36,7 +36,7 @@ import {
 } from "@rilldata/web-common/features/dashboards/stores/test-data/helpers";
 import { initLocalUserPreferenceStore } from "@rilldata/web-common/features/dashboards/user-preferences";
 import type { DashboardTimeControls } from "@rilldata/web-common/lib/time/types";
-import { waitUntil } from "@rilldata/web-common/lib/waitUtils";
+import { waitUntil } from "@rilldata/utils";
 import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
 import type { Page } from "@sveltejs/kit";
 import { render } from "@testing-library/svelte";

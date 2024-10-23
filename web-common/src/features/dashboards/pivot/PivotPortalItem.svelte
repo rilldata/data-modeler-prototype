@@ -1,7 +1,7 @@
 <script lang="ts">
   import PivotChip from "./PivotChip.svelte";
   import { type PivotChipData, PivotChipType } from "./types";
-  import { portal } from "../../../lib/actions/portal";
+  import { portal } from "@rilldata/actions";
   import { dragDataStore } from "./DragList.svelte";
 
   export let item: PivotChipData;

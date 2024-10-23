@@ -20,9 +20,8 @@
   import DelayedSpinner from "@rilldata/web-common/features/entity-management/DelayedSpinner.svelte";
   import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
   import type { TimeGrain } from "@rilldata/web-common/lib/time/types";
-  import { slideRight } from "@rilldata/web-common/lib/transitions";
   import { createEventDispatcher } from "svelte";
-  import { fly } from "svelte/transition";
+  import { fly, slide } from "svelte/transition";
   import { featureFlags } from "../../feature-flags";
   import { PivotChipType } from "../pivot/types";
   import type { TDDComparison } from "./types";
@@ -224,7 +223,7 @@
         </button>
       {:else}
         <div
-          transition:slideRight={{ leftOffset: 8 }}
+          in:slide={{ axis: "x", duration: 200 }}
           class="flex items-center gap-x-1"
         >
           <Search

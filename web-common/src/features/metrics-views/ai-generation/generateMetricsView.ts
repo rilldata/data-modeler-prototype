@@ -2,11 +2,11 @@ import { goto } from "$app/navigation";
 import { fileArtifacts } from "@rilldata/web-common/features/entity-management/file-artifacts";
 import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
 import { getScreenNameFromPage } from "@rilldata/web-common/features/file-explorer/telemetry";
-import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+import { eventBus } from "@rilldata/events";
 import { get } from "svelte/store";
 import { overlay } from "../../../layout/overlay-store";
 import { queryClient } from "../../../lib/svelte-query/globalQueryClient";
-import { waitUntil } from "../../../lib/waitUtils";
+import { waitUntil, getName } from "@rilldata/utils";
 import { behaviourEvent } from "../../../metrics/initMetrics";
 import type { BehaviourEventMedium } from "../../../metrics/service/BehaviourEventTypes";
 import {
@@ -20,7 +20,6 @@ import {
   runtimeServiceGetFile,
 } from "../../../runtime-client";
 import httpClient from "../../../runtime-client/http-client";
-import { getName } from "../../entity-management/name-utils";
 import { featureFlags } from "../../feature-flags";
 import { createAndPreviewExplore } from "../create-and-preview-explore";
 import OptionToCancelAIGeneration from "./OptionToCancelAIGeneration.svelte";

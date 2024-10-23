@@ -8,7 +8,7 @@
   import { getDimensionFilters } from "@rilldata/web-common/features/dashboards/state-managers/selectors/dimension-filters";
   import { getMeasureFilters } from "@rilldata/web-common/features/dashboards/state-managers/selectors/measure-filters";
   import type { DimensionThresholdFilter } from "@rilldata/web-common/features/dashboards/stores/metrics-explorer-entity";
-  import { getMapFromArray } from "@rilldata/web-common/lib/arrayUtils";
+  import { getMapFromArray } from "@rilldata/utils";
   import type {
     V1Expression,
     V1TimeRange,

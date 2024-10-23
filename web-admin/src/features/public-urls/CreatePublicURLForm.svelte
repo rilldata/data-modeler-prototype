@@ -17,7 +17,7 @@
   import FilterChipsReadOnly from "@rilldata/web-common/features/dashboards/filters/FilterChipsReadOnly.svelte";
   import { getStateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
   import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard } from "@rilldata/actions";
   import type { HTTPError } from "@rilldata/web-common/runtime-client/fetchWrapper";
   import { useQueryClient } from "@tanstack/svelte-query";
   import { Pencil } from "lucide-svelte";

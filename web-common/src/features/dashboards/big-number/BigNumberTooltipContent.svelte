@@ -6,7 +6,7 @@
   import TooltipShortcutContainer from "@rilldata/web-common/components/tooltip/TooltipShortcutContainer.svelte";
   import TooltipTitle from "@rilldata/web-common/components/tooltip/TooltipTitle.svelte";
   import type { MetricsViewSpecMeasureV2 } from "@rilldata/web-common/runtime-client";
-  import { isClipboardApiSupported } from "../../../lib/actions/copy-to-clipboard";
+  import { isClipboardApiSupported } from "@rilldata/actions";
 
   export let measure: MetricsViewSpecMeasureV2;
   export let isMeasureExpanded = false;

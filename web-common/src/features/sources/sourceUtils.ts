@@ -1,11 +1,10 @@
-import { extractFileExtension } from "@rilldata/web-common/features/entity-management/file-path-utils";
 import {
   ConnectorDriverPropertyType,
   type V1ConnectorDriver,
   type V1SourceV2,
 } from "@rilldata/web-common/runtime-client";
 import { makeDotEnvConnectorKey } from "../connectors/code-utils";
-import { sanitizeEntityName } from "../entity-management/name-utils";
+import { sanitizeEntityName, extractFileExtension } from "@rilldata/utils";
 
 // Helper text that we put at the top of every Source YAML file
 const TOP_OF_FILE = `# Source YAML

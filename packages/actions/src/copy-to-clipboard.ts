@@ -1,4 +1,4 @@
-import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+import { eventBus } from "@rilldata/events";
 
 /**
  * The Clipboard API is only available in secure contexts.

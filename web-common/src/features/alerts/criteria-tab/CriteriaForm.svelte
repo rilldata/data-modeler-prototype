@@ -6,7 +6,7 @@
   import { parseCriteriaError } from "@rilldata/web-common/features/alerts/criteria-tab/parseCriteriaError";
   import type { AlertFormValues } from "@rilldata/web-common/features/alerts/form-utils";
   import { useMetricsViewValidSpec } from "@rilldata/web-common/features/dashboards/selectors";
-  import { debounce } from "@rilldata/web-common/lib/create-debouncer";
+  import { debounce } from "@rilldata/utils";
   import { createForm } from "svelte-forms-lib";
   import { slide } from "svelte/transition";
   import { runtime } from "../../../runtime-client/runtime-store";

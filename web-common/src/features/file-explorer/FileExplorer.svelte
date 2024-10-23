@@ -8,10 +8,7 @@
     renameFileArtifact,
   } from "@rilldata/web-common/features/entity-management/actions";
   import { removeLeadingSlash } from "@rilldata/web-common/features/entity-management/entity-mappers";
-  import {
-    getTopLevelFolder,
-    splitFolderAndFileName,
-  } from "@rilldata/web-common/features/entity-management/file-path-utils";
+  import { getTopLevelFolder, splitFolderAndFileName } from "@rilldata/utils";
   import ForceDeleteConfirmation from "@rilldata/web-common/features/file-explorer/ForceDeleteConfirmationDialog.svelte";
   import NavEntryPortal from "@rilldata/web-common/features/file-explorer/NavEntryPortal.svelte";
   import { navEntryDragDropStore } from "@rilldata/web-common/features/file-explorer/nav-entry-drag-drop-store";
@@ -19,7 +16,7 @@
   import { isCurrentActivePage } from "@rilldata/web-common/features/file-explorer/utils";
   import { createRuntimeServiceListFiles } from "@rilldata/web-common/runtime-client";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
-  import { eventBus } from "../../lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { fileArtifacts } from "../entity-management/file-artifacts";
   import NavDirectory from "./NavDirectory.svelte";
   import { findDirectory, transformFileList } from "./transform-file-list";

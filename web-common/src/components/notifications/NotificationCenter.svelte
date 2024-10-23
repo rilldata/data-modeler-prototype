@@ -1,7 +1,7 @@
 <script lang="ts">
   import Notification from "./Notification.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
-  import type { NotificationMessage } from "@rilldata/web-common/lib/event-bus/events";
+  import { eventBus } from "@rilldata/events";
+  import type { NotificationMessage } from "@rilldata/events";
   import { onMount } from "svelte";
 
   let notification: NotificationMessage | null = null;

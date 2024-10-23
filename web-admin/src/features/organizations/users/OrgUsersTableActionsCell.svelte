@@ -10,7 +10,7 @@
     getAdminServiceListOrganizationMemberUsersQueryKey,
   } from "@rilldata/web-admin/client";
   import { useQueryClient } from "@tanstack/svelte-query";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { page } from "$app/stores";
 
   export let email: string;

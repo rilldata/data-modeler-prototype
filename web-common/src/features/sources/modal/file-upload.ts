@@ -1,6 +1,6 @@
 import { goto } from "$app/navigation";
 import { fileArtifacts } from "@rilldata/web-common/features/entity-management/file-artifacts";
-import { getName } from "@rilldata/web-common/features/entity-management/name-utils";
+import { getName } from "@rilldata/utils";
 import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
 import {
   PossibleFileExtensions,
@@ -8,7 +8,7 @@ import {
   fileHasValidExtension,
 } from "@rilldata/web-common/features/sources/modal/possible-file-extensions";
 import { overlay } from "@rilldata/web-common/layout/overlay-store";
-import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+import { eventBus } from "@rilldata/events";
 import { runtimeServiceFileUpload } from "@rilldata/web-common/runtime-client/manual-clients";
 import { getTableNameFromFile } from "../extract-file-name";
 import {

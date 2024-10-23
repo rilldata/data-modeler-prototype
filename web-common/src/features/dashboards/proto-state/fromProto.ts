@@ -21,7 +21,7 @@ import {
 } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
 import type { MetricsExplorerEntity } from "@rilldata/web-common/features/dashboards/stores/metrics-explorer-entity";
 import { TDDChart } from "@rilldata/web-common/features/dashboards/time-dimension-details/types";
-import { getMapFromArray } from "@rilldata/web-common/lib/arrayUtils";
+import { getMapFromArray } from "@rilldata/utils";
 import {
   BOOLEANS,
   INTEGERS,

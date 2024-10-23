@@ -1,6 +1,7 @@
 {
   "name": "web-common",
   "version": "0.0.1",
+  "type": "module",
   "scripts": {
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write .",
@@ -8,6 +9,8 @@
     "generate:template-schema": "ts-json-schema-generator -p src/features/templates/types.ts -t TemplateSpec -o ../runtime/compilers/rillv1/data/component-template-v1.json",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
+    "check": "svelte-kit sync && svelte-check --no-tsconfig --ignore 'src/components/data-graphic/elements/GraphicContext.svelte'",
+    "check:watch": "svelte-kit sync && svelte-check --no-tsconfig --watch",
     "test:watch": "vitest",
     "storybook": "STORYBOOK_MODE=true storybook dev -p 6006",
     "storybook:smoketest": "STORYBOOK_MODE=true storybook dev --smoke-test",
@@ -49,7 +52,6 @@
     "@types/d3-time-format": "^4.0.3",
     "@types/dompurify": "^3.0.5",
     "@types/luxon": "^3.4.2",
-    "@vitest/coverage-c8": "^0.31.0",
     "autoprefixer": "^10.4.20",
     "bits-ui": "^0.21.15",
     "chroma-js": "^2.4.2",
@@ -93,5 +95,8 @@
     "yaml": "^2.4.5",
     "yup": "^1.4.0"
   },
-  "type": "module"
+  "dependencies": {
+    "@rilldata/actions": "*",
+    "@rilldata/utils": "*"
+  }
 }

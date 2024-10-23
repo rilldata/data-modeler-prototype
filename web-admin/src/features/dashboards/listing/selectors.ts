@@ -1,6 +1,6 @@
 import { createAdminServiceGetProject } from "@rilldata/web-admin/client";
 import { useValidExplores } from "@rilldata/web-common/features/dashboards/selectors";
-import { getMapFromArray } from "@rilldata/web-common/lib/arrayUtils";
+import { getMapFromArray } from "@rilldata/utils";
 import type { V1Resource } from "@rilldata/web-common/runtime-client";
 import { createRuntimeServiceListResources } from "@rilldata/web-common/runtime-client";
 import type { CreateQueryResult } from "@tanstack/svelte-query";

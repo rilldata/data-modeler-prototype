@@ -5,7 +5,7 @@
   import ChartPromptHistoryDisplay from "@rilldata/web-common/features/canvas-components/prompt/ChartPromptHistoryDisplay.svelte";
   import { createFullChartGenerator } from "@rilldata/web-common/features/canvas-components/prompt/generateChart";
   import { useAllFileNames } from "@rilldata/web-common/features/entity-management/file-selectors";
-  import { getName } from "@rilldata/web-common/features/entity-management/name-utils";
+  import { getName } from "@rilldata/utils";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import { useQueryClient } from "@tanstack/svelte-query";
 

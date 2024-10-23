@@ -1,7 +1,7 @@
 <script lang="ts">
   import Check from "@rilldata/web-common/components/icons/Check.svelte";
   import CopyIcon from "@rilldata/web-common/components/icons/CopyIcon.svelte";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard } from "@rilldata/actions";
 
   export let command: string;
   export let className = "";

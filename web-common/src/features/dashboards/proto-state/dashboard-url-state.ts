@@ -5,7 +5,7 @@ import { createTimeRangeSummary } from "@rilldata/web-common/features/dashboards
 import type { StateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
 import { getDefaultMetricsExplorerEntity } from "@rilldata/web-common/features/dashboards/stores/dashboard-store-defaults";
 import { metricsExplorerStore } from "@rilldata/web-common/features/dashboards/stores/dashboard-stores";
-import { getUrlForPath } from "@rilldata/web-common/lib/url-utils";
+import { getUrlForPath } from "@rilldata/utils";
 import type { V1StructType } from "@rilldata/web-common/runtime-client";
 import { type Readable, derived, get } from "svelte/store";
 
@@ -109,7 +109,10 @@ function gotoNewDashboardUrl(url: URL, newState: string, defaultState: string) {
   let newStateInUrl = "";
   // changed when filters etc are changed on the dashboard
 
-  const newUrl = getUrlForPath(url.pathname, ["features", "theme"]);
+  const newUrl = getUrlForPath(get(page).url, url.pathname, [
+    "features",
+    "theme",
+  ]);
 
   if (newState !== defaultState) {
     newStateInUrl = newState;

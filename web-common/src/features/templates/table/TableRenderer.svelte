@@ -11,9 +11,9 @@
     PivotState,
   } from "@rilldata/web-common/features/dashboards/pivot/types";
   import Resizer from "@rilldata/web-common/layout/Resizer.svelte";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
-  import { clamp } from "@rilldata/web-common/lib/clamp";
+  import { copyToClipboard } from "@rilldata/actions";
+  import { modified } from "@rilldata/actions";
+  import { clamp } from "@rilldata/utils";
   import {
     createSvelteTable,
     type ExpandedState,

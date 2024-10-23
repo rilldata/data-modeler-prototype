@@ -1,5 +1,5 @@
 import type { Page } from "playwright";
-import { assertLeaderboards } from "web-local/tests/utils/metricsViewHelpers";
+import { assertLeaderboards } from "./metricsViewHelpers";
 import {
   updateCodeEditor,
   waitForProfiling,

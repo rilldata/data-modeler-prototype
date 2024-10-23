@@ -25,7 +25,7 @@
   import { createEventDispatcher } from "svelte";
   import { createForm } from "svelte-forms-lib";
   import { get } from "svelte/store";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { runtime } from "../../runtime-client/runtime-store";
   import BaseAlertForm from "./BaseAlertForm.svelte";
 

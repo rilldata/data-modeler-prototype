@@ -17,8 +17,8 @@
   import { metricsExplorerStore } from "@rilldata/web-common/features/dashboards/stores/dashboard-stores";
   import { featureFlags } from "@rilldata/web-common/features/feature-flags";
   import Resizer from "@rilldata/web-common/layout/Resizer.svelte";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+  import { copyToClipboard } from "@rilldata/actions";
+  import { modified } from "@rilldata/actions";
   import {
     type Cell,
     type ExpandedState,

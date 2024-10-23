@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { isClipboardApiSupported } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
-  import { portal } from "@rilldata/web-common/lib/actions/portal";
+  import { isClipboardApiSupported } from "@rilldata/actions";
+  import { portal } from "@rilldata/actions";
   import FormattedDataType from "../data-types/FormattedDataType.svelte";
   import Shortcut from "../tooltip/Shortcut.svelte";
   import StackingWord from "../tooltip/StackingWord.svelte";

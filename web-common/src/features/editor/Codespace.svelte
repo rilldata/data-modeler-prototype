@@ -8,7 +8,7 @@
   import { get } from "svelte/store";
   import Button from "@rilldata/web-common/components/button/Button.svelte";
   import * as AlertDialog from "@rilldata/web-common/components/alert-dialog/";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { underlineSelection } from "./highlight-field";
 
   export let fileArtifact: FileArtifact;

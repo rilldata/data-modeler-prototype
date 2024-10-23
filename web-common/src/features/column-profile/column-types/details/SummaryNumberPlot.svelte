@@ -43,14 +43,14 @@
       <g transform="translate(0 {(values.length - i - 1) * rowHeight})">
         <GraphicContext height={rowHeight}>
           <circle
-            cx={xScale(value)}
+            cx={xScale(value ?? 0)}
             cy={rowHeight / 2}
             r="2.5"
             fill="#ff8282"
           />
           <line
-            x1={xScale(value)}
-            x2={xScale(value)}
+            x1={xScale(value ?? 0)}
+            x2={xScale(value ?? 0)}
             y1={rowHeight / 2 - 1}
             y2={-(rowHeight * (values.length - i - 1))}
             stroke="red"

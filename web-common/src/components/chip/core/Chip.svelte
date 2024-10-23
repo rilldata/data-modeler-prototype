@@ -1,12 +1,12 @@
 <script lang="ts">
   import { builderActions, getAttrs, type Builder } from "bits-ui";
   import { createEventDispatcher, getContext } from "svelte";
-  import { slideRight } from "../../../lib/transitions";
   import type { Writable } from "svelte/store";
   import Tooltip from "../../tooltip/Tooltip.svelte";
   import CancelCircle from "../../icons/CancelCircle.svelte";
   import TooltipContent from "../../tooltip/TooltipContent.svelte";
   import CaretDownIcon from "../../icons/CaretDownIcon.svelte";
+  import { slide } from "svelte/transition";
 
   export let removable = false;
   export let active = false;
@@ -35,7 +35,7 @@
   }
 </script>
 
-<div in:slideRight={{ duration: slideDuration }}>
+<div in:slide={{ axis: "x", duration: slideDuration }}>
   <div
     class="chip {type}"
     class:active

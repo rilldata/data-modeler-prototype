@@ -18,7 +18,7 @@ display:contents. This is useful when nesting a floating element within a toolti
     Alignment,
     FloatingElementRelationship,
   } from "../../lib/place-element";
-  import { portal } from "@rilldata/web-common/lib/actions/portal";
+  import { portal } from "@rilldata/actions";
 
   export let target: HTMLElement;
   export let relationship: FloatingElementRelationship = "parent"; // parent, mouse {x, y}

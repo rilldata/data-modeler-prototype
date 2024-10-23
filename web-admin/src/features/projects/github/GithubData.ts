@@ -8,7 +8,7 @@ import {
 } from "@rilldata/web-admin/client";
 import { openPopupWindow } from "@rilldata/web-common/lib/openPopupWindow";
 import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
-import { waitUntil } from "@rilldata/web-common/lib/waitUtils";
+import { waitUntil } from "@rilldata/utils";
 import { getContext, setContext } from "svelte";
 import { derived, get, writable } from "svelte/store";
 

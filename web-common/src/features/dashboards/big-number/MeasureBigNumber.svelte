@@ -4,8 +4,8 @@
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
   import DelayedSpinner from "@rilldata/web-common/features/entity-management/DelayedSpinner.svelte";
   import { EntityStatus } from "@rilldata/web-common/features/entity-management/types";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+  import { copyToClipboard } from "@rilldata/actions";
+  import { modified } from "@rilldata/actions";
   import { createMeasureValueFormatter } from "@rilldata/web-common/lib/number-formatting/format-measure-value";
   import { FormatPreset } from "@rilldata/web-common/lib/number-formatting/humanizer-types";
   import { formatMeasurePercentageDifference } from "@rilldata/web-common/lib/number-formatting/percentage-formatter";

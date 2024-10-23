@@ -1,4 +1,4 @@
-import { Throttler } from "@rilldata/web-common/lib/throttler";
+import { Throttler, asyncWait } from "@rilldata/utils";
 import { streamingFetchWrapper } from "@rilldata/web-common/runtime-client/fetch-streaming-wrapper";
 import type {
   V1WatchFilesResponse,
@@ -7,7 +7,6 @@ import type {
 } from "@rilldata/web-common/runtime-client/index";
 import { get, writable } from "svelte/store";
 import { runtime } from "./runtime-store";
-import { asyncWait } from "../lib/waitUtils";
 
 const MAX_RETRIES = 5;
 const BACKOFF_DELAY = 1000;

@@ -1,7 +1,7 @@
 import { extractSamples } from "@rilldata/web-common/components/virtualized-table/init-widths";
 import { isTimeDimension } from "@rilldata/web-common/features/dashboards/pivot/pivot-utils";
 import type { PivotDataRow } from "@rilldata/web-common/features/dashboards/pivot/types";
-import { clamp } from "@rilldata/web-common/lib/clamp";
+import { clamp } from "@rilldata/utils";
 
 export const COLUMN_WIDTH_CONSTANTS = {
   MIN_COL_WIDTH: 150,

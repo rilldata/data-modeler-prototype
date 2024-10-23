@@ -4,8 +4,8 @@
   import { Search } from "@rilldata/web-common/components/search";
   import GlobalDimensionSearchResults from "@rilldata/web-common/features/dashboards/dimension-search/GlobalDimensionSearchResults.svelte";
   import { featureFlags } from "@rilldata/web-common/features/feature-flags";
-  import { slideRight } from "@rilldata/web-common/lib/transitions";
   import SearchIcon from "@rilldata/web-common/components/icons/Search.svelte";
+  import { slide } from "svelte/transition";
 
   const { dimensionSearch } = featureFlags;
 
@@ -28,7 +28,7 @@
   <div class="relative flex flex-row">
     {#if searchBarOpen}
       <div
-        transition:slideRight={{}}
+        in:slide={{ axis: "x", duration: 200 }}
         class="flex items-center gap-x-2 pr-2 w-60 bg-slate-50 border border-primary-300"
       >
         <Search

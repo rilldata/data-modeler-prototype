@@ -1,7 +1,7 @@
 import { goto } from "$app/navigation";
 import type { QueryClient } from "@tanstack/svelte-query";
 import { get } from "svelte/store";
-import { waitUntil } from "../../lib/waitUtils";
+import { waitUntil } from "@rilldata/utils";
 import type { V1Resource } from "../../runtime-client";
 import { fileArtifacts } from "../entity-management/file-artifacts";
 import { ResourceKind } from "../entity-management/resource-selectors";

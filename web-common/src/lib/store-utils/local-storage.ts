@@ -1,6 +1,6 @@
 import { browser } from "$app/environment";
 import { writable } from "svelte/store";
-import { debounce } from "../create-debouncer";
+import { debounce } from "@rilldata/utils";
 
 /** Creates a store whose value is stored in localStorage as a string.
  * Only JSON-serializable values can be used.

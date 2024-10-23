@@ -10,7 +10,7 @@
     useMetricsViewTimeRange,
     useMetricsViewValidSpec,
   } from "@rilldata/web-common/features/dashboards/selectors";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { useQueryClient } from "@tanstack/svelte-query";
   import { createEventDispatcher } from "svelte";
   import { createForm } from "svelte-forms-lib";

@@ -9,7 +9,8 @@ horizontal slide animation
   export let collapse = false;
 </script>
 
-{#if !collapse}<div
+{#if !collapse}
+  <div
     transition:slideRight={{
       duration: 400,
       rightOffset: 8,

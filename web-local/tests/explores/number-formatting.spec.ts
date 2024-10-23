@@ -1,12 +1,12 @@
 import { expect } from "@playwright/test";
-import { useDashboardFlowTestSetup } from "web-local/tests/explores/dashboard-flow-test-setup";
+import { useDashboardFlowTestSetup } from "../explores/dashboard-flow-test-setup";
 import {
   AD_BIDS_EXPLORE_PATH,
   AD_BIDS_METRICS_PATH,
-} from "web-local/tests/utils/dataSpecifcHelpers";
-import { interactWithTimeRangeMenu } from "web-local/tests/utils/metricsViewHelpers";
-import { ResourceWatcher } from "web-local/tests/utils/ResourceWatcher";
-import { gotoNavEntry } from "web-local/tests/utils/waitHelpers";
+} from "../utils/dataSpecifcHelpers";
+import { interactWithTimeRangeMenu } from "../utils/metricsViewHelpers";
+import { ResourceWatcher } from "../utils/ResourceWatcher";
+import { gotoNavEntry } from "../utils/waitHelpers";
 import { test } from "../utils/test";
 
 test.describe("smoke tests for number formatting", () => {

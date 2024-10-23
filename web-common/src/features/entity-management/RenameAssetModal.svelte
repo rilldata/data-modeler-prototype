@@ -5,7 +5,6 @@
   import * as Dialog from "@rilldata/web-common/components/dialog-v2";
   import Input from "@rilldata/web-common/components/forms/Input.svelte";
   import SubmissionError from "@rilldata/web-common/components/forms/SubmissionError.svelte";
-  import { splitFolderAndFileName } from "@rilldata/web-common/features/entity-management/file-path-utils";
   import {
     useDirectoryNamesInDirectory,
     useFileNamesInDirectory,
@@ -20,7 +19,8 @@
     INVALID_NAME_MESSAGE,
     VALID_NAME_PATTERN,
     isDuplicateName,
-  } from "./name-utils";
+    splitFolderAndFileName,
+  } from "@rilldata/utils";
 
   export let closeModal: () => void;
   export let filePath: string;

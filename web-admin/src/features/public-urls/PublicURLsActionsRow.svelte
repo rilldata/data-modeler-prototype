@@ -2,7 +2,7 @@
   import IconButton from "@rilldata/web-common/components/button/IconButton.svelte";
   import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
   import ThreeDot from "@rilldata/web-common/components/icons/ThreeDot.svelte";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard } from "@rilldata/actions";
   import { Trash2Icon, CopyIcon } from "lucide-svelte";
   import DeletePublicURLConfirmDialog from "./DeletePublicURLConfirmDialog.svelte";
 

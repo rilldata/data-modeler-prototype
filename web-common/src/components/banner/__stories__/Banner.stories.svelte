@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { Story, Template } from "@storybook/addon-svelte-csf";
   import BannerCenter from "@rilldata/web-common/components/banner/BannerCenter.svelte";
   import { Button } from "@rilldata/web-common/components/button/index.js";

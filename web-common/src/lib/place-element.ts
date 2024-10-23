@@ -1,10 +1,8 @@
+import { clamp } from "@rilldata/utils";
+
 export type Location = "left" | "right" | "top" | "bottom";
 export type Alignment = "start" | "middle" | "end";
 export type FloatingElementRelationship = "parent" | "direct" | "mouse";
-
-function minmax(v: number, min: number, max: number) {
-  return Math.max(min, Math.min(v, max));
-}
 
 export function mouseLocationToBoundingRect({
   x,
@@ -120,7 +118,7 @@ export function placeElement({
     ? y + windowHeight - elementHeight - pad
     : x + windowWidth - elementWidth - pad;
 
-  const value = minmax(alignmentValue, alignMin, alignMax);
+  const value = clamp(alignMin, alignmentValue, alignMax);
 
   if (rightLeft) {
     top = value;

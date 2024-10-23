@@ -7,7 +7,7 @@ The main feature-set component for dashboard filters
   import { allMeasures } from "@rilldata/web-common/features/dashboards/state-managers/selectors/measures";
   import type { DimensionThresholdFilter } from "@rilldata/web-common/features/dashboards/stores/metrics-explorer-entity";
   import { useExploreValidSpec } from "@rilldata/web-common/features/explores/selectors";
-  import { getMapFromArray } from "@rilldata/web-common/lib/arrayUtils";
+  import { getMapFromArray } from "@rilldata/utils";
   import type {
     V1Expression,
     V1TimeRange,

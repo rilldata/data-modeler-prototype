@@ -3,7 +3,7 @@ import { rmSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { spawn } from "node:child_process";
 import treeKill from "tree-kill";
 import { getOpenPort } from "./getOpenPort";
-import { asyncWaitUntil } from "@rilldata/web-common/lib/waitUtils";
+import { asyncWaitUntil } from "@rilldata/utils";
 import axios from "axios";
 
 const BASE_PROJECT_DIRECTORY = "temp/test-project";

@@ -15,7 +15,7 @@
   import Search from "@rilldata/web-common/components/icons/Search.svelte";
   import MetricsTable from "../visual-metrics-editing/MetricsTable.svelte";
   import Sidebar from "../visual-metrics-editing/Sidebar.svelte";
-  import { clamp } from "@rilldata/web-common/lib/clamp";
+  import { clamp } from "@rilldata/utils";
   import Button from "@rilldata/web-common/components/button/Button.svelte";
   import {
     ResourceKind,
@@ -27,7 +27,7 @@
   import { useSources } from "../sources/selectors";
   import Trash from "@rilldata/web-common/components/icons/Trash.svelte";
   import Close from "@rilldata/web-common/components/icons/Close.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { slide } from "svelte/transition";
   import { LIST_SLIDE_DURATION } from "@rilldata/web-common/layout/config";
   import CancelCircle from "@rilldata/web-common/components/icons/CancelCircle.svelte";

@@ -15,7 +15,7 @@
     AlertDialogTrigger,
   } from "@rilldata/web-common/components/alert-dialog/index.js";
   import { Button } from "@rilldata/web-common/components/button/index.js";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { behaviourEvent } from "@rilldata/web-common/metrics/initMetrics";
   import { BehaviourEventAction } from "@rilldata/web-common/metrics/service/BehaviourEventTypes";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";

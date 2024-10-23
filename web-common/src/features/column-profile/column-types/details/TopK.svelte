@@ -6,11 +6,8 @@
   import TooltipShortcutContainer from "@rilldata/web-common/components/tooltip/TooltipShortcutContainer.svelte";
   import TooltipTitle from "@rilldata/web-common/components/tooltip/TooltipTitle.svelte";
   import { LIST_SLIDE_DURATION } from "@rilldata/web-common/layout/config";
-  import {
-    copyToClipboard,
-    isClipboardApiSupported,
-  } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+  import { copyToClipboard, isClipboardApiSupported } from "@rilldata/actions";
+  import { modified } from "@rilldata/actions";
   import { isNested } from "@rilldata/web-common/lib/duckdb-data-types";
   import {
     formatBigNumberPercentage,

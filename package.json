@@ -7,7 +7,8 @@
     "web-admin",
     "web-auth",
     "web-common",
-    "web-local"
+    "web-local",
+    "packages/*"
   ],
   "scripts": {
     "prepare": "husky || true",
@@ -16,22 +17,23 @@
     "dev-web": "npm run dev -w web-local -- ",
     "dev-runtime": "go run cli/main.go start dev-project --no-ui --allowed-origins '*'",
     "clean": "rm -rf dev-project",
-    "test": "npm run test -w web-common & npm run test -w web-auth & PLAYWRIGHT_TEST=true make cli && npm run test -w web-local"
+    "test": "npm run test -w @rilldata/utils & npm run test -w web-common & npm run test -w web-auth & PLAYWRIGHT_TEST=true make cli && npm run test -w web-local",
+    "check": "npm run check -w web-common && npm run check -w web-auth && npm run check -w web-local && npm run check -w web-admin && bash ./scripts/tsc-with-whitelist.sh"
   },
   "devDependencies": {
-    "@types/eslint": "^8.56.9",
-    "eslint": "^8.57.0",
+    "@types/eslint": "^9.6.1",
+    "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-playwright": "^1.6.0",
-    "eslint-plugin-svelte": "^2.37.0",
-    "eslint-plugin-vitest": "^0.5.3",
+    "eslint-plugin-playwright": "^1.8.0",
+    "eslint-plugin-svelte": "^2.46.0",
+    "globals": "^15.11.0",
     "husky": "^8.0.0",
     "lint-staged": "^15.2.7",
     "prettier": "^3.3.3",
     "prettier-plugin-svelte": "^3.2.7",
     "syncpack": "^13.0.0",
     "typescript": "^5.6.2",
-    "typescript-eslint": "^8.8.0"
+    "typescript-eslint": "^8.10.0"
   },
   "lint-staged": {
     "*.{svelte,ts}": [

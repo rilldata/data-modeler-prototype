@@ -7,11 +7,8 @@
   import TooltipShortcutContainer from "@rilldata/web-common/components/tooltip/TooltipShortcutContainer.svelte";
   import TooltipTitle from "@rilldata/web-common/components/tooltip/TooltipTitle.svelte";
   import { TOOLTIP_STRING_LIMIT } from "@rilldata/web-common/layout/config";
-  import {
-    copyToClipboard,
-    isClipboardApiSupported,
-  } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+  import { copyToClipboard, isClipboardApiSupported } from "@rilldata/actions";
+  import { modified } from "@rilldata/actions";
   import { STRING_LIKES } from "@rilldata/web-common/lib/duckdb-data-types";
   import { formatDataTypeAsDuckDbQueryString } from "@rilldata/web-common/lib/formatters";
   import { createEventDispatcher, getContext } from "svelte";

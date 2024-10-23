@@ -1,6 +1,6 @@
 import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
 import { writable } from "svelte/store";
-import { debounce } from "../lib/create-debouncer";
+import { debounce } from "@rilldata/utils";
 import {
   createRuntimeServiceGetInstance,
   type V1InstanceFeatureFlags,

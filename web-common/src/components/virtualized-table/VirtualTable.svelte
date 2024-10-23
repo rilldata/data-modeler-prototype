@@ -22,8 +22,8 @@
   import { tick } from "svelte";
   import type { VirtualizedTableColumns } from "@rilldata/web-common/components/virtualized-table/types";
   import { initColumnWidths } from "./init-widths";
-  import { clamp } from "@rilldata/web-common/lib/clamp";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { clamp } from "@rilldata/utils";
+  import { copyToClipboard } from "@rilldata/actions";
   import VirtualTableCell from "./VirtualTableCell.svelte";
   import VirtualTableHeaderCellContent from "./VirtualTableHeaderCellContent.svelte";
   import VirtualTableRowHeader from "./VirtualTableRowHeader.svelte";

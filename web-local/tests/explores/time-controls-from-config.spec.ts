@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
-import { useDashboardFlowTestSetup } from "web-local/tests/explores/dashboard-flow-test-setup";
-import { interactWithTimeRangeMenu } from "web-local/tests/utils/metricsViewHelpers";
-import { ResourceWatcher } from "web-local/tests/utils/ResourceWatcher";
+import { useDashboardFlowTestSetup } from "./dashboard-flow-test-setup";
+import { interactWithTimeRangeMenu } from "../utils/metricsViewHelpers";
+import { ResourceWatcher } from "../utils/ResourceWatcher";
 import { test } from "../utils/test";
 
 test.describe("time controls settings from explore preset", () => {

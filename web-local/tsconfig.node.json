@@ -5,13 +5,7 @@
     "sourceMap": false,
     "outDir": "dist"
   },
-  "include": [
-    "src/**/*.d.ts",
-    "src/**/*.ts",
-    "routes/**/*.svelte"
-  ],
-  "exclude": [
-    "test/**",
-    "vite.config.ts"
-  ]
+  "include": ["src/**/*.d.ts", "src/**/*.ts", "routes/**/*.svelte"],
+
+  "exclude": ["test/**", "vite.config.ts"]
 }

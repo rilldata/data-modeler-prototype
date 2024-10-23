@@ -167,11 +167,11 @@ export function formatDataType(value: unknown, type: string) {
   } else if (isStruct(type)) {
     return JSON.stringify(value).replace(/"/g, "'");
   } else if (isList(type)) {
-    return (
-      `[${(value as Array<unknown>)
-        ?.map((entry) => (+entry ? +entry : `'${entry}'`))
-        ?.join(", ")}]` || `null`
-    );
+    return value !== undefined && value !== null
+      ? `[${(value as Array<any>)
+          ?.map((entry) => (+entry ? +entry : `'${entry}'`))
+          ?.join(", ")}]`
+      : `null`;
   } else if (isNested(type)) {
     return JSON.stringify(value).replace(/"/g, "'");
   }
@@ -221,16 +221,20 @@ export function formatDataTypeAsDuckDbQueryString(
   } else if (isStruct(type)) {
     return JSON.stringify(value).replace(/"/g, "'");
   } else if (isList(type)) {
-    return (
-      `[${(value as Array<unknown>)
-        ?.map((entry) => (+entry ? +entry : `'${entry}'`))
-        ?.join(", ")}]` || `null`
-    );
+    return value !== undefined && value !== null
+      ? `[${(value as Array<any>)
+          ?.map((entry) => (+entry ? +entry : `'${entry}'`))
+          ?.join(", ")}]`
+      : `null`;
   } else if (isNested(type)) {
     return JSON.stringify(value).replace(/"/g, "'");
   }
   return JSON.stringify(value).replace(/"/g, "'");
 }
+
+const what = "2";
+
+console.log(+what);
 
 /** These will be used in the string */
 export const PreviewRollupIntervalFormatter = {

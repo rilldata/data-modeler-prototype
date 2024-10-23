@@ -2,7 +2,7 @@
   import { createEventDispatcher, getContext } from "svelte";
   import { dragTableCell } from "../drag-table-cell";
   import type { HeaderPosition, VirtualizedTableConfig } from "../types";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+  import { modified } from "@rilldata/actions";
 
   const config: VirtualizedTableConfig = getContext("config");
   const isDimensionTable = config.table === "DimensionTable";

@@ -10,7 +10,7 @@
   import PublicURLsTable from "@rilldata/web-admin/features/public-urls/PublicURLsTable.svelte";
   import { createAdminServiceListMagicAuthTokensInfiniteQuery } from "@rilldata/web-admin/features/public-urls/create-infinite-query-public-urls";
   import DelayedSpinner from "@rilldata/web-common/features/entity-management/DelayedSpinner.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import { useQueryClient } from "@tanstack/svelte-query";
 

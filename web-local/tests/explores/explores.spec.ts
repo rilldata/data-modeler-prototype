@@ -2,12 +2,12 @@ import { expect } from "@playwright/test";
 import {
   createExploreFromModel,
   createExploreFromSource,
-} from "web-local/tests/utils/exploreHelpers";
+} from "../utils/exploreHelpers";
 import {
   assertLeaderboards,
   interactWithTimeRangeMenu,
-} from "web-local/tests/utils/metricsViewHelpers";
-import { ResourceWatcher } from "web-local/tests/utils/ResourceWatcher";
+} from "../utils/metricsViewHelpers";
+import { ResourceWatcher } from "../utils/ResourceWatcher";
 import { updateCodeEditor, wrapRetryAssertion } from "../utils/commonHelpers";
 import {
   AD_BIDS_EXPLORE_PATH,

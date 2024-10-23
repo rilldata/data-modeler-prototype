@@ -1,7 +1,4 @@
-import {
-  extractFileExtension,
-  splitFolderAndFileName,
-} from "@rilldata/web-common/features/entity-management/file-path-utils";
+import { extractFileExtension, splitFolderAndFileName } from "@rilldata/utils";
 import {
   ResourceKind,
   useProjectParser,

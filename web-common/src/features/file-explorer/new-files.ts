@@ -1,5 +1,5 @@
 import { fileArtifacts } from "@rilldata/web-common/features/entity-management/file-artifacts";
-import { getName } from "@rilldata/web-common/features/entity-management/name-utils";
+import { getName } from "@rilldata/utils";
 import {
   ResourceKind,
   type UserFacingResourceKinds,

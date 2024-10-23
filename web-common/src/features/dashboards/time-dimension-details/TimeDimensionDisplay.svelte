@@ -1,6 +1,6 @@
 <script lang="ts">
   import Compare from "@rilldata/web-common/components/icons/Compare.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import {
     SortDirection,
     SortType,
@@ -8,7 +8,7 @@
   import { getStateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
   import { metricsExplorerStore } from "@rilldata/web-common/features/dashboards/stores/dashboard-stores";
   import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
-  import { debounce } from "@rilldata/web-common/lib/create-debouncer";
+  import { debounce } from "@rilldata/utils";
   import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
   import { timeFormat } from "d3-time-format";
   import { onDestroy } from "svelte";

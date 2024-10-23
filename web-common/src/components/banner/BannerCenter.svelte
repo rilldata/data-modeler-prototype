@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
-  import type { BannerMessage } from "@rilldata/web-common/lib/event-bus/events";
+  import { eventBus } from "@rilldata/events";
+  import type { BannerMessage } from "@rilldata/events";
   import { onMount } from "svelte";
   import Banner from "./Banner.svelte";
 

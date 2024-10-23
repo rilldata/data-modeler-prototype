@@ -2,7 +2,7 @@
   import TimestampDetail from "@rilldata/web-common/components/data-graphic/compositions/timestamp-profile/TimestampDetail.svelte";
   import TimestampSpark from "@rilldata/web-common/components/data-graphic/compositions/timestamp-profile/TimestampSpark.svelte";
   import WithParentClientRect from "@rilldata/web-common/components/data-graphic/functional-components/WithParentClientRect.svelte";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard } from "@rilldata/actions";
   import { TIMESTAMP_TOKENS } from "@rilldata/web-common/lib/duckdb-data-types";
   import { httpRequestQueue } from "../../../runtime-client/http-client";
   import { runtime } from "../../../runtime-client/runtime-store";

@@ -13,7 +13,7 @@
     TabsList,
     TabsTrigger,
   } from "@rilldata/web-common/components/tabs";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard } from "@rilldata/actions";
 
   export let createMagicAuthTokens: boolean;
 

@@ -8,7 +8,7 @@ import {
   AD_BIDS_NAME,
 } from "@rilldata/web-common/features/dashboards/stores/test-data/data";
 import { initStateManagers } from "@rilldata/web-common/features/dashboards/stores/test-data/helpers";
-import TimeControlsStoreTest from "@rilldata/web-common/features/dashboards/time-controls/TimeControlsStoreTest.svelte";
+import TimeControlsStoreTest from "./TimeControlsStoreTest.svelte";
 import {
   type TimeControlState,
   type TimeControlStore,
@@ -22,7 +22,7 @@ import {
   TimeComparisonOption,
   TimeRangePreset,
 } from "@rilldata/web-common/lib/time/types";
-import { waitUntil } from "@rilldata/web-common/lib/waitUtils";
+import { waitUntil } from "@rilldata/utils";
 import type { V1MetricsViewSpec } from "@rilldata/web-common/runtime-client";
 import { V1TimeGrain } from "@rilldata/web-common/runtime-client";
 import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";

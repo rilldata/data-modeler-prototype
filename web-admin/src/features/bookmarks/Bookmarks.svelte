@@ -18,7 +18,7 @@
   } from "@rilldata/web-common/components/dropdown-menu";
   import { useExploreStore } from "@rilldata/web-common/features/dashboards/stores/dashboard-stores";
   import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import { useQueryClient } from "@tanstack/svelte-query";
   import { BookmarkIcon } from "lucide-svelte";

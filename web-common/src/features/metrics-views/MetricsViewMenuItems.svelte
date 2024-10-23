@@ -4,7 +4,7 @@
   import ExploreIcon from "@rilldata/web-common/components/icons/ExploreIcon.svelte";
   import Model from "@rilldata/web-common/components/icons/Model.svelte";
   import { fileArtifacts } from "@rilldata/web-common/features/entity-management/file-artifacts";
-  import { extractFileName } from "@rilldata/web-common/features/entity-management/file-path-utils";
+  import { extractFileName } from "@rilldata/utils";
   import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
   import { featureFlags } from "@rilldata/web-common/features/feature-flags";
   import { getScreenNameFromPage } from "@rilldata/web-common/features/file-explorer/telemetry";

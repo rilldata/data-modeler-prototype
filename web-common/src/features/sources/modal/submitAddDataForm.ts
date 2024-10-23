@@ -22,7 +22,7 @@ import {
 } from "../../connectors/code-utils";
 import { getFileAPIPathFromNameAndType } from "../../entity-management/entity-mappers";
 import { fileArtifacts } from "../../entity-management/file-artifacts";
-import { getName } from "../../entity-management/name-utils";
+import { getName } from "@rilldata/utils";
 import { ResourceKind } from "../../entity-management/resource-selectors";
 import { EntityType } from "../../entity-management/types";
 import { EMPTY_PROJECT_TITLE } from "../../welcome/constants";

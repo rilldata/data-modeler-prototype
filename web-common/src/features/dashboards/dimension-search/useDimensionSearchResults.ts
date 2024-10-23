@@ -1,4 +1,4 @@
-import { createBatches } from "@rilldata/web-common/lib/arrayUtils";
+import { createBatches } from "@rilldata/utils";
 import {
   createQueryServiceMetricsViewSearch,
   type V1MetricsViewSpec,

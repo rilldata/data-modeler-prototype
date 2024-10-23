@@ -1,8 +1,5 @@
 import * as yup from "yup";
-import {
-  INVALID_NAME_MESSAGE,
-  VALID_NAME_PATTERN,
-} from "../../entity-management/name-utils";
+import { INVALID_NAME_MESSAGE, VALID_NAME_PATTERN } from "@rilldata/utils";
 
 export const getYupSchema = {
   s3: yup.object().shape({

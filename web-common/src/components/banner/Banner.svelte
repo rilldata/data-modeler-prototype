@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { BannerMessage } from "../../lib/event-bus/events";
+  import type { BannerMessage } from "@rilldata/events";
   import AlertCircleIcon from "../icons/AlertCircleOutline.svelte";
   import CheckCircleOutline from "../icons/CheckCircleOutline.svelte";
   import LoadingCircleOutline from "../icons/LoadingCircleOutline.svelte";

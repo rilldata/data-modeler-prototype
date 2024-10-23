@@ -1,0 +1,10 @@
+{
+  "name": "@rilldata/actions",
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "type": "module",
+  "dependencies": {
+    "@rilldata/events": "^0.0.0"
+  }
+}

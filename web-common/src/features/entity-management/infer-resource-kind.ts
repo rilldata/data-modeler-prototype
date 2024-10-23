@@ -3,7 +3,7 @@ import {
   ResourceShortNameToResourceKind,
   removeLeadingSlash,
 } from "./entity-mappers";
-import { extractFileExtension } from "./file-path-utils";
+import { extractFileExtension } from "@rilldata/utils";
 import { ResourceKind } from "./resource-selectors";
 
 /**

@@ -12,7 +12,7 @@
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
   import InfoCircle from "@rilldata/web-common/components/icons/InfoCircle.svelte";
   import SimpleSqlExpression from "./SimpleSQLExpression.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { NUMERICS } from "@rilldata/web-common/lib/duckdb-data-types";
 
   export let item: YAMLMeasure | YAMLDimension;

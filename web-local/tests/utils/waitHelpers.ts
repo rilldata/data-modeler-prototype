@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { asyncWait } from "@rilldata/web-common/lib/waitUtils";
+import { asyncWait } from "@rilldata/utils";
 import type { Page } from "playwright";
 import { getFileNavEntry } from "./commonHelpers";
 

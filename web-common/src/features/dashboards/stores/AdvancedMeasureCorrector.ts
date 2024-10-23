@@ -1,5 +1,5 @@
 import type { MetricsExplorerEntity } from "@rilldata/web-common/features/dashboards/stores/metrics-explorer-entity";
-import { getMapFromArray } from "@rilldata/web-common/lib/arrayUtils";
+import { getMapFromArray } from "@rilldata/utils";
 import { DashboardState_ActivePage } from "@rilldata/web-common/proto/gen/rill/ui/v1/dashboard_pb";
 import {
   MetricsViewSpecMeasureType,

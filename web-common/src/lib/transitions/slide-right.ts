@@ -1,7 +1,8 @@
 import { cubicOut } from "svelte/easing";
+import type { TransitionConfig } from "svelte/transition";
 
 export default function slideRight(
-  node,
+  node: Element,
   {
     delay = 0,
     duration = 200,
@@ -9,7 +10,7 @@ export default function slideRight(
     rightOffset = 0,
     leftOffset = 0,
   },
-) {
+): TransitionConfig {
   const style = getComputedStyle(node);
   const width = parseFloat(style.width);
   const opacity = +style.opacity;

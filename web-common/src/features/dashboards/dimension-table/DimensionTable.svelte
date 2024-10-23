@@ -158,20 +158,20 @@ TableCells – the cell contents.
 
   function onSelectItem(event) {
     // store previous scroll position before re-render
-    rowScrollOffset = $rowVirtualizer.scrollOffset;
-    colScrollOffset = $columnVirtualizer.scrollOffset;
+    rowScrollOffset = $rowVirtualizer.scrollOffset || 0;
+    colScrollOffset = $columnVirtualizer.scrollOffset || 0;
     dispatch("select-item", event.detail);
   }
 
   async function handleColumnHeaderClick(event) {
-    colScrollOffset = $columnVirtualizer.scrollOffset;
+    colScrollOffset = $columnVirtualizer.scrollOffset || 0;
     const columnName = event.detail;
     dimensionTable.handleMeasureColumnHeaderClick(columnName);
   }
 
   async function handleResizeDimensionColumn(event) {
-    rowScrollOffset = $rowVirtualizer.scrollOffset;
-    colScrollOffset = $columnVirtualizer.scrollOffset;
+    rowScrollOffset = $rowVirtualizer.scrollOffset || 0;
+    colScrollOffset = $columnVirtualizer.scrollOffset || 0;
 
     const { size } = event.detail;
     manualDimensionColumnWidth = Math.max(config.minColumnWidth, size);

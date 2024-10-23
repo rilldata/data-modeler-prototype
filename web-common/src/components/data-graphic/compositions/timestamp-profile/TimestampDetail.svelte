@@ -14,7 +14,7 @@
    * a smoothed series (showing the trend) if the time series merits it.
    */
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+  import { modified } from "@rilldata/actions";
   import { guidGenerator } from "@rilldata/web-common/lib/guid";
   import { removeLocalTimezoneOffset } from "@rilldata/web-common/lib/time/timezone";
   import type { V1TimeGrain } from "@rilldata/web-common/runtime-client";
@@ -38,7 +38,7 @@
   import TimestampProfileSummary from "./TimestampProfileSummary.svelte";
   import TimestampTooltipContent from "./TimestampTooltipContent.svelte";
   import ZoomWindow from "./ZoomWindow.svelte";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard } from "@rilldata/actions";
 
   const id = guidGenerator();
 
@@ -79,8 +79,8 @@
   });
 
   /** These are our global scales, X and Y. */
-  const X: Writable<ScaleLinear<number, number>> = writable(undefined);
-  const Y: Writable<ScaleLinear<number, number>> = writable(undefined);
+  const X: Writable<ScaleLinear<number, number>> = writable(scaleLinear());
+  const Y: Writable<ScaleLinear<number, number>> = writable(scaleLinear());
   /** make them available to the children. */
   setContext("rill:data-graphic:X", X);
   setContext("rill:data-graphic:Y", Y);
@@ -224,7 +224,8 @@
   // get the nearest point to where the cursor is.
 
   const bisectDate = bisector((d) => d[xAccessor]).center;
-  $: nearestPoint = data[bisectDate(data, $X.invert($coordinates.x))];
+  $: nearestPoint =
+    $coordinates.x && data[bisectDate(data, $X.invert($coordinates.x))];
 
   function clearMouseMove() {
     coordinates.set(DEFAULT_COORDINATES);
@@ -309,7 +310,7 @@
     {estimatedSmallestTimeGrain}
     {rollupTimeGrain}
   />
-  <Tooltip location="right" alignment="center" distance={32}>
+  <Tooltip location="right" distance={32}>
     <svg
       role="img"
       {width}

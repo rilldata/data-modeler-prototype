@@ -3,7 +3,7 @@
   import Split from "@rilldata/web-common/components/icons/Split.svelte";
   import Code from "@rilldata/web-common/components/icons/Code.svelte";
   import TooltipContent from "@rilldata/web-common/components/tooltip/TooltipContent.svelte";
-  import { portal } from "@rilldata/web-common/lib/actions/portal";
+  import { portal } from "@rilldata/actions";
 
   const viewOptions = [
     { view: "code", icon: Code },

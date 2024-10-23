@@ -11,7 +11,7 @@
   import { getDimensionFilterWithSearch } from "./dimension-table-utils";
   import DimensionHeader from "./DimensionHeader.svelte";
   import DimensionTable from "./DimensionTable.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { metricsExplorerStore } from "../stores/dashboard-stores";
 
   const stateManagers = getStateManagers();

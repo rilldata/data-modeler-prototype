@@ -1,7 +1,7 @@
 <script lang="ts">
   import { IconButton } from "@rilldata/web-common/components/button";
   import InfoCircle from "@rilldata/web-common/components/icons/InfoCircle.svelte";
-  import { waitUntil } from "@rilldata/web-common/lib/waitUtils";
+  import { waitUntil } from "@rilldata/utils";
   import { slide } from "svelte/transition";
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
   import TooltipContent from "@rilldata/web-common/components/tooltip/TooltipContent.svelte";

@@ -14,8 +14,8 @@
   import {
     copyToClipboard,
     isClipboardApiSupported,
-  } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+    modified,
+  } from "@rilldata/actions";
   import {
     datePortion,
     timePortion,

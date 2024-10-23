@@ -1,4 +1,4 @@
-import { debounce } from "@rilldata/web-common/lib/create-debouncer";
+import { debounce } from "@rilldata/utils";
 import { derived, writable } from "svelte/store";
 import {
   DEFAULT_INSPECTOR_WIDTH,

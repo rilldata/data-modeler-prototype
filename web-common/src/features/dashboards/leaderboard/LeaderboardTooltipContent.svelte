@@ -14,7 +14,7 @@ see more button
   import TooltipContent from "@rilldata/web-common/components/tooltip/TooltipContent.svelte";
   import TooltipShortcutContainer from "@rilldata/web-common/components/tooltip/TooltipShortcutContainer.svelte";
   import TooltipTitle from "@rilldata/web-common/components/tooltip/TooltipTitle.svelte";
-  import { isClipboardApiSupported } from "../../../lib/actions/copy-to-clipboard";
+  import { isClipboardApiSupported } from "@rilldata/actions";
 
   export let label: string | number;
   export let selected: boolean;

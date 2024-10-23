@@ -9,10 +9,7 @@
   import TooltipShortcutContainer from "@rilldata/web-common/components/tooltip/TooltipShortcutContainer.svelte";
   import TooltipTitle from "@rilldata/web-common/components/tooltip/TooltipTitle.svelte";
   import { SortDirection } from "@rilldata/web-common/features/dashboards/proto-state/derived-types";
-  import {
-    copyToClipboard,
-    isClipboardApiSupported,
-  } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard, isClipboardApiSupported } from "@rilldata/actions";
   import { createEventDispatcher, getContext } from "svelte";
   import { fly } from "svelte/transition";
   import TooltipDescription from "../../tooltip/TooltipDescription.svelte";

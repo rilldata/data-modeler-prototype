@@ -18,9 +18,8 @@
   import { createRuntimeServiceCreateDirectory } from "../../runtime-client";
   import { runtime } from "../../runtime-client/runtime-store";
   import { removeLeadingSlash } from "../entity-management/entity-mappers";
-  import { getTopLevelFolder } from "../entity-management/file-path-utils";
   import { useDirectoryNamesInDirectory } from "../entity-management/file-selectors";
-  import { getName } from "../entity-management/name-utils";
+  import { getName, getTopLevelFolder } from "@rilldata/utils";
   import { PROTECTED_DIRECTORIES } from "./protected-paths";
 
   export let dir: Directory;

@@ -6,10 +6,7 @@
   import TimestampType from "@rilldata/web-common/components/icons/TimestampType.svelte";
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
   import TooltipContent from "@rilldata/web-common/components/tooltip/TooltipContent.svelte";
-  import {
-    copyToClipboard,
-    isClipboardApiSupported,
-  } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard, isClipboardApiSupported } from "@rilldata/actions";
   import {
     BOOLEANS,
     FLOATS,
@@ -28,7 +25,7 @@
   import StackingWord from "../tooltip/StackingWord.svelte";
   import TooltipShortcutContainer from "../tooltip/TooltipShortcutContainer.svelte";
   import TooltipTitle from "../tooltip/TooltipTitle.svelte";
-  import { modified } from "@rilldata/web-common/lib/actions/modified-click";
+  import { modified } from "@rilldata/actions";
 
   export let color = "text-gray-400";
   export let type: string;

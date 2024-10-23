@@ -1,5 +1,5 @@
-import { createExploreFromModel } from "web-local/tests/utils/exploreHelpers";
-import { createAdBidsModel } from "web-local/tests/utils/dataSpecifcHelpers";
+import { createExploreFromModel } from "../utils/exploreHelpers";
+import { createAdBidsModel } from "../utils/dataSpecifcHelpers";
 import { test } from "../utils/test";
 
 export function useDashboardFlowTestSetup() {

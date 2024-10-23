@@ -18,7 +18,7 @@
   } from "@rilldata/web-admin/client";
   import DelayedSpinner from "@rilldata/web-common/features/entity-management/DelayedSpinner.svelte";
   import OrgGroupsTable from "@rilldata/web-admin/features/organizations/users/OrgGroupsTable.svelte";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { useQueryClient } from "@tanstack/svelte-query";
   import Button from "@rilldata/web-common/components/button/Button.svelte";
   import { Plus } from "lucide-svelte";

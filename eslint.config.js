@@ -1,24 +1,24 @@
 // //@ts-check
 
-import js from "@eslint/js";
-import eslintConfigPrettier from "eslint-config-prettier";
+import eslint from "@eslint/js";
+import prettier from "eslint-config-prettier";
+import svelte from "eslint-plugin-svelte";
 import globals from "globals";
-import tsEslint from "typescript-eslint";
-import eslintPluginSvelte from "eslint-plugin-svelte";
-// import vitest from "eslint-plugin-vitest";
+import tseslint from "typescript-eslint";
 import playwright from "eslint-plugin-playwright";
+// import vitest from "eslint-plugin-vitest";
 
 export default [
-  js.configs.recommended,
-  ...tsEslint.configs.recommended,
-  ...eslintPluginSvelte.configs["flat/recommended"],
-  eslintConfigPrettier,
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  ...svelte.configs["flat/recommended"],
+  prettier,
+  ...svelte.configs["flat/prettier"],
   {
     ...playwright.configs["flat/playwright"],
     files: ["**/tests/**"],
   },
   //   vitest.configs.recommended,
-  ...eslintPluginSvelte.configs["flat/prettier"],
   {
     languageOptions: {
       ecmaVersion: "latest",
@@ -27,7 +27,7 @@ export default [
       parserOptions: {
         project: true,
         tsconfigRootDir: import.meta.dirname,
-        parser: tsEslint.parser,
+        parser: tseslint.parser,
         extraFileExtensions: [".svelte"],
       },
     },
@@ -78,7 +78,7 @@ export default [
   },
   {
     files: ["*.js"],
-    ...tsEslint.configs.disableTypeChecked,
+    ...tseslint.configs.disableTypeChecked,
   },
   {
     files: ["**/*.svelte"],

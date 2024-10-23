@@ -1,4 +1,4 @@
-import { splitFolderAndFileName } from "@rilldata/web-common/features/entity-management/file-path-utils";
+import { splitFolderAndFileName } from "@rilldata/utils";
 import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
 import { directoryState } from "@rilldata/web-common/features/file-explorer/directory-store";
 import { getPaddingFromPath } from "@rilldata/web-common/features/file-explorer/nav-tree-spacing";

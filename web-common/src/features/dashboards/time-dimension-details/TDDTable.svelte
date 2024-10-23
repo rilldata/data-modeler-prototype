@@ -20,7 +20,7 @@
     SelectedCheckmark,
   } from "@rilldata/web-common/features/dashboards/time-dimension-details/TDDIcons";
   import { getClassForCell } from "@rilldata/web-common/features/dashboards/time-dimension-details/util";
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard } from "@rilldata/actions";
   import { createMeasureValueFormatter } from "@rilldata/web-common/lib/number-formatting/format-measure-value";
   import type { MetricsViewSpecMeasureV2 } from "@rilldata/web-common/runtime-client";
   import { createEventDispatcher } from "svelte";

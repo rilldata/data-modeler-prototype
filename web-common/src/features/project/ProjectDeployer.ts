@@ -1,9 +1,8 @@
 import { page } from "$app/stores";
 import type { ConnectError } from "@connectrpc/connect";
-import { sanitizeOrgName } from "@rilldata/web-common/features/organization/sanitizeOrgName";
+import { sanitizeName, waitUntil } from "@rilldata/utils";
 import { extractDeployError } from "@rilldata/web-common/features/project/deploy-errors";
 import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
-import { waitUntil } from "@rilldata/web-common/lib/waitUtils";
 import { behaviourEvent } from "@rilldata/web-common/metrics/initMetrics";
 import { BehaviourEventAction } from "@rilldata/web-common/metrics/service/BehaviourEventTypes";
 import {
@@ -182,6 +181,6 @@ export class ProjectDeployer {
   }
 
   private getOrgNameFromEmail(email: string): string {
-    return sanitizeOrgName(email.split("@")[0] ?? "");
+    return sanitizeName(email.split("@")[0] ?? "");
   }
 }

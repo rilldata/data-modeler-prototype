@@ -9,7 +9,7 @@
   import { createForm } from "svelte-forms-lib";
   import * as yup from "yup";
   import { Button } from "../../components/button";
-  import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
+  import { eventBus } from "@rilldata/events";
   import { getLocalIANA } from "../../lib/time/timezone";
   import {
     V1ExportFormat,

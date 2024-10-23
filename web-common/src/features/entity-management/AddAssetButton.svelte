@@ -28,7 +28,7 @@
     useDirectoryNamesInDirectory,
     useFileNamesInDirectory,
   } from "./file-selectors";
-  import { getName } from "./name-utils";
+  import { getName } from "@rilldata/utils";
   import {
     resourceColorMapping,
     resourceIconMapping,

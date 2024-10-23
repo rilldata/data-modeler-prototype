@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
+  import { copyToClipboard } from "@rilldata/actions";
   import {
     FLOATS,
     INTERVALS,

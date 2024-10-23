@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { useDashboardFlowTestSetup } from "web-local/tests/explores/dashboard-flow-test-setup";
+import { useDashboardFlowTestSetup } from "./dashboard-flow-test-setup";
 import { startRuntimeForEachTest } from "../utils/startRuntimeForEachTest";
 
 test.describe("~~~~~~~~~~~~~~~~~~~~FIXME RENAME THIS~~~~~~~~~~~~~~~~~~~~~~~", () => {
