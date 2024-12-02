@@ -1320,6 +1320,8 @@ paths:
                 title: Optional
               exact:
                 type: boolean
+              fillMissing:
+                type: boolean
       tags:
         - QueryService
   /v1/instances/{instanceId}/queries/metrics-views/{metricsViewName}/compare-toplist:
@@ -2999,6 +3001,9 @@ definitions:
         type: object
       validPercentOfTotal:
         type: boolean
+      treatNullsAs:
+        type: string
+        title: TODO what should the type, using string values will not work when coalescing numeric cols
     title: Measures are aggregated computed values
   MetricsViewSpecMeasureWindow:
     type: object
@@ -4710,6 +4715,8 @@ definitions:
         description: Deprecated. should be removed once UI is moved to use new filters
         title: Optional
       exact:
+        type: boolean
+      fillMissing:
         type: boolean
   v1MetricsViewAggregationResponse:
     type: object

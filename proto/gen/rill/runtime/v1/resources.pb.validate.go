@@ -12590,6 +12590,8 @@ func (m *MetricsViewSpec_MeasureV2) validate(all bool) error {
 
 	// no validation rules for ValidPercentOfTotal
 
+	// no validation rules for TreatNullsAs
+
 	if len(errors) > 0 {
 		return MetricsViewSpec_MeasureV2MultiError(errors)
 	}

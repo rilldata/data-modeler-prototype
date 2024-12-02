@@ -205,6 +205,7 @@ message MetricsViewSpec {
     string format_d3 = 7;
     google.protobuf.Struct format_d3_locale = 13;
     bool valid_percent_of_total = 6;
+    string treat_nulls_as = 14; // TODO what should the type, using string values will not work when coalescing numeric cols
   }
   // Connector containing the table
   string connector = 1;

@@ -193,6 +193,10 @@ func (d Dialect) String() string {
 	}
 }
 
+func (d Dialect) ContextKeyArgPrefix() string {
+	return fmt.Sprintf("%s_context__", d.String())
+}
+
 func (d Dialect) CanPivot() bool {
 	return d == DialectDuckDB
 }

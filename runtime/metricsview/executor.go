@@ -2,6 +2,7 @@ package metricsview
 
 import (
 	"context"
+	sql2 "database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -212,6 +213,10 @@ func (e *Executor) Query(ctx context.Context, qry *Query, executionTime *time.Ti
 		sql, args, err := ast.SQL()
 		if err != nil {
 			return nil, err
+		}
+
+		for k, v := range ast.olapContext {
+			args = append(args, sql2.NamedArg{Name: drivers.DialectDruid.ContextKeyArgPrefix() + k, Value: v})
 		}
 
 		res, err = e.olap.Execute(ctx, &drivers.Statement{

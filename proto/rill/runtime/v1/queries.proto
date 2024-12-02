@@ -389,6 +389,7 @@ message MetricsViewAggregationRequest {
   // Optional
   MetricsViewFilter filter = 14; // Deprecated. should be removed once UI is moved to use new filters
   bool exact = 17;
+  bool fill_missing = 21;
 }
 
 message MetricsViewAggregationResponse {

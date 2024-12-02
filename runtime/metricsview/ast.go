@@ -9,6 +9,8 @@ import (
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime"
 	"github.com/rilldata/rill/runtime/drivers"
+	"github.com/rilldata/rill/runtime/drivers/druid/druidsqldriver"
+	"github.com/rilldata/rill/runtime/pkg/timeutil"
 )
 
 // AST is the abstract syntax tree for a metrics SQL query.
@@ -31,6 +33,7 @@ type AST struct {
 	security    *runtime.ResolvedSecurity
 	query       *Query
 	dialect     drivers.Dialect
+	olapContext map[string]any
 }
 
 // SelectNode represents a query that computes measures by dimensions.
@@ -57,6 +60,9 @@ type SelectNode struct {
 	OrderBy              []OrderFieldNode // Fields to order by
 	Limit                *int64           // Limit for the query
 	Offset               *int64           // Offset for the query
+	FromCrossSelect      *SelectNode      // sub-select containing cross join to select from (only one of FromTable, FromSelect, FromCrossSelect can be set)
+	CrossJoinSelects     []*SelectNode    // sub-selects containing cross joins of FromCrossSelect
+	UnionAllSelects      []*SelectNode    // Selects to union all, if this is set all other selects are ignored
 }
 
 // FieldNode represents a column in a SELECT clause. It also carries metadata related to the dimension/measure it was derived from.
@@ -67,6 +73,7 @@ type FieldNode struct {
 	DisplayName string
 	Expr        string
 	AutoUnnest  bool
+	TreatNullAs string // only used for measures
 }
 
 // ExprNode represents an expression for a WHERE clause.
@@ -648,6 +655,9 @@ func (a *AST) buildBaseSelect(alias string, comparison bool) (*SelectNode, error
 		if err != nil {
 			return nil, err
 		}
+		if sn == nil {
+			return n, nil
+		}
 
 		a.wrapSelect(n, a.generateIdentifier())
 		n.SpineSelect = sn
@@ -689,7 +699,87 @@ func (a *AST) buildSpineSelect(alias string, spine *Spine, tr *TimeRange) (*Sele
 	}
 
 	if spine.TimeRange != nil {
-		return nil, errors.New("time_range not yet supported in spine")
+		if a.dialect == drivers.DialectDruid {
+			if a.olapContext == nil {
+				a.olapContext = make(map[string]any)
+			}
+			a.olapContext[druidsqldriver.SkipEmptyBucketsContextKey] = false
+			return nil, nil
+		}
+
+		// if spine generates more than 1000 values then return an error
+		bins := timeutil.ApproximateBins(spine.TimeRange.Start, spine.TimeRange.End, spine.TimeRange.Grain.ToTimeutil())
+		if bins > 1000 {
+			return nil, errors.New("time spine generates more than 1000 values")
+		}
+
+		var rangeSelect *SelectNode
+		if a.dialect == drivers.DialectDuckDB {
+			from := fmt.Sprintf("range('%s'::TIMESTAMP, '%s'::TIMESTAMP, INTERVAL '1 %s')", spine.TimeRange.Start.Format(time.RFC3339), spine.TimeRange.End.Format(time.RFC3339), spine.TimeRange.Grain)
+			rangeSelect = &SelectNode{
+				Alias: alias,
+				DimFields: []FieldNode{
+					{
+						Name:        spine.TimeRange.Alias,
+						DisplayName: spine.TimeRange.Alias,
+						Expr:        "range",
+					},
+				},
+				FromTable: &from,
+			}
+		} else if a.dialect == drivers.DialectClickHouse {
+			rangeSelect = &SelectNode{
+				Alias: alias,
+			}
+
+			// ClickHouse does not support range() function, so we need to generate a series of timestamps
+			for t := spine.TimeRange.Start; t.Before(spine.TimeRange.End); t = timeutil.AddTime(t, spine.TimeRange.Grain.ToTimeutil(), 1) {
+				rangeSelect.UnionAllSelects = append(rangeSelect.UnionAllSelects, &SelectNode{
+					Alias: "", // alias is not needed for union all selects
+					DimFields: []FieldNode{
+						{
+							Name:        spine.TimeRange.Alias,
+							DisplayName: spine.TimeRange.Alias,
+							Expr:        fmt.Sprintf("'%s'::DateTime64", t.Format("2006-01-02T15:04:05.000")),
+						},
+					},
+				})
+			}
+		} else {
+			return nil, errors.New("unsupported dialect")
+		}
+		if len(a.dimFields) == 1 {
+			return rangeSelect, nil
+		}
+
+		var newDims []FieldNode
+		for _, f := range a.dimFields {
+			if f.Name != spine.TimeRange.Alias {
+				newDims = append(newDims, f)
+			}
+		}
+
+		rangeSelect.Alias = a.generateIdentifier()
+
+		dimSelect := &SelectNode{
+			Alias:     a.generateIdentifier(),
+			DimFields: newDims,
+			FromTable: a.underlyingTable,
+			Where:     a.underlyingWhere,
+			Group:     true,
+		}
+
+		a.addTimeRange(dimSelect, tr)
+
+		// there are other dimensions in the query, so cross join the spine time range with the other dimensions
+		crossSelect := &SelectNode{
+			Alias:            alias,
+			CrossJoinSelects: []*SelectNode{dimSelect, rangeSelect},
+		}
+
+		a.wrapSelect(crossSelect, "")
+
+		return crossSelect, nil
 	}
 
 	return nil, errors.New("unhandled spine type")
@@ -730,11 +820,14 @@ func (a *AST) addMeasureField(n *SelectNode, m *runtimev1.MetricsViewSpec_Measur
 
 	switch m.Type {
 	case runtimev1.MetricsViewSpec_MEASURE_TYPE_UNSPECIFIED, runtimev1.MetricsViewSpec_MEASURE_TYPE_SIMPLE:
-		return a.addSimpleMeasure(n, m)
+		_, err = a.addSimpleMeasure(n, m)
+		return err
 	case runtimev1.MetricsViewSpec_MEASURE_TYPE_DERIVED:
-		return a.addDerivedMeasure(n, m)
+		_, err = a.addDerivedMeasure(n, m)
+		return err
 	case runtimev1.MetricsViewSpec_MEASURE_TYPE_TIME_COMPARISON:
-		return a.addTimeComparisonMeasure(n, m)
+		_, err = a.addTimeComparisonMeasure(n, m)
+		return err
 	default:
 		panic("unhandled measure type")
 	}
@@ -742,32 +835,34 @@ func (a *AST) addMeasureField(n *SelectNode, m *runtimev1.MetricsViewSpec_Measur
 
 // addSimpleMeasure adds a measure of type simple to the given SelectNode.
 // When called, we know the measure is not present in the SelectNode, but it might be present in a sub-select.
-func (a *AST) addSimpleMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_MeasureV2) error {
+func (a *AST) addSimpleMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_MeasureV2) (*FieldNode, error) {
 	// Base case: it targets the underlying table.
 	// Add the measure directly to the SELECT list.
 	if n.FromTable != nil {
 		expr, err := a.sqlForMeasure(m, n)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		n.MeasureFields = append(n.MeasureFields, FieldNode{
 			Name:        m.Name,
 			DisplayName: m.DisplayName,
 			Expr:        expr,
+			TreatNullAs: m.TreatNullsAs,
 		})
 
-		return nil
+		return &n.MeasureFields[len(n.MeasureFields)-1], nil
 	}
 
 	// Recursive case: it targets another SelectNode.
 	// We recurse on the sub-select and add a pass-through field to the current node.
 
 	if !hasMeasure(n.FromSelect, m.Name) { // Don't recurse if already in scope in sub-query
-		err := a.addSimpleMeasure(n.FromSelect, m)
+		f, err := a.addSimpleMeasure(n.FromSelect, m)
 		if err != nil {
-			return err
+			return nil, err
 		}
+		f.TreatNullAs = "" // only have to set this at the top level
 	}
 
 	expr := a.sqlForMember(n.FromSelect.Alias, m.Name)
@@ -779,14 +874,15 @@ func (a *AST) addSimpleMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_Measu
 		Name:        m.Name,
 		DisplayName: m.DisplayName,
 		Expr:        expr,
+		TreatNullAs: m.TreatNullsAs,
 	})
 
-	return nil
+	return &n.MeasureFields[len(n.MeasureFields)-1], nil
 }
 
 // addDerivedMeasure adds a measure of type derived to the given SelectNode.
 // When called, we know the measure is not present in the SelectNode, but it might be present in a sub-select.
-func (a *AST) addDerivedMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_MeasureV2) error {
+func (a *AST) addDerivedMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_MeasureV2) (*FieldNode, error) {
 	// Handle derived measures with "per" dimensions separately.
 	if len(m.PerDimensions) > 0 {
 		return a.addDerivedMeasureWithPer(n, m)
@@ -797,10 +893,11 @@ func (a *AST) addDerivedMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_Meas
 	// so we need to ensure the referenced names exist only in ONE sub-query.
 	if n.JoinComparisonSelect != nil {
 		if !hasMeasure(n.FromSelect, m.Name) {
-			err := a.addDerivedMeasure(n.FromSelect, m)
+			f, err := a.addDerivedMeasure(n.FromSelect, m)
 			if err != nil {
-				return err
+				return nil, err
 			}
+			f.TreatNullAs = "" // only have to set this at the top level
 		}
 
 		expr := a.sqlForMember(n.FromSelect.Alias, m.Name)
@@ -812,9 +909,10 @@ func (a *AST) addDerivedMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_Meas
 			Name:        m.Name,
 			DisplayName: m.DisplayName,
 			Expr:        expr,
+			TreatNullAs: m.TreatNullsAs,
 		})
 
-		return nil
+		return &n.MeasureFields[len(n.MeasureFields)-1], nil
 	}
 	// Now we know it's NOT a node with a comparison join.
 
@@ -830,13 +928,13 @@ func (a *AST) addDerivedMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_Meas
 	// Since the node doesn't have a comparison join, addReferencedMeasuresToScope guarantees the referenced measures are ONLY in scope in ONE sub-query, which prevents ambiguous references in the measure expression.
 	err := a.addReferencedMeasuresToScope(n, m.ReferencedMeasures)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Add the derived measure expression to the current node.
 	expr, err := a.sqlForMeasure(m, n)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if n.Group {
 		// TODO: There's a risk of expr containing a window, which can't be wrapped by ANY_VALUE. Need to fix it by wrapping with a non-grouped SELECT. Doesn't matter until we implement addDerivedMeasureWithPer.
@@ -847,32 +945,33 @@ func (a *AST) addDerivedMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_Meas
 		Name:        m.Name,
 		DisplayName: m.DisplayName,
 		Expr:        expr,
+		TreatNullAs: m.TreatNullsAs,
 	})
 
-	return nil
+	return &n.MeasureFields[len(n.MeasureFields)-1], nil
 }
 
 // addDerivedMeasureWithPer adds a measure of type derived with "per" dimensions to the given SelectNode.
 // When called, we know the measure is not present in the SelectNode, but it might be present in a sub-select.
-func (a *AST) addDerivedMeasureWithPer(_ *SelectNode, _ *runtimev1.MetricsViewSpec_MeasureV2) error {
-	return errors.New(`support for "per" not implemented`)
+func (a *AST) addDerivedMeasureWithPer(_ *SelectNode, _ *runtimev1.MetricsViewSpec_MeasureV2) (*FieldNode, error) {
+	return nil, errors.New(`support for "per" not implemented`)
 }
 
 // addTimeComparisonMeasure adds a measure of type time comparison to the given SelectNode.
 // When called, we know the measure is not present in the SelectNode, but it might be present in a sub-select.
-func (a *AST) addTimeComparisonMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_MeasureV2) error {
+func (a *AST) addTimeComparisonMeasure(n *SelectNode, m *runtimev1.MetricsViewSpec_MeasureV2) (*FieldNode, error) {
 	// If the node doesn't have a comparison join, we wrap it in a new SELECT that we add the comparison join to.
 	// We use the hardcoded aliases "base" and "comparison" for the two SELECTs (which must be used in the comparison measure expression).
 	if n.JoinComparisonSelect == nil {
 		if a.query.ComparisonTimeRange == nil {
-			return errors.New("comparison time range not provided")
+			return nil, errors.New("comparison time range not provided")
 		}
 
 		a.wrapSelect(n, "base")
 
 		csn, err := a.buildBaseSelect("comparison", true)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		n.JoinComparisonSelect = csn
 
@@ -887,13 +986,13 @@ func (a *AST) addTimeComparisonMeasure(n *SelectNode, m *runtimev1.MetricsViewSp
 	// Add the referenced measures to the base and comparison SELECTs.
 	err := a.addReferencedMeasuresToScope(n, m.ReferencedMeasures)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Add the comparison measure expression to the current node.
 	expr, err := a.sqlForMeasure(m, n)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if n.Group {
 		// TODO: There's a risk of expr containing a window, which can't be wrapped by ANY_VALUE. Need to fix it by wrapping with a non-grouped SELECT. Doesn't matter until we implement addDerivedMeasureWithPer.
@@ -905,9 +1004,10 @@ func (a *AST) addTimeComparisonMeasure(n *SelectNode, m *runtimev1.MetricsViewSp
 		Name:        m.Name,
 		DisplayName: m.DisplayName,
 		Expr:        expr,
+		TreatNullAs: m.TreatNullsAs,
 	})
 
-	return nil
+	return &n.MeasureFields[len(n.MeasureFields)-1], nil
 }
 
 // addOrderField adds a sort field to the given SelectNode.
@@ -982,17 +1082,43 @@ func (a *AST) wrapSelect(s *SelectNode, innerAlias string) {
 		})
 	}
 
+	for _, cjs := range cpy.CrossJoinSelects {
+		for _, f := range cjs.DimFields {
+			s.DimFields = append(s.DimFields, FieldNode{
+				Name:        f.Name,
+				DisplayName: f.DisplayName,
+				Expr:        a.sqlForMember(cpy.Alias, f.Name),
+			})
+		}
+
+		if len(cjs.UnionAllSelects) > 0 {
+			// All dimensions will be same across UNION ALL SELECTS so we can just pick the first one
+			for _, f := range cjs.UnionAllSelects[0].DimFields {
+				s.DimFields = append(s.DimFields, FieldNode{
+					Name:        f.Name,
+					DisplayName: f.DisplayName,
+					Expr:        a.sqlForMember(cpy.Alias, f.Name),
+				})
+			}
+		}
+	}
+
 	s.MeasureFields = make([]FieldNode, 0, len(cpy.MeasureFields))
 	for _, f := range cpy.MeasureFields {
 		s.MeasureFields = append(s.MeasureFields, FieldNode{
 			Name:        f.Name,
 			DisplayName: f.DisplayName,
 			Expr:        a.sqlForMember(cpy.Alias, f.Name),
+			TreatNullAs: "",
 		})
 	}
 
 	s.FromTable = nil
-	s.FromSelect = &cpy
+	if len(cpy.CrossJoinSelects) > 0 {
+		s.FromCrossSelect = &cpy
+	} else {
+		s.FromSelect = &cpy
+	}
 	s.SpineSelect = nil
 	s.LeftJoinSelects = nil
 	s.JoinComparisonSelect = nil
@@ -1008,6 +1134,7 @@ func (a *AST) wrapSelect(s *SelectNode, innerAlias string) {
 
 	s.Limit = nil
 	s.Offset = nil
+	s.CrossJoinSelects = nil
 }
 
 // findFieldForDimension finds the field in the SelectNode that corresponds to the dimension selector.

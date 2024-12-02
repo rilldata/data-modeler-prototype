@@ -56,6 +56,7 @@ type MetricsViewYAML struct {
 		FormatD3Locale      map[string]any `yaml:"format_d3_locale"`
 		Ignore              bool           `yaml:"ignore"` // Deprecated
 		ValidPercentOfTotal bool           `yaml:"valid_percent_of_total"`
+		TreatNullsAs        string         `yaml:"treat_nulls_as"`
 	}
 	Security *SecurityPolicyYAML
 
@@ -696,6 +697,7 @@ func (p *Parser) parseMetricsView(node *Node) error {
 			FormatD3:            measure.FormatD3,
 			FormatD3Locale:      formatD3Locale,
 			ValidPercentOfTotal: measure.ValidPercentOfTotal,
+			TreatNullsAs:        measure.TreatNullsAs,
 		})
 	}
 	if len(measures) == 0 {

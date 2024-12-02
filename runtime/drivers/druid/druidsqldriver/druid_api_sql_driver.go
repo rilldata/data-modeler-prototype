@@ -16,6 +16,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rilldata/rill/admin/pkg/urlutil"
+	"github.com/rilldata/rill/runtime/drivers"
 	"github.com/rilldata/rill/runtime/drivers/druid/retrier"
 )
 
@@ -25,6 +27,12 @@ var (
 	errCoordinatorDown = regexp.MustCompile("A leader node could not be found for") // HTTP 500
 	errBrokerDown      = regexp.MustCompile("There are no available brokers")       // HTTP 500
 	errNoObject        = regexp.MustCompile("Object '.*' not found")                // HTTP 400
+)
+
+const (
+	SkipEmptyBucketsContextKey           = "skipEmptyBuckets"
+	sqlQueryIDContextKey                 = "sqlQueryId"
+	enableTimeBoundaryPlanningContextKey = "enableTimeBoundaryPlanning"
 )
 
 type druidSQLDriver struct{}
@@ -83,7 +91,7 @@ func (c *sqlConnection) QueryContext(ctx context.Context, query string, args []d
 		context.AfterFunc(ctx, func() {
 			tctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 			defer cancel()
-			r, err := http.NewRequestWithContext(tctx, http.MethodDelete, c.dsn+"/"+dr.Context.SQLQueryID, http.NoBody)
+			r, err := http.NewRequestWithContext(tctx, http.MethodDelete, urlutil.MustJoinURL(c.dsn, dr.Context[sqlQueryIDContextKey].(string)), http.NoBody)
 			if err != nil {
 				return
 			}
@@ -415,43 +423,45 @@ func (chc *coordinatorHTTPCheck) IsHardFailure(ctx context.Context) (bool, error
 	}
 }
 
-type DruidQueryContext struct {
-	SQLQueryID                 string `json:"sqlQueryId"`
-	EnableTimeBoundaryPlanning bool   `json:"enableTimeBoundaryPlanning"`
-}
-
 type DruidParameter struct {
 	Type  string `json:"type"`
 	Value any    `json:"value"`
 }
 
 type DruidRequest struct {
-	Query          string            `json:"query"`
-	Header         bool              `json:"header"`
-	SQLTypesHeader bool              `json:"sqlTypesHeader"`
-	ResultFormat   string            `json:"resultFormat"`
-	Parameters     []DruidParameter  `json:"parameters"`
-	Context        DruidQueryContext `json:"context"`
+	Query          string           `json:"query"`
+	Header         bool             `json:"header"`
+	SQLTypesHeader bool             `json:"sqlTypesHeader"`
+	ResultFormat   string           `json:"resultFormat"`
+	Parameters     []DruidParameter `json:"parameters"`
+	Context        map[string]any   `json:"context"`
 }
 
 func newDruidRequest(query string, args []driver.NamedValue) *DruidRequest {
-	parameters := make([]DruidParameter, len(args))
-	for i, arg := range args {
-		parameters[i] = DruidParameter{
+	queryCtx := make(map[string]any)
+	queryCtx[sqlQueryIDContextKey] = uuid.New().String()
+	queryCtx[enableTimeBoundaryPlanningContextKey] = true
+
+	var parameters []DruidParameter
+	for _, arg := range args {
+		if strings.HasPrefix(arg.Name, drivers.DialectDruid.ContextKeyArgPrefix()) {
+			queryCtx[strings.TrimPrefix(arg.Name, drivers.DialectDruid.ContextKeyArgPrefix())] = arg.Value
+			continue
+		}
+
+		parameters = append(parameters, DruidParameter{
 			Type:  toType(arg.Value),
 			Value: arg.Value,
-		}
+		})
 	}
+
 	return &DruidRequest{
 		Query:          query,
 		Header:         true,
 		SQLTypesHeader: true,
 		ResultFormat:   "arrayLines",
 		Parameters:     parameters,
-		Context: DruidQueryContext{
-			SQLQueryID:                 uuid.New().String(),
-			EnableTimeBoundaryPlanning: true,
-		},
+		Context:        queryCtx,
 	}
 }
 

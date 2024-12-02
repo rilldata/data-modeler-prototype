@@ -60,6 +60,7 @@ func (s *Server) MetricsViewAggregation(ctx context.Context, req *runtimev1.Metr
 		SecurityClaims:      auth.GetClaims(ctx).SecurityClaims(),
 		Exact:               req.Exact,
 		Aliases:             req.Aliases,
+		FillMissing:         req.FillMissing,
 	}
 	err := s.runtime.Query(ctx, req.InstanceId, q, int(req.Priority))
 	if err != nil {
