@@ -16,7 +16,10 @@
   import LeaderboardDisplay from "../leaderboard/LeaderboardDisplay.svelte";
   import RowsViewerAccordion from "../rows-viewer/RowsViewerAccordion.svelte";
   import { getStateManagers } from "../state-managers/state-managers";
-  import { useTimeControlStore } from "../time-controls/time-control-store";
+  import {
+    timeControlStateSelector,
+    useTimeControlStore,
+  } from "../time-controls/time-control-store";
   import TimeDimensionDisplay from "../time-dimension-details/TimeDimensionDisplay.svelte";
   import MetricsTimeSeriesCharts from "../time-series/MetricsTimeSeriesCharts.svelte";
 
@@ -35,9 +38,8 @@
 
     dashboardStore,
     validSpecStore,
+    timeRangeSummaryStore,
   } = StateManagers;
-
-  const timeControlsStore = useTimeControlStore(StateManagers);
 
   const { cloudDataViewer, readOnly } = featureFlags;
 
@@ -69,7 +71,12 @@
 
   $: hidePivot = isEmbedded && $explore.data?.explore?.embedsHidePivot;
 
-  $: timeControls = $timeControlsStore;
+  $: timeControls = timeControlStateSelector([
+    metricsView,
+    $explore.data?.explore,
+    $timeRangeSummaryStore,
+    $dashboardStore,
+  ]);
 
   $: timeRange = {
     start: timeControls.timeStart,

@@ -5,7 +5,7 @@ import {
 } from "@rilldata/web-common/features/dashboards/state-managers/selectors/measures";
 import type { StateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
 import { sanitiseExpression } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
-import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
+import { timeControlStateSelector } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
 import {
   createTotalsForMeasure,
   createUnfilteredTotalsForMeasure,
@@ -20,7 +20,10 @@ import {
   createQueryServiceMetricsViewTimeSeries,
 } from "@rilldata/web-common/runtime-client";
 import type { HTTPError } from "@rilldata/web-common/runtime-client/fetchWrapper";
-import type { CreateQueryResult } from "@tanstack/svelte-query";
+import type {
+  CreateQueryResult,
+  QueryObserverResult,
+} from "@tanstack/svelte-query";
 import { type Writable, derived, writable, type Readable } from "svelte/store";
 import { memoizeMetricsStore } from "../state-managers/memoize-metrics-store";
 import {
@@ -60,10 +63,36 @@ export function createMetricsViewTimeSeries(
     [
       ctx.runtime,
       ctx.metricsViewName,
+      ctx.validSpecStore,
+      ctx.timeRangeSummaryStore,
       ctx.dashboardStore,
-      useTimeControlStore(ctx),
     ],
-    ([runtime, metricsViewName, dashboardStore, timeControls], set) =>
+    (
+      [runtime, metricsViewName, validSpec, timeRangeSummary, dashboardStore],
+      set,
+    ) => {
+      if (
+        !validSpec?.data?.metricsView ||
+        !validSpec?.data?.explore ||
+        timeRangeSummary.isFetching ||
+        !dashboardStore
+      ) {
+        set({
+          isFetching: true,
+          isError: false,
+        } as QueryObserverResult<V1MetricsViewTimeSeriesResponse, HTTPError>);
+        return;
+      }
+
+      const { metricsView, explore } = validSpec.data;
+      // This indirection makes sure only one update of dashboard store triggers this
+      const timeControls = timeControlStateSelector([
+        metricsView,
+        explore,
+        timeRangeSummary,
+        dashboardStore,
+      ]);
+
       createQueryServiceMetricsViewTimeSeries(
         runtime.instanceId,
         metricsViewName,
@@ -87,7 +116,6 @@ export function createMetricsViewTimeSeries(
         {
           query: {
             enabled:
-              !!timeControls.ready &&
               !!ctx.dashboardStore &&
               // in case of comparison, we need to wait for the comparison start time to be available
               (!isComparison || !!timeControls.comparisonAdjustedStart),
@@ -95,7 +123,8 @@ export function createMetricsViewTimeSeries(
             keepPreviousData: true,
           },
         },
-      ).subscribe(set),
+      ).subscribe(set);
+    },
   );
 }
 
@@ -103,9 +132,9 @@ export function createTimeSeriesDataStore(
   ctx: StateManagers,
 ): TimeSeriesDataStore {
   return derived(
-    [ctx.validSpecStore, useTimeControlStore(ctx), ctx.dashboardStore],
-    ([validSpec, timeControls, dashboardStore], set) => {
-      if (!validSpec.data || !timeControls.ready || timeControls.isFetching) {
+    [ctx.validSpecStore, ctx.timeRangeSummaryStore, ctx.dashboardStore],
+    ([validSpec, timeRangeSummary, dashboardStore], set) => {
+      if (!validSpec.data || timeRangeSummary.isFetching || !dashboardStore) {
         set({
           isFetching: true,
           isError: false,
@@ -114,11 +143,18 @@ export function createTimeSeriesDataStore(
         return;
       }
 
+      const { metricsView, explore } = validSpec.data;
+      // This indirection makes sure only one update of dashboard store triggers this
+      const timeControls = timeControlStateSelector([
+        metricsView,
+        explore,
+        timeRangeSummary,
+        dashboardStore,
+      ]);
+
       const showComparison = timeControls.showTimeComparison;
       const interval =
         timeControls.selectedTimeRange?.interval ?? timeControls.minTimeGrain;
-
-      const { metricsView, explore } = validSpec.data;
 
       const allMeasures = explore?.measures ?? [];
       let measures = allMeasures;

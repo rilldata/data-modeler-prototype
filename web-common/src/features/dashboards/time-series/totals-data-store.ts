@@ -1,3 +1,4 @@
+import type { QueryObserverResult } from "@rilldata/svelte-query";
 import { mergeMeasureFilters } from "@rilldata/web-common/features/dashboards/filters/measure-filters/measure-filter-utils";
 import type { StateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
 import {
@@ -6,7 +7,7 @@ import {
   matchExpressionByName,
   sanitiseExpression,
 } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
-import { useTimeControlStore } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
+import { timeControlStateSelector } from "@rilldata/web-common/features/dashboards/time-controls/time-control-store";
 import {
   createQueryServiceMetricsViewAggregation,
   type V1MetricsViewAggregationResponse,
@@ -24,10 +25,36 @@ export function createTotalsForMeasure(
     [
       ctx.runtime,
       ctx.metricsViewName,
-      useTimeControlStore(ctx),
+      ctx.validSpecStore,
+      ctx.timeRangeSummaryStore,
       ctx.dashboardStore,
     ],
-    ([runtime, metricsViewName, timeControls, dashboard], set) =>
+    (
+      [runtime, metricsViewName, validSpec, timeRangeSummary, dashboard],
+      set,
+    ) => {
+      if (
+        !validSpec?.data?.metricsView ||
+        !validSpec?.data?.explore ||
+        timeRangeSummary.isFetching ||
+        !dashboard
+      ) {
+        set({
+          isFetching: true,
+          isError: false,
+        } as QueryObserverResult<V1MetricsViewAggregationResponse, HTTPError>);
+        return;
+      }
+
+      const { metricsView, explore } = validSpec.data;
+      // This indirection makes sure only one update of dashboard store triggers this
+      const timeControls = timeControlStateSelector([
+        metricsView,
+        explore,
+        timeRangeSummary,
+        dashboard,
+      ]);
+
       createQueryServiceMetricsViewAggregation(
         runtime.instanceId,
         metricsViewName,
@@ -49,7 +76,8 @@ export function createTotalsForMeasure(
             queryClient: ctx.queryClient,
           },
         },
-      ).subscribe(set),
+      ).subscribe(set);
+    },
   );
 }
 
@@ -62,10 +90,36 @@ export function createUnfilteredTotalsForMeasure(
     [
       ctx.runtime,
       ctx.metricsViewName,
-      useTimeControlStore(ctx),
+      ctx.validSpecStore,
+      ctx.timeRangeSummaryStore,
       ctx.dashboardStore,
     ],
-    ([runtime, metricsViewName, timeControls, dashboard], set) => {
+    (
+      [runtime, metricsViewName, validSpec, timeRangeSummary, dashboard],
+      set,
+    ) => {
+      if (
+        !validSpec?.data?.metricsView ||
+        !validSpec?.data?.explore ||
+        timeRangeSummary.isFetching ||
+        !dashboard
+      ) {
+        set({
+          isFetching: true,
+          isError: false,
+        } as QueryObserverResult<V1MetricsViewAggregationResponse, HTTPError>);
+        return;
+      }
+
+      const { metricsView, explore } = validSpec.data;
+      // This indirection makes sure only one update of dashboard store triggers this
+      const timeControls = timeControlStateSelector([
+        metricsView,
+        explore,
+        timeRangeSummary,
+        dashboard,
+      ]);
+
       const filter = sanitiseExpression(
         mergeMeasureFilters(dashboard),
         undefined,
