@@ -34,6 +34,7 @@
 
     newPath.push(id);
     const path = `/${newPath.join("/")}`;
+    if (option?.absolute) return path;
 
     // add the sub route if it has no variables
     return path + getNonVariableSubRoute(path, route);

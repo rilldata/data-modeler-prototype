@@ -532,6 +532,14 @@ const metricsViewReducers = {
     });
   },
 
+  // Temporary method to use this method outside stateManagers availability
+  clearAllFilters(name: string) {
+    updateMetricsExplorerByName(name, (metricsExplorer) => {
+      metricsExplorer.whereFilter = createAndExpression([]);
+      metricsExplorer.dimensionThresholdFilters = [];
+    });
+  },
+
   remove(name: string) {
     update((state) => {
       delete state.entities[name];

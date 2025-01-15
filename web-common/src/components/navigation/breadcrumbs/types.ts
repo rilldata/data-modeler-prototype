@@ -7,6 +7,7 @@ export type PathOption = {
   preloadData?: boolean;
   section?: string;
   pill?: string;
+  absolute?: boolean;
 };
 
 export type PathOptions = Map<Param, PathOption>;

@@ -4,6 +4,7 @@
   import {
     isBillingUpgradePage,
     isProjectInvitePage,
+    isProjectsBreakdownPage,
     isPublicReportPage,
     withinOrganization,
     withinProject,
@@ -67,7 +68,10 @@
     // invite page shouldn't show the banner since the illusion is that the user is not on cloud yet.
     isProjectInvitePage($page);
 
-  $: withinOnlyOrg = withinOrganization($page) && !withinProject($page);
+  $: showOrgTabs =
+    withinOrganization($page) &&
+    !withinProject($page) &&
+    !isProjectsBreakdownPage($page);
 </script>
 
 <svelte:head>
@@ -88,7 +92,7 @@
           manageProjectMembers={projectPermissions?.manageProjectMembers}
         />
 
-        {#if withinOnlyOrg}
+        {#if showOrgTabs}
           <OrganizationTabs />
         {/if}
       {/if}

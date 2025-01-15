@@ -39,9 +39,9 @@
   </div>
 
   {#if $usageMetrics?.data}
-    {#if singleProjectLimit && storageLimitBytesPerDeployment && storageLimitBytesPerDeployment !== "-1"}
-      <div class="quota-entry">
-        <div class="quota-entry-title">Data Size</div>
+    <div class="quota-entry">
+      <div class="quota-entry-title">Data Size</div>
+      {#if singleProjectLimit && storageLimitBytesPerDeployment && storageLimitBytesPerDeployment !== "-1"}
         <div>
           <Progress
             value={totalOrgUsage}
@@ -49,10 +49,17 @@
           />
           {formatUsageVsQuota(totalOrgUsage, storageLimitBytesPerDeployment)}
         </div>
-      </div>
-    {:else}
-      <!-- TODO: once we have the dashboard support link to it -->
-    {/if}
+      {:else}
+        <a
+          href={`/${organization}/-/projects-breakdown`}
+          target="_blank"
+          class="text-primary-600 text-xs"
+          data-sveltekit-preload-data="off"
+        >
+          See project size breakdown
+        </a>
+      {/if}
+    </div>
   {/if}
 </div>
 

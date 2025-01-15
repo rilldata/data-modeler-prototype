@@ -27,6 +27,10 @@ export function isProjectPage(page: Page): boolean {
   );
 }
 
+export function isProjectsBreakdownPage(page: Page): boolean {
+  return page.route.id === "/[organization]/-/projects-breakdown";
+}
+
 export function withinProject(page: Page): boolean {
   return !!page.route?.id?.startsWith("/[organization]/[project]");
 }
