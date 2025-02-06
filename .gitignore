@@ -76,3 +76,5 @@ sysroot/
 latest.txt
 /web-common/coverage
 
+
+web-local/duckdb*

@@ -1,5 +1,6 @@
 import { asyncWaitUntil } from "@rilldata/web-common/lib/waitUtils";
 import type { Page } from "playwright";
+import { expect } from "@playwright/test";
 
 export async function openFileNavEntryContextMenu(
   page: Page,
@@ -19,7 +20,7 @@ export async function clickMenuButton(
   text: string,
   role: "menuitem" | "option" = "menuitem",
 ) {
-  await page.getByRole(role, { name: text }).click();
+  await page.getByRole(role, { name: text }).first().click();
 }
 
 export async function waitForProfiling(
@@ -138,4 +139,45 @@ export async function updateCodeEditor(page: Page, code: string) {
   }
   await page.keyboard.insertText(code);
   await page.waitForTimeout(600);
+}
+
+export async function duplicateFileUsingMenu(page: Page, filePath: string) {
+  // open context menu and click rename
+  await openFileNavEntryContextMenu(page, filePath);
+  await clickMenuButton(page, "Duplicate");
+}
+
+export async function refreshFileUsingMenu(page: Page, filePath: string) {
+  // open context menu and click rename
+  await openFileNavEntryContextMenu(page, filePath);
+  await clickMenuButton(page, "Refresh source");
+}
+
+//maybe better to generalize actions, so for duplicate, rename, refresh
+export async function actionUsingMenu(
+  page: Page,
+  filePath: string,
+  action: string,
+) {
+  // open context menu and click rename
+  await openFileNavEntryContextMenu(page, filePath);
+  await clickMenuButton(page, action);
+}
+
+export async function checkExistInConnector(
+  page: Page,
+  connector: string,
+  db: string,
+  fileName: string,
+) {
+  await page.locator(`li[aria-label="${connector}"]`).click();
+  await page.locator(`li[aria-label="${db}"]`).click();
+  await page.locator(`li[aria-label^="${db}."]`).click(); //table name dynamic
+  await expect(
+    page
+      .locator(
+        `[aria-label*="${connector}-${db}."][aria-label*=".${fileName}"]`,
+      )
+      .first(),
+  ).toBeVisible(); //table name dynamic
 }

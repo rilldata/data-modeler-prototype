@@ -10,3 +10,4 @@
 log
 /playwright-report
 /test-results
+duckdb*

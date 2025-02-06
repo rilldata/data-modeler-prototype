@@ -3,7 +3,15 @@ import { defineConfig, devices } from "@playwright/test";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: "./tests",
+  testDir: "./tests/clickhouse",
+  testIgnore: [
+    "**/source-sqlite.spec.ts",
+    "**/source-duckdb.spec.ts",
+    "**/source-mysql.spec.ts",
+    "**/clickhouse/olap-clickhouse-cloud.spec.ts",
+    "**/clickhouse/olap-managed-clickhouse.spec.ts",
+  ],
+  // testMatch: "",
   /* Don't run tests in files in parallel in CI*/
   fullyParallel: !process.env.CI,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

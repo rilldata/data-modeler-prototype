@@ -9,6 +9,7 @@ export async function waitForFileNavEntry(
   navigated: boolean,
 ) {
   await page.getByLabel(`${filePath} Nav Entry`).waitFor();
+
   if (navigated) {
     await page.waitForURL(new RegExp(`/files${filePath}`));
   }
