@@ -6,9 +6,77 @@ import {
   createConnectorServiceOLAPListTables,
   createRuntimeServiceAnalyzeConnectors,
   createRuntimeServiceGetInstance,
+  createRuntimeServiceListConnectorDrivers,
 } from "../../../runtime-client";
 import { featureFlags } from "../../feature-flags";
+import {
+  CLICKHOUSE_SOURCE_CONNECTORS,
+  DUCKDB_SOURCE_CONNECTORS,
+} from "../connector-availability";
 import { OLAP_DRIVERS_WITHOUT_MODELING } from "./olap-config";
+
+export function useCurrentOlapConnector(instanceId: string) {
+  return createRuntimeServiceGetInstance(
+    instanceId,
+    { sensitive: true },
+    {
+      query: {
+        select: (data) => {
+          const {
+            instance: {
+              olapConnector: olapConnectorName = "",
+              connectors = [],
+              projectConnectors = [],
+            } = {},
+          } = data || {};
+          const olapConnector = [...connectors, ...projectConnectors].find(
+            (connector) => connector.name === olapConnectorName,
+          );
+          return olapConnector;
+        },
+      },
+    },
+  );
+}
+
+export function useSourceConnectorsForCurrentOlapConnector(instanceId: string) {
+  return derived(
+    [
+      createRuntimeServiceListConnectorDrivers(),
+      useCurrentOlapConnector(instanceId),
+    ],
+    ([connectors, olapConnector]) => {
+      const allConnectorDrivers = connectors.data?.connectors ?? [];
+      const olapConnectorType = olapConnector.data?.type;
+
+      if (!allConnectorDrivers || !olapConnectorType) {
+        return [];
+      }
+
+      const sourceConnectorNames = (
+        olapConnectorType === "clickhouse"
+          ? CLICKHOUSE_SOURCE_CONNECTORS
+          : olapConnectorType === "duckdb"
+            ? DUCKDB_SOURCE_CONNECTORS
+            : []
+      ) as string[];
+
+      const sourceConnectors = allConnectorDrivers
+        .filter((a) => {
+          return a.name && sourceConnectorNames.includes(a.name);
+        })
+        .sort(
+          // CAST SAFETY: we have filtered out any connectors that
+          // don't have a `name` in the previous filter
+          (a, b) =>
+            sourceConnectorNames.indexOf(a.name as string) -
+            sourceConnectorNames.indexOf(b.name as string),
+        );
+
+      return sourceConnectors;
+    },
+  );
+}
 
 export function useIsModelingSupportedForOlapDriver(
   instanceId: string,

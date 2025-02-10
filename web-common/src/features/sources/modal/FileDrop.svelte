@@ -1,14 +1,16 @@
 <script lang="ts">
-  import { goto, invalidate } from "$app/navigation";
+  import { goto } from "$app/navigation";
   import Overlay from "@rilldata/web-common/components/overlay/Overlay.svelte";
-  import { getFilePathFromNameAndType } from "@rilldata/web-common/features/entity-management/entity-mappers";
   import { EntityType } from "@rilldata/web-common/features/entity-management/types";
-  import { createRuntimeServiceUnpackEmpty } from "@rilldata/web-common/runtime-client";
+  import {
+    createRuntimeServiceUnpackEmpty,
+    runtimeServicePutFile,
+  } from "@rilldata/web-common/runtime-client";
   import { runtime } from "../../../runtime-client/runtime-store";
+  import { getFileAPIPathFromNameAndType } from "../../entity-management/entity-mappers";
   import { EMPTY_PROJECT_TITLE } from "../../welcome/constants";
   import { isProjectInitialized } from "../../welcome/is-project-initialized";
   import { compileLocalFileSourceYAML } from "../sourceUtils";
-  import { createSource } from "./createSource";
   import { uploadTableFiles } from "./file-upload";
 
   export let showDropOverlay: boolean;
@@ -38,20 +40,18 @@
               displayName: EMPTY_PROJECT_TITLE,
             },
           });
-
-          // Race condition: invalidate("init") must be called before we navigate to
-          // `/files/${newFilePath}`. invalidate("init") is also called in the
-          // `WatchFilesClient`, but there it's not guaranteed to get invoked before we need it.
-          await invalidate("init");
         }
 
-        const yaml = compileLocalFileSourceYAML(filePath);
-        await createSource(instanceId, tableName, yaml);
-        const newFilePath = getFilePathFromNameAndType(
+        const newFilePath = getFileAPIPathFromNameAndType(
           tableName,
           EntityType.Table,
         );
-        await goto(`/files${newFilePath}`);
+        await runtimeServicePutFile(instanceId, {
+          path: newFilePath,
+          blob: compileLocalFileSourceYAML(filePath),
+          createOnly: false,
+        });
+        await goto(`/files/${newFilePath}`);
       } catch (err) {
         console.error(err);
       }

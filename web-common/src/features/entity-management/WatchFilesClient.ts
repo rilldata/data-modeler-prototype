@@ -49,8 +49,6 @@ export class WatchFilesClient {
             void queryClient.invalidateQueries(
               getRuntimeServiceIssueDevJWTQueryKey({}),
             );
-
-            await invalidate("init");
           }
           this.seenFiles.add(res.path);
           break;

@@ -28,49 +28,37 @@ export const appScreen = derived(page, ($page) => {
     type: MetricsEventScreenName;
   };
   switch ($page.route.id) {
-    case "/(application)":
+    case "/(application)/(developer)":
       activeEntity = {
         name: $page?.params?.name,
         type: MetricsEventScreenName.Home,
       };
       break;
-    case "/(application)/source/[name]":
+    case "/(application)/(developer)/files/sources/[name]":
       activeEntity = {
         name: $page?.params?.name,
         type: MetricsEventScreenName.Source,
       };
       break;
-    case "/(application)/model/[name]":
+    case "/(application)/(developer)/files/models/[name]":
       activeEntity = {
         name: $page?.params?.name,
         type: MetricsEventScreenName.Model,
       };
       break;
-    case "/(application)/dashboard/[name]":
+    case "/(application)/(developer)/files/dashboards/[name]":
       activeEntity = {
         name: $page?.params?.name,
         type: MetricsEventScreenName.Dashboard,
       };
       break;
-    case "/(application)/dashboard/[name]/edit":
+    case "/(application)/(developer)/files/metrics/[name]":
       activeEntity = {
         name: $page?.params?.name,
         type: MetricsEventScreenName.MetricsDefinition,
       };
       break;
-    case "/(application)/chart/[name]":
-      activeEntity = {
-        name: $page?.params?.name,
-        type: MetricsEventScreenName.Chart,
-      };
-      break;
-    case "/(application)/canvas/[name]":
-      activeEntity = {
-        name: $page?.params?.name,
-        type: MetricsEventScreenName.Canvas,
-      };
-      break;
-    case "/(application)/welcome":
+    case "/welcome":
       activeEntity = {
         name: $page?.params?.name,
         type: MetricsEventScreenName.Splash,

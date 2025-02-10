@@ -1,7 +1,8 @@
 export enum EntityType {
   Connector = "Connector",
-  Table = "Table",
+  Source = "Source",
   Model = "Model",
+  Table = "Table",
   Application = "Application",
   MetricsDefinition = "MetricsDefinition",
   MetricsExplorer = "MetricsExplorer",

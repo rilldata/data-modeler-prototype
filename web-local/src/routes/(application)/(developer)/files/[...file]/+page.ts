@@ -4,13 +4,7 @@ import { featureFlags } from "@rilldata/web-common/features/feature-flags";
 import { error, redirect } from "@sveltejs/kit";
 import { get } from "svelte/store";
 
-export const load = async ({ params: { file }, parent }) => {
-  const parentData = await parent();
-
-  if (!parentData.initialized) {
-    throw redirect(303, "/");
-  }
-
+export const load = async ({ params: { file } }) => {
   const readOnly = get(featureFlags.readOnly);
   const path = addLeadingSlash(file);
 

@@ -5,7 +5,7 @@
 </script>
 
 <div>
-  <AlertTriangle size="16px" />
+  <AlertTriangle size="16px" className="shrink-0" />
   <p class="ml-2">
     {message}
   </p>

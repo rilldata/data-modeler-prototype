@@ -48,7 +48,9 @@ test.describe("File Explorer", () => {
       await page.getByLabel("/README.md actions menu").click();
       await page.getByRole("menuitem", { name: "Duplicate" }).click();
       await expect(
-        page.getByRole("link", { name: "README (copy).md" }),
+        page
+          .getByLabel("/README (copy).md Nav Entry")
+          .getByRole("link", { name: "README (copy).md" }),
       ).toBeVisible();
       await expect(
         page.getByText("Here's a README.md file for the e2e test!"),

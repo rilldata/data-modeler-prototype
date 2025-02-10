@@ -1,24 +1,8 @@
 <script lang="ts">
-  import Add from "@rilldata/web-common/components/icons/Add.svelte";
   import RillLogoSquareNegative from "@rilldata/web-common/components/icons/RillLogoSquareNegative.svelte";
   import RadixH1 from "@rilldata/web-common/components/typography/RadixH1.svelte";
   import Subheading from "@rilldata/web-common/components/typography/Subheading.svelte";
-  import { behaviourEvent } from "../../metrics/initMetrics";
-  import {
-    BehaviourEventAction,
-    BehaviourEventMedium,
-  } from "../../metrics/service/BehaviourEventTypes";
-  import { MetricsEventSpace } from "../../metrics/service/MetricsTypes";
-  import { addSourceModal } from "../sources/modal/add-source-visibility";
-
-  async function openShowAddSourceModal() {
-    addSourceModal.open();
-    await behaviourEvent?.fireSplashEvent(
-      BehaviourEventAction.SourceModal,
-      BehaviourEventMedium.Button,
-      MetricsEventSpace.Workspace,
-    );
-  }
+  import Button from "../../components/button/Button.svelte";
 </script>
 
 <section class="flex flex-col gap-y-6 items-center text-center">
@@ -34,17 +18,9 @@
     <Subheading twColor="text-slate-600">
       Build fast operational dashboards that your team will actually use.
     </Subheading>
-    <Subheading twColor="text-slate-600">Let’s get started.</Subheading>
+    <Subheading twColor="text-slate-600">Let's get started.</Subheading>
   </div>
-  <button
-    class="pl-2 pr-4 py-2 rounded-sm bg-gradient-to-b from-primary-400 to-primary-500 hover:from-primary-500 hover:to-primary-500"
-    on:click={openShowAddSourceModal}
-  >
-    <div
-      class="flex flex-row gap-x-1 items-center text-sm font-medium text-white"
-    >
-      <Add className="text-white" />
-      Add data
-    </div>
-  </button>
+  <Button type="primary" large href="/welcome/select-connectors">
+    Connect your data
+  </Button>
 </section>

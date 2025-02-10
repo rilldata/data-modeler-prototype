@@ -2,19 +2,19 @@
   import CaretDownIcon from "../../components/icons/CaretDownIcon.svelte";
   import { Tag } from "../../components/tag";
   import {
-    type V1AnalyzedConnector,
     createRuntimeServiceGetInstance,
+    type V1AnalyzedConnector,
   } from "../../runtime-client";
   import { runtime } from "../../runtime-client/runtime-store";
   import type { ConnectorExplorerStore } from "./connector-explorer-store";
-  import { connectorIconMapping } from "./connector-icon-mapping";
+  import { symbolIconMapping } from "./connector-icon-mapping";
   import DatabaseExplorer from "./olap/DatabaseExplorer.svelte";
 
   export let connector: V1AnalyzedConnector;
   export let store: ConnectorExplorerStore;
 
   $: connectorName = connector?.name as string;
-  $: expandedStore = store.getItem(connectorName);
+  $: expandedStore = store.getItem({ connector: connectorName });
   $: expanded = $expandedStore;
   $: ({ instanceId } = $runtime);
   $: instance = createRuntimeServiceGetInstance(instanceId, {
@@ -32,7 +32,7 @@
       <button
         class="connector-entry-header"
         on:click={() => {
-          store.toggleItem(connectorName);
+          store.toggleItem({ connector: connectorName });
         }}
       >
         <CaretDownIcon
@@ -44,7 +44,7 @@
         <span class="flex-none">
           {#if connector.driver?.name}
             <svelte:component
-              this={connectorIconMapping[connector.driver.name]}
+              this={symbolIconMapping[connector.driver.name]}
               size="16px"
             />
           {/if}

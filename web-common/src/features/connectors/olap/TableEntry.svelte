@@ -5,6 +5,7 @@
   import MoreHorizontal from "@rilldata/web-common/components/icons/MoreHorizontal.svelte";
   import CaretDownIcon from "../../../components/icons/CaretDownIcon.svelte";
   import TableIcon from "../../../components/icons/TableIcon.svelte";
+  import type { ConnectorExplorerStore } from "../connector-explorer-store";
   import TableMenuItems from "./TableMenuItems.svelte";
   import TableSchema from "./TableSchema.svelte";
   import UnsupportedTypesIndicator from "./UnsupportedTypesIndicator.svelte";
@@ -12,7 +13,6 @@
     makeFullyQualifiedTableName,
     makeTablePreviewHref,
   } from "./olap-config";
-  import type { ConnectorExplorerStore } from "../connector-explorer-store";
 
   export let instanceId: string;
   export let driver: string;
@@ -25,7 +25,12 @@
 
   let contextMenuOpen = false;
 
-  $: expandedStore = store.getItem(connector, database, databaseSchema, table);
+  $: expandedStore = store.getItem({
+    connector,
+    database,
+    databaseSchema,
+    table,
+  });
   $: showSchema = $expandedStore;
 
   const { allowContextMenu, allowNavigateToTable, allowShowSchema } = store;
@@ -47,10 +52,22 @@
 
   $: open = $page.url.pathname === href;
 
+  $: selected = store.isItemSelected({
+    connector,
+    database,
+    databaseSchema,
+    table,
+  });
+
   $: element = allowNavigateToTable ? "a" : "button";
 </script>
 
-<li aria-label={tableId} class="table-entry group" class:open>
+<li
+  aria-label={tableId}
+  class="table-entry group"
+  class:open
+  class:selected={$selected}
+>
   <div
     class:pl-[58px]={database || !allowShowSchema}
     class="table-entry-header pl-10"
@@ -58,7 +75,12 @@
     {#if allowShowSchema}
       <button
         on:click={() => {
-          store.toggleItem(connector, database, databaseSchema, table);
+          store.toggleItem({
+            connector,
+            database,
+            databaseSchema,
+            table,
+          });
         }}
       >
         <CaretDownIcon
@@ -76,7 +98,12 @@
       role="menuitem"
       tabindex="0"
       on:click={() => {
-        store.toggleItem(connector, database, databaseSchema, table);
+        store.toggleItem({
+          connector,
+          database,
+          databaseSchema,
+          table,
+        });
       }}
     >
       <TableIcon size="14px" className="shrink-0 text-gray-400" />
@@ -149,7 +176,7 @@
     @apply text-gray-900 truncate;
   }
 
-  .selected:hover {
-    @apply bg-slate-200;
+  .selected {
+    @apply bg-blue-50;
   }
 </style>

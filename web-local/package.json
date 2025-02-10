@@ -16,18 +16,19 @@
     "manual-publish": "./build-tools/npm_publish.sh"
   },
   "devDependencies": {
-    "@playwright/test": "^1.33.0",
+    "@clickhouse/client": "^1.10.1",
+    "@playwright/test": "^1.49.1",
     "@rilldata/svelte-query": "^4.29.20-0.0.3",
     "@sveltejs/adapter-static": "^3.0.5",
     "@sveltejs/kit": "^2.7.1",
     "@tanstack/svelte-query": "npm:@rilldata/svelte-query@4.29.20-0.0.3",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.7",
-    "playwright": "^1.33.0",
     "postcss-load-config": "^6.0.1",
     "svelte": "^4.2.19",
     "svelte-check": "^4.0.4",
     "svelte-preprocess": "^6.0.3",
+    "testcontainers": "^10.17.2",
     "tree-kill": "^1.2.2",
     "vitest": "^2.1.3",
     "web-common": "*"

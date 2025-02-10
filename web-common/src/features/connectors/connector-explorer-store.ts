@@ -1,9 +1,17 @@
 import { localStorageStore } from "@rilldata/web-common/lib/store-utils";
 import { derived, get, writable, type Writable } from "svelte/store";
 
+type ConnectorExplorerItem = {
+  connector: string;
+  database?: string;
+  databaseSchema?: string;
+  table?: string;
+};
+
 type ConnectorExplorerState = {
   showConnectors: boolean;
   expandedItems: Record<string, boolean>;
+  selectedItem: ConnectorExplorerItem | null;
 };
 
 export class ConnectorExplorerStore {
@@ -12,14 +20,7 @@ export class ConnectorExplorerStore {
   allowSelectTable: boolean;
   allowShowSchema: boolean;
   store: Writable<ConnectorExplorerState>;
-  onToggleItem:
-    | undefined
-    | ((
-        connector: string,
-        database?: string,
-        schema?: string,
-        table?: string,
-      ) => void) = undefined;
+  onToggleItem: undefined | ((item: ConnectorExplorerItem) => void) = undefined;
 
   constructor(
     {
@@ -30,14 +31,11 @@ export class ConnectorExplorerStore {
 
       showConnectors = true,
       expandedItems = {},
+      selectedItem = null,
+
       localStorage = true,
     } = {},
-    onToggleItem?: (
-      connector: string,
-      database?: string,
-      schema?: string,
-      table?: string,
-    ) => void,
+    onToggleItem?: (item: ConnectorExplorerItem) => void,
   ) {
     this.allowNavigateToTable = allowNavigateToTable;
     this.allowContextMenu = allowContextMenu;
@@ -50,18 +48,14 @@ export class ConnectorExplorerStore {
       ? localStorageStore<ConnectorExplorerState>("connector-explorer-state", {
           showConnectors,
           expandedItems,
+          selectedItem,
         })
-      : writable({ showConnectors, expandedItems });
+      : writable({ showConnectors, expandedItems, selectedItem });
   }
 
-  createItemIfNotExists(
-    connector: string,
-    database?: string,
-    schema?: string,
-    table?: string,
-  ) {
+  createItemIfNotExists(item: ConnectorExplorerItem) {
     this.store.update((state) => {
-      const key = getItemKey(connector, database, schema, table);
+      const key = getItemKey(item);
 
       if (key in state.expandedItems) return state; // Item already exists
 
@@ -69,19 +63,14 @@ export class ConnectorExplorerStore {
         ...state,
         expandedItems: {
           ...state.expandedItems,
-          [key]: getDefaultState(connector, database, schema, table),
+          [key]: getDefaultState(item),
         },
       };
     });
   }
 
   duplicateStore(
-    onToggleItem?: (
-      connector: string,
-      database?: string,
-      schema?: string,
-      table?: string,
-    ) => void | Promise<void>,
+    onToggleItem?: (item: ConnectorExplorerItem) => void | Promise<void>,
   ) {
     const state = get(this.store);
     return new ConnectorExplorerStore(
@@ -93,6 +82,7 @@ export class ConnectorExplorerStore {
         localStorage: false,
         showConnectors: state.showConnectors,
         expandedItems: {},
+        selectedItem: null,
       },
       onToggleItem ?? this.onToggleItem,
     );
@@ -104,37 +94,35 @@ export class ConnectorExplorerStore {
       showConnectors: !state.showConnectors,
     }));
 
-  getItem = (
-    connector: string,
-    database?: string,
-    schema?: string,
-    table?: string,
-  ) => {
-    this.createItemIfNotExists(connector, database, schema, table);
+  getItem = (item: ConnectorExplorerItem) => {
+    this.createItemIfNotExists(item);
 
-    const key = getItemKey(connector, database, schema, table);
+    const key = getItemKey(item);
 
     return derived(this.store, ($state) => {
       return $state.expandedItems[key];
     });
   };
 
-  toggleItem = (
-    connector: string,
-    database?: string,
-    schema?: string,
-    table?: string,
-  ) => {
-    if (this.onToggleItem)
-      this.onToggleItem(connector, database, schema, table);
+  toggleItem = (item: ConnectorExplorerItem) => {
+    if (this.onToggleItem) this.onToggleItem(item);
 
-    if (table && !this.allowShowSchema) return;
+    if (item.table) {
+      if (this.allowSelectTable) {
+        const isSelected = get(this.isItemSelected(item));
+
+        if (isSelected) {
+          this.clearSelection();
+        } else {
+          this.selectItem(item);
+        }
+      }
+      if (!this.allowShowSchema) return;
+    }
 
     this.store.update((state) => {
-      const key = getItemKey(connector, database, schema, table);
-      const currentState =
-        state.expandedItems[key] ??
-        getDefaultState(connector, database, schema, table);
+      const key = getItemKey(item);
+      const currentState = state.expandedItems[key] ?? getDefaultState(item);
       return {
         ...state,
         expandedItems: {
@@ -145,38 +133,9 @@ export class ConnectorExplorerStore {
     });
   };
 
-  // Not used yet. Currently, the reconciler does not track connector renames.
-  renameItem = (
-    oldConnector: string,
-    newConnector: string,
-    oldDatabase?: string,
-    newDatabase?: string,
-    oldSchema?: string,
-    newSchema?: string,
-  ) =>
+  deleteItem = (item: ConnectorExplorerItem) =>
     this.store.update((state) => {
-      const oldKeyPrefix = getItemKey(oldConnector, oldDatabase, oldSchema);
-      const newKeyPrefix = getItemKey(newConnector, newDatabase, newSchema);
-
-      const updatedExpandedItems = Object.fromEntries(
-        Object.entries(state.expandedItems).map(([key, value]) => {
-          if (key.startsWith(oldKeyPrefix)) {
-            const newKey = key.replace(oldKeyPrefix, newKeyPrefix);
-            return [newKey, value];
-          }
-          return [key, value];
-        }),
-      );
-
-      return {
-        ...state,
-        expandedItems: updatedExpandedItems,
-      };
-    });
-
-  deleteItem = (connector: string, database?: string, schema?: string) =>
-    this.store.update((state) => {
-      const keyPrefix = getItemKey(connector, database, schema);
+      const keyPrefix = getItemKey(item);
       const updatedExpandedItems = Object.fromEntries(
         Object.entries(state.expandedItems).filter(
           ([key]) => !key.startsWith(keyPrefix),
@@ -187,27 +146,44 @@ export class ConnectorExplorerStore {
         expandedItems: updatedExpandedItems,
       };
     });
+
+  selectItem(item: ConnectorExplorerItem) {
+    this.store.update((state) => ({
+      ...state,
+      selectedItem: item,
+    }));
+  }
+
+  clearSelection() {
+    this.store.update((state) => ({
+      ...state,
+      selectedItem: null,
+    }));
+  }
+
+  isItemSelected(item: ConnectorExplorerItem) {
+    return derived(this.store, ($state) => {
+      if (!this.allowSelectTable) return false;
+      const selected = $state.selectedItem;
+      if (!selected || !item) return false;
+
+      // Compare by properties rather than reference equality
+      return getItemKey(selected) === getItemKey(item);
+    });
+  }
 }
 
 export const connectorExplorerStore = new ConnectorExplorerStore();
 
 // Helpers
-function getItemKey(
-  connector: string,
-  database?: string,
-  schema?: string,
-  table?: string,
-): string {
-  return [connector, database, schema, table].filter(Boolean).join("|");
+function getItemKey(item: ConnectorExplorerItem): string {
+  return [item.connector, item.database, item.databaseSchema, item.table]
+    .filter(Boolean)
+    .join("|");
 }
 
-function getDefaultState(
-  connector: string, // Included for API consistency, but not used in this function
-  database?: string,
-  schema?: string,
-  table?: string,
-): boolean {
-  if (schema || table) return false; // Database Schema or Table
-  if (database) return true; // Database
+function getDefaultState(item: ConnectorExplorerItem): boolean {
+  if (item.databaseSchema || item.table) return false; // Database Schema or Table
+  if (item.database) return true; // Database
   return true; // Connector
 }

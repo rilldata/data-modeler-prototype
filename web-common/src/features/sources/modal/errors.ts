@@ -19,6 +19,10 @@ export function humanReadableErrorMessage(
 
   switch (code) {
     // gRPC error codes: https://pkg.go.dev/google.golang.org/grpc@v1.49.0/codes
+    // Unknown
+    case 2: {
+      return serverError;
+    }
     // InvalidArgument
     case 3: {
       // Rill errors
@@ -81,6 +85,13 @@ export function humanReadableErrorMessage(
 
       // Fallback to raw server error
       return serverError;
+    }
+    // DeadlineExceeded
+    case 4: {
+      if (connectorName === "clickhouse") {
+        return "The request timed out. This can happen if your ClickHouse instance has been idle. Please ensure your instance is running and try again.";
+      }
+      return "The request timed out. Please ensure your service is running and try again.";
     }
     default:
       return unknownErrorStr;

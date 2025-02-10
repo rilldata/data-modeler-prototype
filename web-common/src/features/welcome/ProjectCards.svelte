@@ -1,9 +1,11 @@
 <script lang="ts">
-  import AddCircleOutline from "@rilldata/web-common/components/icons/AddCircleOutline.svelte";
+  import { goto } from "$app/navigation";
   import Subheading from "@rilldata/web-common/components/typography/Subheading.svelte";
+  import { get } from "svelte/store";
   import Card from "../../components/card/Card.svelte";
   import CardDescription from "../../components/card/CardDescription.svelte";
   import CardTitle from "../../components/card/CardTitle.svelte";
+  import { queryClient } from "../../lib/svelte-query/globalQueryClient";
   import { behaviourEvent } from "../../metrics/initMetrics";
   import {
     BehaviourEventAction,
@@ -11,51 +13,62 @@
   } from "../../metrics/service/BehaviourEventTypes";
   import { MetricsEventSpace } from "../../metrics/service/MetricsTypes";
   import {
-    createRuntimeServiceUnpackEmpty,
     createRuntimeServiceUnpackExample,
+    getRuntimeServiceListFilesQueryKey,
+    runtimeServiceListFiles,
+    type V1ListFilesResponse,
   } from "../../runtime-client";
   import { runtime } from "../../runtime-client/runtime-store";
-  import { EMPTY_PROJECT_TITLE } from "./constants";
   import { EXAMPLES } from "./constants";
 
   const unpackExampleProject = createRuntimeServiceUnpackExample();
-  const unpackEmptyProject = createRuntimeServiceUnpackEmpty();
 
   let selectedProjectName: string | null = null;
 
   $: ({ instanceId } = $runtime);
 
   $: ({ mutateAsync: unpackExample } = $unpackExampleProject);
-  $: ({ mutateAsync: unpackEmpty } = $unpackEmptyProject);
 
-  async function unpackProject(example?: (typeof EXAMPLES)[number]) {
-    selectedProjectName = example ? example.name : EMPTY_PROJECT_TITLE;
+  async function unpackProjectAndGoToDashboard(
+    example: (typeof EXAMPLES)[number],
+  ) {
+    selectedProjectName = example.name;
 
     await behaviourEvent?.fireSplashEvent(
-      example
-        ? BehaviourEventAction.ExampleAdd
-        : BehaviourEventAction.ProjectEmpty,
+      BehaviourEventAction.ExampleAdd,
       BehaviourEventMedium.Card,
       MetricsEventSpace.Workspace,
-      example?.name,
+      selectedProjectName,
     );
 
-    const mutationFunction = example ? unpackExample : unpackEmpty;
-    const key = example ? "name" : "displayName";
-
     try {
-      await mutationFunction({
+      // Unpack the example project
+      await unpackExample({
         instanceId,
         data: {
-          [key]: selectedProjectName,
+          name: selectedProjectName,
           force: true,
         },
       });
 
-      setTimeout(() => {
-        if (window.location.search.includes("redirect=true"))
-          window.location.reload();
-      }, 5000);
+      // Get the first dashboard file, and navigate to it
+      const files = await queryClient.fetchQuery<V1ListFilesResponse>({
+        queryKey: getRuntimeServiceListFilesQueryKey(
+          get(runtime).instanceId,
+          undefined,
+        ),
+        queryFn: ({ signal }) => {
+          return runtimeServiceListFiles(
+            get(runtime).instanceId,
+            undefined,
+            signal,
+          );
+        },
+      });
+      const firstDashboardFile = files.files?.find((file) =>
+        file.path?.startsWith("/dashboards/"),
+      );
+      await goto(`/files${firstDashboardFile?.path}`);
     } catch {
       selectedProjectName = null;
     }
@@ -64,24 +77,14 @@
 
 <section class="flex flex-col items-center gap-y-5">
   <Subheading>Or jump right into a project.</Subheading>
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <Card
-      disabled={!!selectedProjectName}
-      isLoading={selectedProjectName === EMPTY_PROJECT_TITLE}
-      on:click={() => unpackProject()}
-    >
-      <AddCircleOutline size="2em" className="text-slate-600" />
-      <CardTitle position="middle">Start with an empty project</CardTitle>
-    </Card>
-
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
     {#each EXAMPLES as example (example.name)}
       <Card
-        redirect
         imageUrl={example.image}
         disabled={!!selectedProjectName}
         isLoading={selectedProjectName === example.name}
         on:click={async () => {
-          await unpackProject(example);
+          await unpackProjectAndGoToDashboard(example);
         }}
       >
         <CardTitle>{example.title}</CardTitle>

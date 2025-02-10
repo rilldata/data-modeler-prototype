@@ -51,11 +51,16 @@ function initializeDefaultColorsVars(
 export default {
   // need to add this for storybook
   // https://www.kantega.no/blogg/setting-up-storybook-7-with-vite-and-tailwind-css
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,svelte}"],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx,svelte,css}"],
   /** Once we have applied dark styling to all UI elements, remove this line */
   darkMode: "class",
   theme: {
     extend: {
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
       colors: {
         border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input) / <alpha-value>)",
@@ -95,10 +100,20 @@ export default {
           foreground: "hsl(var(--card-foreground) / <alpha-value>)",
         },
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+      fontSize: {
+        // Rill Design System
+        // Rill
+        "heading-l-bold": ["36px", { lineHeight: "40px", fontWeight: "bold" }],
+        "heading-s": ["16px", { lineHeight: "24px", fontWeight: "normal" }],
+        "heading-xs": ["12px", { lineHeight: "100px", fontWeight: "normal" }],
+        "heading-xxs": ["10px", { lineHeight: "16px", fontWeight: "normal" }],
+        "body-small": ["12px", { lineHeight: "16px", fontWeight: "normal" }],
+        subheading: ["16px", { lineHeight: "24px", fontWeight: "normal" }],
+        "code-s": ["12px", { lineHeight: "20px", fontWeight: "normal" }],
+        "code-s-semibold": ["12px", { lineHeight: "20px", fontWeight: "600" }],
+        "code-m-semibold": ["14px", { lineHeight: "20px", fontWeight: "600" }],
+        // Radix
+        lead: ["20px", { lineHeight: "28px", fontWeight: "normal" }],
       },
     },
   },

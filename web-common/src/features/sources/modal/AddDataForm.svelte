@@ -1,16 +1,15 @@
 <script lang="ts">
-  import { Button } from "@rilldata/web-common/components/button";
   import InformationalField from "@rilldata/web-common/components/forms/InformationalField.svelte";
   import Input from "@rilldata/web-common/components/forms/Input.svelte";
   import SubmissionError from "@rilldata/web-common/components/forms/SubmissionError.svelte";
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
   import {
     ConnectorDriverPropertyType,
-    type RpcStatus,
     type V1ConnectorDriver,
   } from "@rilldata/web-common/runtime-client";
   import { defaults, superForm } from "sveltekit-superforms";
   import { yup } from "sveltekit-superforms/adapters";
+  import type { OlapDriver } from "../../connectors/olap/olap-config";
   import { inferSourceName } from "../sourceUtils";
   import { humanReadableErrorMessage } from "./errors";
   import { submitAddDataForm } from "./submitAddDataForm";
@@ -19,10 +18,10 @@
 
   export let connector: V1ConnectorDriver;
   export let formType: AddDataFormType;
-  export let onBack: () => void;
-  export let onClose: () => void;
+  export let olapDriver: OlapDriver;
+  export let onSuccess: (newFilePath: string) => Promise<void>;
 
-  $: formId = `add-data-${connector.name}-form`;
+  const formId = `add-data-form`;
 
   $: isSourceForm = formType === "source";
   $: isConnectorForm = formType === "connector";
@@ -30,7 +29,7 @@
     ? (connector.configProperties ?? [])
     : (connector.sourceProperties ?? []);
 
-  let rpcError: RpcStatus | null = null;
+  let error: string | null = null;
 
   const schema = yup(getYupSchema[connector.name as keyof typeof getYupSchema]);
 
@@ -39,25 +38,30 @@
     {
       SPA: true,
       validators: schema,
+      resetForm: false,
       async onUpdate({ form }) {
         if (!form.valid) return;
         const values = form.data;
-        if (isSourceForm) {
-          try {
-            await submitAddDataForm(queryClient, formType, connector, values);
-            onClose();
-          } catch (e) {
-            rpcError = e?.response?.data;
-          }
-          return;
-        }
-
-        // Connectors
         try {
-          await submitAddDataForm(queryClient, formType, connector, values);
-          onClose();
+          const newFilePath = await submitAddDataForm(
+            queryClient,
+            formType,
+            connector,
+            values,
+            olapDriver,
+          );
+          await onSuccess(newFilePath);
         } catch (e) {
-          rpcError = e?.response?.data;
+          // Check that e?.response?.data conforms to the `RpcStatus` interface
+          if (e?.response?.data?.code && e?.response?.data?.message) {
+            error = humanReadableErrorMessage(
+              connector.name,
+              e?.response?.data?.code,
+              e?.response?.data?.message,
+            );
+          } else {
+            error = e;
+          }
         }
       },
     },
@@ -82,29 +86,27 @@
   }
 </script>
 
-<div class="h-full w-full flex flex-col">
+<div class="h-full w-full flex flex-col gap-y-4">
   <form
-    class="pb-5 flex-grow overflow-y-auto"
+    class="overflow-y-auto"
     id={formId}
     use:enhance
     on:submit|preventDefault={submit}
   >
-    <div class="pb-2 text-slate-500">
-      Need help? Refer to our
-      <a
-        href="https://docs.rilldata.com/build/connect"
-        rel="noreferrer noopener"
-        target="_blank">docs</a
-      > for more information.
-    </div>
-    {#if rpcError}
-      <SubmissionError
-        message={humanReadableErrorMessage(
-          connector.name,
-          rpcError.code,
-          rpcError.message,
-        )}
-      />
+    {#if isSourceForm}
+      <div class="pb-2 text-slate-500">
+        Need help? Refer to our
+        <a
+          href="https://docs.rilldata.com/build/connect"
+          rel="noreferrer noopener"
+          target="_blank">docs</a
+        > for more information.
+      </div>
+    {/if}
+    {#if error}
+      <div class="pb-0.5">
+        <SubmissionError message={error} />
+      </div>
     {/if}
 
     {#each properties as property (property.key)}
@@ -146,10 +148,5 @@
       {/if}
     {/each}
   </form>
-  <div class="flex items-center space-x-2 ml-auto">
-    <Button on:click={onBack} type="secondary">Back</Button>
-    <Button disabled={$submitting} form={formId} submitForm type="primary">
-      Add data
-    </Button>
-  </div>
+  <slot name="actions" submitting={$submitting} />
 </div>

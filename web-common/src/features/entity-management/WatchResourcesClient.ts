@@ -289,7 +289,9 @@ export class WatchResourcesClient {
             );
 
             // Remove the connector's state from the connector explorer store
-            connectorExplorerStore.deleteItem(res.name.name);
+            connectorExplorerStore.deleteItem({
+              connector: res.name.name,
+            });
 
             // Done
             return;

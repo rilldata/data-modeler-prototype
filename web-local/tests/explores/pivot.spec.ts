@@ -562,7 +562,9 @@ test.describe("pivot run through", () => {
 
     // single measure
     await totalRecords.dragTo(columnZone);
-    await expect(page.getByRole("row", { name: "100.0k" })).toBeVisible();
+    await expect(
+      page.locator("td").filter({ hasText: "100.0k" }),
+    ).toBeVisible();
 
     // one measure and one dimension
     await publisher.dragTo(rowZone);
@@ -593,7 +595,8 @@ test.describe("pivot run through", () => {
     await clickMenuButton(page, "Publisher");
 
     const expandButton = page
-      .getByRole("cell", { name: "Jan" })
+      .locator("td")
+      .filter({ hasText: "Jan" })
       .getByRole("button");
     await expandButton.click();
     await expect(page.locator(".status.running")).toHaveCount(0);

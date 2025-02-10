@@ -7,6 +7,7 @@
   import type { ConnectorExplorerStore } from "./connector-explorer-store";
 
   export let store: ConnectorExplorerStore;
+  export let border: boolean = false;
 
   $: ({ instanceId } = $runtime);
 
@@ -26,7 +27,7 @@
   $: ({ data, error } = $connectors);
 </script>
 
-<div class="wrapper">
+<div class="wrapper" class:outer-border={border}>
   {#if error}
     <span class="message">
       {error.message}
@@ -49,6 +50,11 @@
 <style lang="postcss">
   .wrapper {
     @apply overflow-auto px-0 pb-4;
+  }
+
+  .wrapper.outer-border {
+    @apply border border-gray-300 rounded-md;
+    @apply p-2;
   }
 
   .message {

@@ -251,7 +251,7 @@
 
 <style lang="postcss">
   .component-wrapper {
-    @apply flex  flex-col h-fit justify-center;
+    @apply flex flex-col h-fit justify-center items-start;
   }
 
   .sm {
@@ -307,7 +307,7 @@
   }
 
   .error {
-    @apply text-red-500 text-xs;
+    @apply text-red-500 text-xs text-left;
   }
 
   .toggle {

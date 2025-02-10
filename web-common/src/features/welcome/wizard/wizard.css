@@ -1,0 +1,16 @@
+.option {
+  @apply rounded;
+  @apply bg-white transition-colors;
+}
+
+.option:hover {
+  @apply bg-slate-50;
+}
+
+.option:not(.selected) {
+  @apply border border-slate-200;
+}
+
+.option.selected {
+  @apply outline outline-2 outline-primary-300 bg-slate-50;
+}

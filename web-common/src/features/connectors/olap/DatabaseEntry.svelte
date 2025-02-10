@@ -4,9 +4,9 @@
   import CaretDownIcon from "../../../components/icons/CaretDownIcon.svelte";
   import { LIST_SLIDE_DURATION as duration } from "../../../layout/config";
   import type { V1AnalyzedConnector } from "../../../runtime-client";
+  import type { ConnectorExplorerStore } from "../connector-explorer-store";
   import DatabaseSchemaEntry from "./DatabaseSchemaEntry.svelte";
   import { useDatabaseSchemas } from "./selectors";
-  import type { ConnectorExplorerStore } from "../connector-explorer-store";
 
   export let instanceId: string;
   export let connector: V1AnalyzedConnector;
@@ -14,7 +14,10 @@
   export let store: ConnectorExplorerStore;
 
   $: connectorName = connector?.name as string;
-  $: expandedStore = store.getItem(connectorName, database);
+  $: expandedStore = store.getItem({
+    connector: connectorName,
+    database,
+  });
   $: expanded = $expandedStore;
   $: databaseSchemasQuery = useDatabaseSchemas(
     instanceId,
@@ -30,7 +33,7 @@
     <button
       class="database-entry-header"
       class:open={expanded}
-      on:click={() => store.toggleItem(connectorName, database)}
+      on:click={() => store.toggleItem({ connector: connectorName, database })}
     >
       <CaretDownIcon
         className="transform transition-transform text-gray-400 {expanded

@@ -7,19 +7,15 @@ import type { Page } from "@sveltejs/kit";
  */
 export function mapScreenName(page: Page): MetricsEventScreenName {
   switch (page.route.id) {
-    case "/(application)/dashboard/[name]":
+    case "/(application)/(developer)/files/dashboards/[name]":
       return MetricsEventScreenName.Dashboard;
-    case "/(application)/dashboard/[name]/edit":
+    case "/(application)/(developer)/files/metrics/[name]/edit":
       return MetricsEventScreenName.MetricsDefinition;
-    case "/(application)/source/[name]":
+    case "/(application)/(developer)/files/sources/[name]":
       return MetricsEventScreenName.Source;
-    case "/(application)/model/[name]":
+    case "/(application)/(developer)/files/models/[name]":
       return MetricsEventScreenName.Model;
-    case "/(application)/chart/[name]":
-      return MetricsEventScreenName.Chart;
-    case "/(application)/canvas/[name]":
-      return MetricsEventScreenName.Canvas;
-    case "/(application)":
+    case "/(application)/(developer)":
       return MetricsEventScreenName.Home;
   }
   return MetricsEventScreenName.Unknown;

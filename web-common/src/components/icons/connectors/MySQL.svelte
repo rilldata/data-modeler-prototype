@@ -1,9 +1,14 @@
+<script lang="ts">
+  export let width: string | number = "100%";
+  export let height: string | number = "100%";
+</script>
+
 <svg
   viewBox="0 26 150 98"
   xmlns="http://www.w3.org/2000/svg"
   fill="#000000"
-  width="100%"
-  height="100%"
+  {width}
+  {height}
 >
   <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
   <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"

@@ -52,14 +52,14 @@
 
   const { clickhouseModeling } = featureFlags;
   const store = connectorExplorerStore.duplicateStore(
-    (connector, database, schema, table) => {
-      if (!table || !schema) return;
+    ({ connector, database, databaseSchema, table }) => {
+      if (!table || !databaseSchema) return;
 
       confirmation = {
         action: "switch",
         connector,
         database,
-        schema,
+        schema: databaseSchema,
         model: table,
       };
 

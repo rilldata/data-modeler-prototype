@@ -1,22 +1,22 @@
 <script lang="ts">
-  import { goto, invalidate } from "$app/navigation";
   import { Button } from "@rilldata/web-common/components/button";
-  import { getFilePathFromNameAndType } from "@rilldata/web-common/features/entity-management/entity-mappers";
+  import { getFileAPIPathFromNameAndType } from "@rilldata/web-common/features/entity-management/entity-mappers";
   import { EntityType } from "@rilldata/web-common/features/entity-management/types";
   import {
     openFileUploadDialog,
     uploadTableFiles,
   } from "@rilldata/web-common/features/sources/modal/file-upload";
   import { overlay } from "@rilldata/web-common/layout/overlay-store";
-  import { createRuntimeServiceUnpackEmpty } from "@rilldata/web-common/runtime-client";
-  import { createEventDispatcher } from "svelte";
+  import {
+    createRuntimeServiceUnpackEmpty,
+    runtimeServicePutFile,
+  } from "@rilldata/web-common/runtime-client";
   import { runtime } from "../../../runtime-client/runtime-store";
   import { EMPTY_PROJECT_TITLE } from "../../welcome/constants";
   import { isProjectInitialized } from "../../welcome/is-project-initialized";
   import { compileLocalFileSourceYAML } from "../sourceUtils";
-  import { createSource } from "./createSource";
 
-  const dispatch = createEventDispatcher();
+  export let onSuccess: (newFilePath: string) => Promise<void>;
 
   $: ({ instanceId } = $runtime);
 
@@ -39,36 +39,37 @@
               displayName: EMPTY_PROJECT_TITLE,
             },
           });
-
-          // Race condition: invalidate("init") must be called before we navigate to
-          // `/files/${newFilePath}`. invalidate("init") is also called in the
-          // `WatchFilesClient`, but there it's not guaranteed to get invoked before we need it.
-          await invalidate("init");
         }
-
-        const yaml = compileLocalFileSourceYAML(filePath);
-        await createSource(instanceId, tableName, yaml);
-        const newFilePath = getFilePathFromNameAndType(
+        const newFilePath = getFileAPIPathFromNameAndType(
           tableName,
           EntityType.Table,
         );
-        await goto(`/files${newFilePath}`);
+        await runtimeServicePutFile(instanceId, {
+          path: newFilePath,
+          blob: compileLocalFileSourceYAML(filePath),
+          createOnly: false,
+        });
+
+        await onSuccess(newFilePath);
       } catch (err) {
         console.error(err);
+        overlay.set(null);
       }
-
-      overlay.set(null);
-      dispatch("close");
     }
   }
 </script>
 
-<div class="grid place-items-center h-44">
+<div class="local-source-upload">
   <Button on:click={handleOpenFileDialog} type="primary"
     >Upload a CSV, JSON or Parquet file
   </Button>
 </div>
-<div class="flex">
-  <div class="grow" />
-  <Button on:click={() => dispatch("back")} type="secondary">Back</Button>
-</div>
+<slot name="actions" />
+
+<style lang="postcss">
+  .local-source-upload {
+    @apply h-44 w-96 grid place-items-center mx-auto my-6;
+    @apply border border-gray-300 rounded;
+    @apply bg-gray-50;
+  }
+</style>

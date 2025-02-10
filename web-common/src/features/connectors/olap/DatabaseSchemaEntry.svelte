@@ -2,9 +2,9 @@
   import { Database, Folder } from "lucide-svelte";
   import CaretDownIcon from "../../../components/icons/CaretDownIcon.svelte";
   import type { V1AnalyzedConnector } from "../../../runtime-client";
+  import type { ConnectorExplorerStore } from "../connector-explorer-store";
   import TableEntry from "./TableEntry.svelte";
   import { useTables } from "./selectors";
-  import type { ConnectorExplorerStore } from "../connector-explorer-store";
 
   export let instanceId: string;
   export let connector: V1AnalyzedConnector;
@@ -14,7 +14,11 @@
 
   $: connectorName = connector?.name as string;
 
-  $: expandedStore = store.getItem(connectorName, database, databaseSchema);
+  $: expandedStore = store.getItem({
+    connector: connectorName,
+    database,
+    databaseSchema,
+  });
   $: expanded = $expandedStore;
   $: tablesQuery = useTables(
     instanceId,
@@ -38,7 +42,12 @@
   <button
     class="database-schema-entry-header {database ? 'pl-[40px]' : 'pl-[22px]'}"
     class:open={expanded}
-    on:click={() => store.toggleItem(connectorName, database, databaseSchema)}
+    on:click={() =>
+      store.toggleItem({
+        connector: connectorName,
+        database,
+        databaseSchema,
+      })}
   >
     <CaretDownIcon
       className="transform transition-transform text-gray-400 {expanded

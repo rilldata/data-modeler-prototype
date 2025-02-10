@@ -1,14 +1,10 @@
 <script lang="ts">
   import { dev } from "$app/environment";
-  import { page } from "$app/stores";
-  import BannerCenter from "@rilldata/web-common/components/banner/BannerCenter.svelte";
   import NotificationCenter from "@rilldata/web-common/components/notifications/NotificationCenter.svelte";
-  import RepresentingUserBanner from "@rilldata/web-common/features/authentication/RepresentingUserBanner.svelte";
   import ResourceWatcher from "@rilldata/web-common/features/entity-management/ResourceWatcher.svelte";
   import { featureFlags } from "@rilldata/web-common/features/feature-flags";
   import { initPylonWidget } from "@rilldata/web-common/features/help/initPylonWidget";
   import { RillTheme } from "@rilldata/web-common/layout";
-  import ApplicationHeader from "@rilldata/web-common/layout/ApplicationHeader.svelte";
   import BlockingOverlayContainer from "@rilldata/web-common/layout/BlockingOverlayContainer.svelte";
   import type { ApplicationBuildMetadata } from "@rilldata/web-common/layout/build-metadata";
   import { overlay } from "@rilldata/web-common/layout/overlay-store";
@@ -29,9 +25,7 @@
   import type { AxiosError } from "axios";
   import { getContext, onMount } from "svelte";
   import type { Writable } from "svelte/store";
-  import type { LayoutData } from "./$types";
 
-  export let data: LayoutData;
   /** This function will initialize the existing node stores and will connect them
    * to the Node server.
    */
@@ -83,10 +77,6 @@
   });
 
   $: ({ host, instanceId } = $runtime);
-
-  $: ({ route } = $page);
-
-  $: mode = route.id?.includes("(viz)") ? "Preview" : "Developer";
 </script>
 
 <RillTheme>
@@ -95,12 +85,6 @@
       <div
         class="body h-screen w-screen overflow-hidden absolute flex flex-col"
       >
-        {#if data.initialized}
-          <BannerCenter />
-          <RepresentingUserBanner />
-          <ApplicationHeader {mode} />
-        {/if}
-
         <slot />
       </div>
     </ResourceWatcher>
