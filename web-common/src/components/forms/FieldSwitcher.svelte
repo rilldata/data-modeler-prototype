@@ -43,6 +43,6 @@
   }
 
   .option-wrapper > .selected {
-    @apply border-primary-500 z-50 text-primary-500;
+    @apply border-primary-500 z-50 text-primary-700;
   }
 </style>

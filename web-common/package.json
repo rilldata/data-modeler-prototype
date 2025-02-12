@@ -13,7 +13,8 @@
     "storybook": "STORYBOOK_MODE=true storybook dev -p 6006",
     "storybook:smoketest": "STORYBOOK_MODE=true storybook dev --smoke-test",
     "build-storybook": "storybook build",
-    "build-filter-grammar": "nearleyc src/features/dashboards/url-state/filters/expression.ne -o src/features/dashboards/url-state/filters/expression.cjs"
+    "build-filter-grammar": "nearleyc src/features/dashboards/url-state/filters/expression.ne -o src/features/dashboards/url-state/filters/expression.cjs",
+    "build-rill-time-grammar": "nearleyc src/features/dashboards/url-state/time-ranges/rill-time.ne -o src/features/dashboards/url-state/time-ranges/rill-time.cjs"
   },
   "devDependencies": {
     "@bufbuild/protobuf": "^1.0.0",

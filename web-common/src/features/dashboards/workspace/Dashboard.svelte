@@ -43,6 +43,8 @@
   const { cloudDataViewer, readOnly } = featureFlags;
 
   let exploreContainerWidth: number;
+  let metricsWidth = DEFAULT_TIMESERIES_WIDTH;
+  let resizing = false;
 
   $: ({ instanceId } = $runtime);
 
@@ -63,6 +65,8 @@
 
   // Check if the mock user (if selected) has access to the explore
   $: explore = useExploreValidSpec(instanceId, exploreName);
+
+  $: exploreSpec = $explore.data?.explore;
 
   $: mockUserHasNoAccess =
     $selectedMockUserStore && $explore.error?.response?.status === 404;
@@ -90,8 +94,7 @@
       }
     : undefined;
 
-  let metricsWidth = DEFAULT_TIMESERIES_WIDTH;
-  let resizing = false;
+  $: timeRanges = exploreSpec?.timeRanges ?? [];
 </script>
 
 <article
@@ -108,7 +111,7 @@
     {:else}
       {#key exploreName}
         <section class="flex relative justify-between gap-x-4 py-4 pb-6 px-4">
-          <Filters />
+          <Filters {timeRanges} {metricsViewName} />
           <div class="absolute bottom-0 flex flex-col right-0">
             <TabBar {hidePivot} {exploreName} onPivot={$showPivot} />
           </div>

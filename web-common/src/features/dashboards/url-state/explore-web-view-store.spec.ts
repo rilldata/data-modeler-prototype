@@ -325,6 +325,7 @@ function getUrlForWebView(
     AD_BIDS_METRICS_3_MEASURES_DIMENSIONS,
     AD_BIDS_EXPLORE_INIT,
     explorePresetFromSessionStorage,
+    [],
   );
 
   const exploreState = partialExploreState as MetricsExplorerEntity;

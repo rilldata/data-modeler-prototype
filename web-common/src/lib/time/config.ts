@@ -35,6 +35,7 @@ export type TimeRangeMetaSet = Partial<Record<TimeRangePreset, TimeRangeMeta>>;
 export const LATEST_WINDOW_TIME_RANGES: TimeRangeMetaSet = {
   [TimeRangePreset.LAST_SIX_HOURS]: {
     label: "Last 6 Hours",
+    rillSyntax: "-6h",
     rangePreset: RangePresetType.OFFSET_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {
@@ -62,6 +63,7 @@ export const LATEST_WINDOW_TIME_RANGES: TimeRangeMetaSet = {
 
   [TimeRangePreset.LAST_24_HOURS]: {
     label: "Last 24 Hours",
+    rillSyntax: "-24h",
     rangePreset: RangePresetType.OFFSET_ANCHORED,
     defaultComparison: TimeComparisonOption.DAY,
     start: {
@@ -88,6 +90,7 @@ export const LATEST_WINDOW_TIME_RANGES: TimeRangeMetaSet = {
 
   [TimeRangePreset.LAST_7_DAYS]: {
     label: "Last 7 Days",
+    rillSyntax: "-7D",
     rangePreset: RangePresetType.OFFSET_ANCHORED,
     defaultComparison: TimeComparisonOption.WEEK,
     start: {
@@ -113,6 +116,7 @@ export const LATEST_WINDOW_TIME_RANGES: TimeRangeMetaSet = {
   },
   [TimeRangePreset.LAST_14_DAYS]: {
     label: "Last 14 Days",
+    rillSyntax: "-14D",
     rangePreset: RangePresetType.OFFSET_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {
@@ -138,6 +142,7 @@ export const LATEST_WINDOW_TIME_RANGES: TimeRangeMetaSet = {
   },
   [TimeRangePreset.LAST_4_WEEKS]: {
     label: "Last 4 Weeks",
+    rillSyntax: "-4W",
     rangePreset: RangePresetType.OFFSET_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {
@@ -163,6 +168,7 @@ export const LATEST_WINDOW_TIME_RANGES: TimeRangeMetaSet = {
   },
   [TimeRangePreset.LAST_12_MONTHS]: {
     label: "Last 12 Months",
+    rillSyntax: "-12M",
     rangePreset: RangePresetType.OFFSET_ANCHORED,
     defaultComparison: TimeComparisonOption.YEAR,
     start: {
@@ -201,6 +207,7 @@ export const LATEST_WINDOW_TIME_RANGES: TimeRangeMetaSet = {
 export const PERIOD_TO_DATE_RANGES: TimeRangeMetaSet = {
   [TimeRangePreset.TODAY]: {
     label: "Today",
+    rillSyntax: "0D",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.DAY,
     start: {
@@ -225,6 +232,7 @@ export const PERIOD_TO_DATE_RANGES: TimeRangeMetaSet = {
   },
   [TimeRangePreset.WEEK_TO_DATE]: {
     label: "Week to Date",
+    rillSyntax: "0W",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.WEEK,
     start: {
@@ -249,6 +257,7 @@ export const PERIOD_TO_DATE_RANGES: TimeRangeMetaSet = {
   },
   [TimeRangePreset.MONTH_TO_DATE]: {
     label: "Month to Date",
+    rillSyntax: "0M",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.MONTH,
     start: {
@@ -273,6 +282,7 @@ export const PERIOD_TO_DATE_RANGES: TimeRangeMetaSet = {
   },
   [TimeRangePreset.QUARTER_TO_DATE]: {
     label: "Quarter to Date",
+    rillSyntax: "0Q",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {
@@ -297,6 +307,7 @@ export const PERIOD_TO_DATE_RANGES: TimeRangeMetaSet = {
   },
   [TimeRangePreset.YEAR_TO_DATE]: {
     label: "Year to Date",
+    rillSyntax: "0Y",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.YEAR,
     start: {
@@ -324,6 +335,7 @@ export const PERIOD_TO_DATE_RANGES: TimeRangeMetaSet = {
 export const PREVIOUS_COMPLETE_DATE_RANGES: TimeRangeMetaSet = {
   [TimeRangePreset.YESTERDAY_COMPLETE]: {
     label: "Yesterday",
+    rillSyntax: "-1D, 0D",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {
@@ -350,7 +362,8 @@ export const PREVIOUS_COMPLETE_DATE_RANGES: TimeRangeMetaSet = {
     },
   },
   [TimeRangePreset.PREVIOUS_WEEK_COMPLETE]: {
-    label: "Previous week complete",
+    label: "Previous week",
+    rillSyntax: "-1W, 0W",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {
@@ -377,7 +390,8 @@ export const PREVIOUS_COMPLETE_DATE_RANGES: TimeRangeMetaSet = {
     },
   },
   [TimeRangePreset.PREVIOUS_MONTH_COMPLETE]: {
-    label: "Previous month complete",
+    label: "Previous month",
+    rillSyntax: "-1M, OM",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {
@@ -404,7 +418,8 @@ export const PREVIOUS_COMPLETE_DATE_RANGES: TimeRangeMetaSet = {
     },
   },
   [TimeRangePreset.PREVIOUS_QUARTER_COMPLETE]: {
-    label: "Previous quarter complete",
+    label: "Previous quarter",
+    rillSyntax: "-1Q, OQ",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {
@@ -431,7 +446,8 @@ export const PREVIOUS_COMPLETE_DATE_RANGES: TimeRangeMetaSet = {
     },
   },
   [TimeRangePreset.PREVIOUS_YEAR_COMPLETE]: {
-    label: "Previous year complete",
+    label: "Previous year",
+    rillSyntax: "-1Y, OY",
     rangePreset: RangePresetType.PERIOD_ANCHORED,
     defaultComparison: TimeComparisonOption.CONTIGUOUS,
     start: {

@@ -1,6 +1,10 @@
 import type { CreateQueryOptions, QueryFunction } from "@rilldata/svelte-query";
 import type { MetricsExplorerEntity } from "@rilldata/web-common/features/dashboards/stores/metrics-explorer-entity";
 import {
+  fetchTimeRanges,
+  resolveTimeRanges,
+} from "@rilldata/web-common/features/dashboards/time-controls/rill-time-ranges";
+import {
   convertPresetToExploreState,
   convertURLToExploreState,
 } from "@rilldata/web-common/features/dashboards/url-state/convertPresetToExploreState";
@@ -21,6 +25,7 @@ import {
   type V1ExplorePreset,
   getQueryServiceMetricsViewSchemaQueryKey,
   queryServiceMetricsViewSchema,
+  type V1TimeRange,
 } from "@rilldata/web-common/runtime-client";
 import type { ErrorType } from "@rilldata/web-common/runtime-client/http-client";
 import { error } from "@sveltejs/kit";
@@ -133,16 +138,24 @@ export async function fetchExploreSpec(
     exploreSpec,
     fullTimeRange,
   );
+
+  let timeRanges: V1TimeRange[] = [];
+  if (metricsViewSpec.timeDimension) {
+    timeRanges = await fetchTimeRanges(exploreSpec, defaultExplorePreset);
+  }
+
   const { partialExploreState: exploreStateFromYAMLConfig, errors } =
     convertPresetToExploreState(
       metricsViewSpec,
       exploreSpec,
       defaultExplorePreset,
+      timeRanges,
     );
 
   return {
     explore: exploreResource,
     metricsView: metricsViewResource,
+    timeRanges,
     defaultExplorePreset,
     exploreStateFromYAMLConfig,
     errors,
@@ -185,6 +198,7 @@ export function getExploreStates(
       metricsViewSpec,
       exploreSpec,
       defaultExplorePreset,
+      [],
     );
 
   const { exploreStateFromSessionStorage, errors: errorsFromLoad } =

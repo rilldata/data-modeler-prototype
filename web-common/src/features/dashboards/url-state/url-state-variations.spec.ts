@@ -426,6 +426,7 @@ describe("Human readable URL state variations", () => {
           AD_BIDS_METRICS_3_MEASURES_DIMENSIONS,
           explore,
           defaultExplorePreset,
+          [],
         );
         expect(entityFromUrl).toEqual(curState);
 
@@ -437,6 +438,7 @@ describe("Human readable URL state variations", () => {
             AD_BIDS_METRICS_3_MEASURES_DIMENSIONS,
             explore,
             defaultExplorePreset,
+            [],
           );
 
         // assert that the entity we got back matches the original
@@ -457,6 +459,7 @@ export function applyURLToExploreState(
       AD_BIDS_METRICS_3_MEASURES_DIMENSIONS,
       exploreSpec,
       defaultExplorePreset,
+      [],
     );
   metricsExplorerStore.mergePartialExplorerEntity(
     AD_BIDS_EXPLORE_NAME,

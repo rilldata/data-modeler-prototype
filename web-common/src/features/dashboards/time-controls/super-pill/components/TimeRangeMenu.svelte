@@ -26,21 +26,13 @@
   }
 </script>
 
-<DropdownMenu.Item on:click={handleClick} data-range={ALL_TIME_RANGE_ALIAS}>
-  <span class:font-bold={selected === ALL_TIME_RANGE_ALIAS}>
-    {RILL_TO_LABEL[ALL_TIME_RANGE_ALIAS]}
-  </span>
-</DropdownMenu.Item>
-
 {#if showDefaultItem && defaultTimeRange}
   <DropdownMenu.Item data-range={defaultTimeRange} on:click={handleClick}>
     <div class:font-bold={selected === defaultTimeRange}>
       Last {humaniseISODuration(defaultTimeRange)}
     </div>
   </DropdownMenu.Item>
-{/if}
 
-{#if ranges.latest.length}
   <DropdownMenu.Separator />
 {/if}
 
@@ -80,4 +72,12 @@
 
 <DropdownMenu.Item on:click={onSelectCustomOption} data-range="custom">
   <span class:font-bold={selected === "CUSTOM"}> Custom </span>
+</DropdownMenu.Item>
+
+<DropdownMenu.Separator />
+
+<DropdownMenu.Item on:click={handleClick} data-range={ALL_TIME_RANGE_ALIAS}>
+  <span class:font-bold={selected === ALL_TIME_RANGE_ALIAS}>
+    {RILL_TO_LABEL[ALL_TIME_RANGE_ALIAS]}
+  </span>
 </DropdownMenu.Item>

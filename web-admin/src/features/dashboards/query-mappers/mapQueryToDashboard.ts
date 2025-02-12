@@ -127,6 +127,7 @@ export function mapQueryToDashboard(
         validSpecResp.data.metricsView,
         validSpecResp.data.explore,
         defaultExplorePreset,
+        [], // TODO
       );
       const defaultExploreState = getFullInitExploreState(
         metricsViewName,

@@ -40,14 +40,17 @@ import {
   type V1ExploreSpec,
   V1ExploreWebView,
   type V1MetricsViewSpec,
+  type V1TimeRange,
 } from "@rilldata/web-common/runtime-client";
 import type { SortingState } from "@tanstack/svelte-table";
+import { findTimeRange } from "../time-controls/time-control-store";
 
 export function convertURLToExploreState(
   searchParams: URLSearchParams,
   metricsView: V1MetricsViewSpec,
   exploreSpec: V1ExploreSpec,
   defaultExplorePreset: V1ExplorePreset,
+  timeRanges: V1TimeRange[],
 ) {
   const errors: Error[] = [];
   const { preset, errors: errorsFromPreset } = convertURLToExplorePreset(
@@ -58,7 +61,7 @@ export function convertURLToExploreState(
   );
   errors.push(...errorsFromPreset);
   const { partialExploreState, errors: errorsFromEntity } =
-    convertPresetToExploreState(metricsView, exploreSpec, preset);
+    convertPresetToExploreState(metricsView, exploreSpec, preset, timeRanges);
   errors.push(...errorsFromEntity);
   return { partialExploreState, errors };
 }
@@ -71,6 +74,7 @@ export function convertPresetToExploreState(
   metricsView: V1MetricsViewSpec,
   explore: V1ExploreSpec,
   preset: V1ExplorePreset,
+  timeRanges: V1TimeRange[],
 ) {
   const partialExploreState: Partial<MetricsExplorerEntity> = {};
   const errors: Error[] = [];
@@ -102,7 +106,7 @@ export function convertPresetToExploreState(
   }
 
   const { partialExploreState: trPartialState, errors: trErrors } =
-    fromTimeRangesParams(preset, dimensions);
+    fromTimeRangesParams(preset, dimensions, timeRanges);
   Object.assign(partialExploreState, trPartialState);
   errors.push(...trErrors);
 
@@ -127,6 +131,7 @@ export function convertPresetToExploreState(
 function fromTimeRangesParams(
   preset: V1ExplorePreset,
   dimensions: Map<string, MetricsViewSpecDimensionV2>,
+  timeRanges: V1TimeRange[],
 ) {
   const partialExploreState: Partial<MetricsExplorerEntity> = {};
   const errors: Error[] = [];
@@ -134,6 +139,7 @@ function fromTimeRangesParams(
   if (preset.timeRange) {
     partialExploreState.selectedTimeRange = fromTimeRangeUrlParam(
       preset.timeRange,
+      timeRanges,
     );
   }
 
@@ -150,6 +156,7 @@ function fromTimeRangesParams(
   if (preset.compareTimeRange) {
     partialExploreState.selectedComparisonTimeRange = fromTimeRangeUrlParam(
       preset.compareTimeRange,
+      timeRanges,
     );
     partialExploreState.showTimeComparison = true;
     setCompareTimeRange = true;
@@ -191,7 +198,7 @@ function fromTimeRangesParams(
   if (preset.selectTimeRange) {
     partialExploreState.lastDefinedScrubRange =
       partialExploreState.selectedScrubRange = {
-        ...fromTimeRangeUrlParam(preset.selectTimeRange),
+        ...fromTimeRangeUrlParam(preset.selectTimeRange, timeRanges),
         isScrubbing: false,
       };
   } else {
@@ -213,7 +220,7 @@ function fromTimeRangesParams(
 
 export const CustomTimeRangeRegex =
   /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z),(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z)/;
-function fromTimeRangeUrlParam(tr: string) {
+function fromTimeRangeUrlParam(tr: string, timeRanges: V1TimeRange[]) {
   const customTimeRangeMatch = CustomTimeRangeRegex.exec(tr);
   if (customTimeRangeMatch?.length) {
     const [, start, end] = customTimeRangeMatch;
@@ -223,7 +230,11 @@ function fromTimeRangeUrlParam(tr: string) {
       end: new Date(end),
     } as DashboardTimeControls;
   }
+
+  const foundTimeRange = findTimeRange(tr, timeRanges) ?? {};
+
   return {
+    ...foundTimeRange,
     name: tr,
   } as DashboardTimeControls;
 }

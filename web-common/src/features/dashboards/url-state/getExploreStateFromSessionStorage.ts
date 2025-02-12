@@ -68,6 +68,7 @@ export function getExploreStateFromSessionStorage(
       metricsViewSpec,
       exploreSpec,
       explorePresetFromSessionStorage,
+      [], // TODO
     );
 
   return {

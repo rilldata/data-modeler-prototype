@@ -39,6 +39,7 @@
       metricsViewSpec,
       exploreSpec,
       defaultExplorePreset,
+      [], // TODO
     ));
 
   let partialExploreStateFromUrl: Partial<MetricsExplorerEntity> = {};

@@ -311,15 +311,15 @@ export class TimeControls {
     });
   };
 
-  setTimeZone(timezone: string) {
+  setTimeZone = (timezone: string) => {
     this.selectedTimezone.set(timezone);
-  }
+  };
 
-  selectTimeRange(
+  selectTimeRange = (
     timeRange: TimeRange,
     timeGrain: V1TimeGrain,
     comparisonTimeRange: DashboardTimeControls | undefined,
-  ) {
+  ) => {
     if (!timeRange.name) return;
 
     if (timeRange.name === TimeRangePreset.ALL_TIME) {
@@ -332,13 +332,13 @@ export class TimeControls {
     });
 
     this.selectedComparisonTimeRange.set(comparisonTimeRange);
-  }
+  };
 
-  setSelectedComparisonRange(comparisonTimeRange: DashboardTimeControls) {
+  setSelectedComparisonRange = (comparisonTimeRange: DashboardTimeControls) => {
     this.selectedComparisonTimeRange.set(comparisonTimeRange);
-  }
+  };
 
-  displayTimeComparison(showTimeComparison: boolean) {
+  displayTimeComparison = (showTimeComparison: boolean) => {
     this.showTimeComparison.set(showTimeComparison);
-  }
+  };
 }

@@ -47,3 +47,8 @@ export function arrayOrderedEquals<T>(src: T[], tar: T[]) {
 export function getMissingValues<T>(src: T[], tar: T[]) {
   return tar.filter((v) => !src.includes(v));
 }
+
+export function dedupe<T>(array: T[]): T[] {
+  const set = new Set(array);
+  return [...set.values()];
+}

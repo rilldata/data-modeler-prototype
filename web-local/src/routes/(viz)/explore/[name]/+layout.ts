@@ -14,6 +14,7 @@ export const load = async ({ params, depends }) => {
     const {
       explore,
       metricsView,
+      timeRanges,
       defaultExplorePreset,
       exploreStateFromYAMLConfig,
     } = await fetchExploreSpec(instanceId, exploreName);
@@ -21,6 +22,7 @@ export const load = async ({ params, depends }) => {
     return {
       explore,
       metricsView,
+      timeRanges,
       defaultExplorePreset,
       exploreStateFromYAMLConfig,
     };

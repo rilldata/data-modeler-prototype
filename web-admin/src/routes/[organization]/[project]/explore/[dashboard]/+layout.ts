@@ -12,6 +12,7 @@ import {
 import {
   type V1ExplorePreset,
   type V1Resource,
+  type V1TimeRange,
 } from "@rilldata/web-common/runtime-client";
 
 export const load = async ({ params, depends, parent }) => {
@@ -23,6 +24,7 @@ export const load = async ({ params, depends, parent }) => {
 
   let explore: V1Resource | undefined;
   let metricsView: V1Resource | undefined;
+  let timeRanges: V1TimeRange[] = [];
   let defaultExplorePreset: V1ExplorePreset | undefined;
   let exploreStateFromYAMLConfig: Partial<MetricsExplorerEntity> = {};
   let bookmarks: V1Bookmark[] | undefined;
@@ -32,6 +34,7 @@ export const load = async ({ params, depends, parent }) => {
       {
         explore,
         metricsView,
+        timeRanges,
         defaultExplorePreset,
         exploreStateFromYAMLConfig,
       },
@@ -79,6 +82,7 @@ export const load = async ({ params, depends, parent }) => {
   return {
     explore,
     metricsView,
+    timeRanges,
     defaultExplorePreset,
     exploreStateFromYAMLConfig,
     homeBookmarkExploreState,

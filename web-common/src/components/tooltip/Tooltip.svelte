@@ -28,7 +28,7 @@ FIXME: In the future, we should also be listening to focus events from the child
 
   export let location: Location = "bottom";
   export let alignment: Alignment = "middle";
-  export let distance = 0;
+  export let distance = 8;
   export let pad = 8;
   // provide a programmatic guard to suppressing the tooltip.
   export let suppress = false;

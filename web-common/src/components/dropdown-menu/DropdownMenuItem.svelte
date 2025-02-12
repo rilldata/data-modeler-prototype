@@ -20,7 +20,7 @@
 
 <DropdownMenuPrimitive.Item
   class={cn(
-    "relative flex gap-x-2 cursor-default select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[highlighted]:cursor-pointer data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+    "relative flex gap-x-2 cursor-default select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none data-[highlighted]:bg-slate-100 data-[highlighted]:text-accent-foreground data-[highlighted]:cursor-pointer data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
     href && "text-gray-900 font-normal",
     inset && "pl-8",
     type === "destructive" &&

@@ -21,6 +21,7 @@ import {
   FromURLParamTimeRangePresetMap,
   FromURLParamViewMap,
 } from "@rilldata/web-common/features/dashboards/url-state/mappers";
+import { validateRillTime } from "@rilldata/web-common/features/dashboards/url-state/time-ranges/parser";
 import { ExploreStateURLParams } from "@rilldata/web-common/features/dashboards/url-state/url-params";
 import {
   getMapFromArray,
@@ -256,7 +257,12 @@ function fromTimeRangesParams(
     ) {
       preset.timeRange = tr;
     } else {
-      errors.push(getSingleFieldError("time range", tr));
+      const rillTimeError = validateRillTime(tr);
+      if (rillTimeError) {
+        errors.push(getSingleFieldError("time range", tr));
+      } else {
+        preset.timeRange = tr;
+      }
     }
   }
 

@@ -22,6 +22,7 @@ export const load = async ({ params: { token }, parent }) => {
     const {
       explore,
       metricsView,
+      timeRanges,
       defaultExplorePreset,
       exploreStateFromYAMLConfig,
     } = await fetchExploreSpec(runtime?.instanceId, exploreName);
@@ -46,6 +47,7 @@ export const load = async ({ params: { token }, parent }) => {
     return {
       explore,
       metricsView,
+      timeRanges,
       defaultExplorePreset,
       exploreStateFromYAMLConfig,
       tokenExploreState,

@@ -11,8 +11,10 @@
   import CalendarPlusDateInput from "./CalendarPlusDateInput.svelte";
   import RangeDisplay from "./RangeDisplay.svelte";
   import TimeRangeMenu from "./TimeRangeMenu.svelte";
+  import type { V1ExploreTimeRange } from "@rilldata/web-common/runtime-client";
+  import { bucketTimeRanges } from "../../time-range-store";
 
-  export let ranges: RangeBuckets;
+  export let timeRanges: V1ExploreTimeRange[];
   export let selected: NamedRange | ISODurationString;
   export let interval: Interval<true>;
   export let zone: string;
@@ -27,6 +29,23 @@
   let firstVisibleMonth: DateTime<true> = interval.start;
   let open = false;
   let showSelector = false;
+
+  $: buckets = bucketTimeRanges(timeRanges, defaultTimeRange);
+
+  $: ranges = <RangeBuckets>{
+    latest: buckets.ranges[0].map((range) => ({
+      range: range.range,
+      label: range.meta?.label,
+    })),
+    periodToDate: buckets.ranges[1].map((range) => ({
+      range: range.range,
+      label: range.meta?.label,
+    })),
+    previous: buckets.ranges[2].map((range) => ({
+      range: range.range,
+      label: range.meta?.label,
+    })),
+  };
 </script>
 
 <DropdownMenu.Root
@@ -66,24 +85,21 @@
           {defaultTimeRange}
           onSelectRange={(selected) => {
             onSelectRange(selected);
-
             open = false;
           }}
           onSelectCustomOption={() => (showSelector = !showSelector)}
         />
       </div>
       {#if showSelector}
-        <div class="bg-slate-50 border-l flex flex-col w-64 p-2 py-1">
-          <CalendarPlusDateInput
-            {firstVisibleMonth}
-            {interval}
-            {zone}
-            {maxDate}
-            {minDate}
-            applyRange={applyCustomRange}
-            closeMenu={() => (open = false)}
-          />
-        </div>
+        <CalendarPlusDateInput
+          {firstVisibleMonth}
+          {interval}
+          {zone}
+          {maxDate}
+          {minDate}
+          applyRange={applyCustomRange}
+          closeMenu={() => (open = false)}
+        />
       {/if}
     </div>
   </DropdownMenu.Content>

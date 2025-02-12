@@ -1,5 +1,6 @@
 // WIP as of 04/19/2024
 
+import { parseRillTime } from "@rilldata/web-common/features/dashboards/url-state/time-ranges/parser";
 import { humaniseISODuration } from "@rilldata/web-common/lib/time/ranges/iso-ranges";
 import { writable, type Writable, get } from "svelte/store";
 import {
@@ -10,7 +11,10 @@ import {
   Duration,
   IANAZone,
 } from "luxon";
-import type { MetricsViewSpecAvailableTimeRange } from "@rilldata/web-common/runtime-client";
+import {
+  queryServiceMetricsViewTimeRanges,
+  type MetricsViewSpecAvailableTimeRange,
+} from "@rilldata/web-common/runtime-client";
 
 // CONSTANTS -> time-control-constants.ts
 
@@ -37,10 +41,10 @@ export const RILL_TO_LABEL: Record<
   inf: "All Time",
   CUSTOM: "Custom",
   "rill-PDC": "Yesterday",
-  "rill-PWC": "Previous week complete",
-  "rill-PMC": "Previous month complete",
-  "rill-PQC": "Previous quarter complete",
-  "rill-PYC": "Previous year complete",
+  "rill-PWC": "Previous week",
+  "rill-PMC": "Previous month",
+  "rill-PQC": "Previous quarter",
+  "rill-PYC": "Previous year",
   "rill-TD": "Today",
   "rill-WTD": "Week to date",
   "rill-MTD": "Month to date",
@@ -84,8 +88,8 @@ export type RillPreviousPeriod = RillPreviousPeriodTuple[number];
 type RillLatestTuple = typeof RILL_LATEST;
 export type RillLatest = RillLatestTuple[number];
 
-export const CUSTOM_TIME_RANGE_ALIAS = "CUSTOM" as const;
-export const ALL_TIME_RANGE_ALIAS = "inf" as const;
+export const CUSTOM_TIME_RANGE_ALIAS = "CUSTOM";
+export const ALL_TIME_RANGE_ALIAS = "inf";
 export type AllTime = typeof ALL_TIME_RANGE_ALIAS;
 export type CustomRange = typeof CUSTOM_TIME_RANGE_ALIAS;
 export type ISODurationString = string;
@@ -138,8 +142,10 @@ class MetricsTimeControls {
   private _subrange = new IntervalStore();
   private _comparisonRange = new IntervalStore();
   private _showComparison: Writable<boolean> = writable(false);
+  private _metricsViewName: string;
 
-  constructor(maxStart: DateTime, maxEnd: DateTime) {
+  constructor(maxStart: DateTime, maxEnd: DateTime, metricsViewName: string) {
+    this._metricsViewName = metricsViewName;
     const maxInterval = Interval.fromDateTimes(
       maxStart.setZone("UTC"),
       maxEnd.setZone("UTC"),
@@ -154,10 +160,14 @@ class MetricsTimeControls {
     this._subrange.clear();
   };
 
-  private applyISODuration = (iso: ISODurationString) => {
+  private applyISODuration = async (iso: ISODurationString) => {
     const rightAnchor = get(this._maxRange).end;
     if (rightAnchor) {
-      const interval = deriveInterval(iso, rightAnchor);
+      const interval = await deriveInterval(
+        iso,
+        rightAnchor,
+        this._metricsViewName,
+      );
       if (interval?.isValid) {
         this._visibleRange.updateInterval(interval);
         this._selected.set(iso);
@@ -165,10 +175,14 @@ class MetricsTimeControls {
     }
   };
 
-  private applyNamedRange = (name: NamedRange) => {
+  private applyNamedRange = async (name: NamedRange) => {
     const rightAnchor = get(this._maxRange).end;
     if (rightAnchor) {
-      const interval = deriveInterval(name, rightAnchor);
+      const interval = await deriveInterval(
+        name,
+        rightAnchor,
+        this._metricsViewName,
+      );
       if (interval?.isValid) {
         this._visibleRange.updateInterval(interval);
         this._selected.set(name);
@@ -249,7 +263,7 @@ class TimeControls {
     let store = this._timeControls.get(metricsViewName);
 
     if (!store && maxStart && maxEnd) {
-      store = new MetricsTimeControls(maxStart, maxEnd);
+      store = new MetricsTimeControls(maxStart, maxEnd, metricsViewName);
       this._timeControls.set(metricsViewName, store);
     } else if (!store) {
       throw new Error("TimeControls.get() called without maxStart and maxEnd");
@@ -273,10 +287,13 @@ export function isRillPeriodToDate(value: string): value is RillPeriodToDate {
   return RILL_PERIOD_TO_DATE.includes(value as RillPeriodToDate);
 }
 
-export function deriveInterval(
+import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
+
+export async function deriveInterval(
   name: RillPeriodToDate | RillPreviousPeriod | ISODurationString,
   anchor: DateTime,
-) {
+  metricsViewName: string,
+): Promise<Interval> {
   if (name === ALL_TIME_RANGE_ALIAS || name === CUSTOM_TIME_RANGE_ALIAS) {
     throw new Error("Cannot derive interval for all time or custom range");
   }
@@ -293,7 +310,26 @@ export function deriveInterval(
 
   const duration = isValidISODuration(name);
 
-  if (duration) return getInterval(duration, anchor);
+  if (duration) {
+    return getInterval(duration, anchor);
+  } else {
+    const response = await queryServiceMetricsViewTimeRanges(
+      get(runtime).instanceId,
+      metricsViewName,
+      { expressions: [name] },
+    );
+
+    const timeRange = response.timeRanges?.pop();
+
+    if (!timeRange?.start || !timeRange?.end) {
+      return Interval.invalid("Invalid time range");
+    }
+
+    return Interval.fromDateTimes(
+      DateTime.fromISO(timeRange.start),
+      DateTime.fromISO(timeRange.end),
+    );
+  }
 }
 
 export function getPeriodToDate(date: DateTime, period: DateTimeUnit) {
@@ -362,7 +398,7 @@ export function getDurationLabel(isoDuration: string): string {
   return `Last ${humaniseISODuration(isoDuration)}`;
 }
 
-export function getRangeLabel(range: NamedRange | ISODurationString): string {
+export function getRangeLabel(range: string): string {
   if (isRillPeriodToDate(range) || isRillPreviousPeriod(range)) {
     return RILL_TO_LABEL[range];
   }
@@ -373,6 +409,18 @@ export function getRangeLabel(range: NamedRange | ISODurationString): string {
 
   if (isValidISODuration(range)) {
     return getDurationLabel(range);
+  }
+
+  try {
+    const rt = parseRillTime(range);
+    const label = rt.getLabel();
+    if (label.endsWith(", incomplete")) {
+      return label.replace(", incomplete", "");
+    } else {
+      return label + ", complete";
+    }
+  } catch {
+    // no-op
   }
 
   return range;

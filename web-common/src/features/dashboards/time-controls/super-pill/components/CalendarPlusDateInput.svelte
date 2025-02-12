@@ -61,56 +61,59 @@
   }}
 />
 
-<Calendar
-  {maxDate}
-  {minDate}
-  selection={calendarInterval}
-  {selectingStart}
-  {firstVisibleMonth}
-  onSelectDay={onValidDateInput}
-/>
+<div class="flex flex-col bg-slate-50">
+  <div class="p-4 pt-3 pb-2 border-b">
+    <Calendar
+      {maxDate}
+      {minDate}
+      selection={calendarInterval}
+      {selectingStart}
+      {firstVisibleMonth}
+      onSelectDay={onValidDateInput}
+    />
+  </div>
 
-<DropdownMenu.Separator />
-<div class="flex flex-col gap-y-2 px-2 pt-1 pb-2">
-  <DateInput
-    bind:selectingStart
-    date={calendarInterval?.start ?? DateTime.now()}
-    {zone}
-    boundary="start"
-    {minDate}
-    {maxDate}
-    currentYear={firstVisibleMonth.year}
-    {onValidDateInput}
-  />
+  <div class="flex flex-col gap-y-2 px-4 py-3">
+    <DateInput
+      bind:selectingStart
+      date={calendarInterval?.start ?? DateTime.now()}
+      {zone}
+      boundary="start"
+      {minDate}
+      {maxDate}
+      currentYear={firstVisibleMonth.year}
+      {onValidDateInput}
+    />
 
-  <DateInput
-    bind:selectingStart
-    date={calendarInterval?.end ?? DateTime.now()}
-    {zone}
-    boundary="end"
-    {minDate}
-    {maxDate}
-    currentYear={firstVisibleMonth.year}
-    {onValidDateInput}
-  />
-</div>
-<div class="flex justify-end w-full py-1 px-2">
-  <Button
-    fit
-    compact
-    type="primary"
-    on:click={() => {
-      const mapped = calendarInterval?.set({
-        end: calendarInterval.end?.plus({ day: 1 }).startOf("day"),
-      });
+    <DateInput
+      bind:selectingStart
+      date={calendarInterval?.end ?? DateTime.now()}
+      {zone}
+      boundary="end"
+      {minDate}
+      {maxDate}
+      currentYear={firstVisibleMonth.year}
+      {onValidDateInput}
+    />
+  </div>
+  <div class="flex justify-end w-full py-1 px-2">
+    <Button
+      fit
+      compact
+      type="subtle"
+      on:click={() => {
+        const mapped = calendarInterval?.set({
+          end: calendarInterval.end?.plus({ day: 1 }).startOf("day"),
+        });
 
-      if (mapped?.isValid) {
-        applyRange(mapped);
-      }
+        if (mapped?.isValid) {
+          applyRange(mapped);
+        }
 
-      closeMenu();
-    }}
-  >
-    <span class="px-2 w-fit">Apply</span>
-  </Button>
+        closeMenu();
+      }}
+    >
+      <span class="px-2 w-fit">Apply</span>
+    </Button>
+  </div>
 </div>
