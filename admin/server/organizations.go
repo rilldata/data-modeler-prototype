@@ -165,6 +165,9 @@ func (s *Server) UpdateOrganization(ctx context.Context, req *adminv1.UpdateOrga
 	if req.BillingEmail != nil {
 		observability.AddRequestAttributes(ctx, attribute.String("args.billing_email", *req.BillingEmail))
 	}
+	if req.DisplayName != nil {
+		observability.AddRequestAttributes(ctx, attribute.String("args.display_name", *req.DisplayName))
+	}
 
 	org, err := s.admin.DB.FindOrganizationByName(ctx, req.Name)
 	if err != nil {
