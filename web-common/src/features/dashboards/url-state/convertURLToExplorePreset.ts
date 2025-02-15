@@ -240,7 +240,7 @@ function fromFilterUrlParam(
   }
 }
 
-function fromTimeRangesParams(
+export function fromTimeRangesParams(
   searchParams: URLSearchParams,
   dimensions: Map<string, MetricsViewSpecDimensionV2>,
 ) {

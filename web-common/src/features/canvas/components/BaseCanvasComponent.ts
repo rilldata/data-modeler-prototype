@@ -105,6 +105,17 @@ export abstract class BaseCanvasComponent<T> {
     if (value === undefined || value == "") {
       delete newSpec[key];
     }
+
+    // If the metrics_view is changed, clear the time_filters and dimension_filters
+    if (key === "metrics_view") {
+      if ("time_filters" in newSpec) {
+        delete newSpec.time_filters;
+      }
+      if ("dimension_filters" in newSpec) {
+        delete newSpec.dimension_filters;
+      }
+    }
+
     if (this.isValid(newSpec)) {
       await this.updateYAML(newSpec);
     }

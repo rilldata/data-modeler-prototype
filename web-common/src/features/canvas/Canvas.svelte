@@ -1,37 +1,36 @@
 <script lang="ts">
-  import CanvasDashboardPreview from "./CanvasDashboardPreview.svelte";
-  import { getCanvasStateManagers } from "@rilldata/web-common/features/canvas/state-managers/state-managers";
-  import type { FileArtifact } from "@rilldata/web-common/features/entity-management/file-artifact";
-  import type { V1CanvasSpec } from "@rilldata/web-common/runtime-client";
-  import { parseDocument } from "yaml";
-  import { workspaces } from "@rilldata/web-common/layout/workspace/workspace-stores";
-  import { useDefaultMetrics } from "./selector";
-  import { getComponentRegistry } from "./components/util";
-  import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
-  import { findNextAvailablePosition } from "./util";
-  import type { CanvasComponentType } from "./components/types";
-  import BlankCanvas from "./BlankCanvas.svelte";
-  import CanvasFilters from "@rilldata/web-common/features/canvas/filters/CanvasFilters.svelte";
   import {
     ContextMenu,
     ContextMenuContent,
     ContextMenuItem,
     ContextMenuTrigger,
   } from "@rilldata/web-common/components/context-menu";
+  import CanvasFilters from "@rilldata/web-common/features/canvas/filters/CanvasFilters.svelte";
+  import { getCanvasStateManagers } from "@rilldata/web-common/features/canvas/state-managers/state-managers";
+  import type { FileArtifact } from "@rilldata/web-common/features/entity-management/file-artifact";
+  import { workspaces } from "@rilldata/web-common/layout/workspace/workspace-stores";
+  import type { V1CanvasSpec } from "@rilldata/web-common/runtime-client";
+  import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
+  import { parseDocument } from "yaml";
+  import BlankCanvas from "./BlankCanvas.svelte";
+  import CanvasDashboardPreview from "./CanvasDashboardPreview.svelte";
   import { menuItems } from "./components/menu-items.svelte";
+  import type { CanvasComponentType } from "./components/types";
+  import { getComponentRegistry } from "./components/util";
+  import { useDefaultMetrics } from "./selector";
+  import { findNextAvailablePosition } from "./util";
 
   export let fileArtifact: FileArtifact;
 
   const ctx = getCanvasStateManagers();
 
   const {
+    canvasEntity,
     canvasEntity: {
       selectedComponentIndex: selectedIndex,
       spec: { canvasSpec },
     },
   } = ctx;
-
-  const { canvasEntity } = getCanvasStateManagers();
 
   $: workspaceLayout = workspaces.get(fileArtifact.path);
   // Open inspector when a canvas item is selected
@@ -88,6 +87,9 @@
     updateEditorContent(parsedDocument.toString(), true);
     items = updatedItems;
     canvasEntity.setSelectedComponentIndex(null);
+    if (items[index]?.component) {
+      canvasEntity.removeComponent(items[index]?.component);
+    }
     await saveLocalContent();
   }
 

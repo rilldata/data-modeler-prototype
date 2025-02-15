@@ -32,8 +32,7 @@ export type ComponentComparisonOptions =
   | "percent_change";
 
 export interface ComponentFilterProperties {
-  time_range?: string;
-  comparison_range?: string;
+  time_filters?: string;
   dimension_filters?: string;
 }
 

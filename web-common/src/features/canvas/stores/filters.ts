@@ -555,11 +555,7 @@ export class Filters {
     this.dimensionFilterExcludeMode.set(excludeMode);
   };
 
-  setTemporaryFilterName = (name: string) => {
-    this.temporaryFilterName.set(name);
-  };
-
-  setFiltersFromText = (filterText: string) => {
+  getFiltersFromText = (filterText: string) => {
     let expr = convertFilterParamToExpression(filterText);
     if (
       expr?.cond?.op !== V1Operation.OPERATION_AND &&
@@ -567,6 +563,15 @@ export class Filters {
     ) {
       expr = createAndExpression([expr]);
     }
+    return expr;
+  };
+
+  setTemporaryFilterName = (name: string) => {
+    this.temporaryFilterName.set(name);
+  };
+
+  setFiltersFromText = (filterText: string) => {
+    const expr = this.getFiltersFromText(filterText);
     this.setFilters(expr);
   };
 }

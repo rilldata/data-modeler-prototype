@@ -13,8 +13,8 @@
     type ISODurationString,
     type NamedRange,
   } from "../new-time-controls";
-  import * as Elements from "./components";
   import TimeGrainSelector from "../TimeGrainSelector.svelte";
+  import * as Elements from "./components";
 
   export let allTimeRange: TimeRange;
   export let selectedRangeAlias: string | undefined;
@@ -29,6 +29,7 @@
   export let canPanRight: boolean;
   export let interval: Interval;
   export let showPan = false;
+  export let showFullRange = true;
   export let complete: boolean;
   export let activeTimeZone: string;
   export let timeStart: string | undefined;
@@ -54,6 +55,7 @@
       maxDate={DateTime.fromJSDate(allTimeRange.end)}
       ranges={rangeBuckets}
       {showDefaultItem}
+      {showFullRange}
       {defaultTimeRange}
       selected={selectedRangeAlias ?? ""}
       grain={activeTimeGrain}

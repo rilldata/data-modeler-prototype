@@ -1,12 +1,15 @@
 <script lang="ts">
-  import ComponentError from "@rilldata/web-common/features/canvas/components/ComponentError.svelte";
+  import type { TimeAndFilterStore } from "@rilldata/web-common/features/canvas/stores/types";
   import type { V1ComponentSpecRendererProperties } from "@rilldata/web-common/runtime-client";
+  import type { Readable } from "svelte/store";
   import type { KPIGridSpec } from ".";
+  import ComponentError from "../ComponentError.svelte";
   import type { KPISpec } from "../kpi";
   import KPI from "../kpi/KPI.svelte";
   import { validateKPIGridSchema } from "./selector";
 
   export let rendererProperties: V1ComponentSpecRendererProperties;
+  export let timeAndFilterStore: Readable<TimeAndFilterStore>;
 
   let containerWidth: number;
   let containerHeight: number;
@@ -21,6 +24,8 @@
     measure,
     sparkline: kpiGridProperties.sparkline,
     comparison: kpiGridProperties.comparison,
+    dimension_filters: kpiGridProperties.dimension_filters,
+    time_filters: kpiGridProperties.time_filters,
   }));
 
   // Calculate individual KPI width based on container width and number of KPIs
@@ -39,7 +44,7 @@
         class="border-r border-gray-200"
         class:border-r-0={i === kpis.length - 1}
       >
-        <KPI rendererProperties={kpi} topPadding={false} />
+        <KPI rendererProperties={kpi} topPadding={false} {timeAndFilterStore} />
       </div>
     {/each}
   </div>

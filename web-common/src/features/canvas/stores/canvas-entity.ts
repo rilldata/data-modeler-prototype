@@ -1,21 +1,19 @@
 import { useCanvas } from "@rilldata/web-common/features/canvas/selector";
+import type { TimeAndFilterStore } from "@rilldata/web-common/features/canvas/stores/types";
 import type { CanvasSpecResponseStore } from "@rilldata/web-common/features/canvas/types";
 import { mergeFilters } from "@rilldata/web-common/features/dashboards/pivot/pivot-merge-filters";
 import {
   buildValidMetricsViewFilter,
   createAndExpression,
 } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
-import { convertFilterParamToExpression } from "@rilldata/web-common/features/dashboards/url-state/filters/converters";
 import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
-import type { DashboardTimeControls } from "@rilldata/web-common/lib/time/types";
 import {
-  V1Operation,
   type V1Expression,
   type V1TimeRange,
 } from "@rilldata/web-common/runtime-client";
 import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
 import type { GridStack } from "gridstack";
-import { derived, writable, type Writable } from "svelte/store";
+import { derived, writable, type Readable, type Writable } from "svelte/store";
 import { CanvasComponentState } from "./canvas-component";
 import { Filters } from "./filters";
 import { CanvasResolvedSpec } from "./spec";
@@ -50,8 +48,10 @@ export class CanvasEntity {
    */
   selectedComponentIndex: Writable<number | null>;
 
+  private specStore: CanvasSpecResponseStore;
+
   constructor(name: string) {
-    const specStore: CanvasSpecResponseStore = derived(runtime, (r, set) =>
+    this.specStore = derived(runtime, (r, set) =>
       useCanvas(r.instanceId, name, { queryClient }).subscribe(set),
     );
 
@@ -59,8 +59,8 @@ export class CanvasEntity {
 
     this.components = new Map();
     this.selectedComponentIndex = writable(null);
-    this.spec = new CanvasResolvedSpec(specStore);
-    this.timeControls = new TimeControls(specStore);
+    this.spec = new CanvasResolvedSpec(this.specStore);
+    this.timeControls = new TimeControls(this.specStore);
     this.filters = new Filters(this.spec);
   }
 
@@ -68,14 +68,22 @@ export class CanvasEntity {
     this.selectedComponentIndex.set(index);
   };
 
-  useComponent = (componentName: string) => {
+  useComponent = (componentName: string): CanvasComponentState => {
     let componentEntity = this.components.get(componentName);
 
     if (!componentEntity) {
-      componentEntity = new CanvasComponentState(componentName, this.spec);
+      componentEntity = new CanvasComponentState(
+        componentName,
+        this.specStore,
+        this.spec,
+      );
       this.components.set(componentName, componentEntity);
     }
     return componentEntity;
+  };
+
+  removeComponent = (componentName: string) => {
+    this.components.delete(componentName);
   };
 
   setGridstack(gridstack: GridStack | null) {
@@ -86,86 +94,102 @@ export class CanvasEntity {
    * Helper method to get the time range and where clause for a given metrics view
    * with the ability to override the time range and filter
    */
-  createTimeAndFilterStore = (
-    metricsViewName: string,
-    {
-      componentTimeRange,
-      componentComparisonRange,
-      componentFilter,
-    }: {
-      timeRangeStore?: Writable<DashboardTimeControls | undefined>;
-      componentTimeRange?: string;
-      componentComparisonRange?: string;
-      componentFilter?: string;
-    },
-  ) => {
-    const { timeControls, filters, spec } = this;
+  componentTimeAndFilterStore = (
+    componentName: string,
+  ): Readable<TimeAndFilterStore> => {
+    const { timeControls, filters, spec, useComponent } = this;
 
-    const dimensionsStore = spec.getDimensionsForMetricView(metricsViewName);
-    const measuresStore = spec.getMeasuresForMetricView(metricsViewName);
+    const componentSpecStore = spec.getComponentResourceFromName(componentName);
 
-    return derived(
-      [
-        timeControls.timeRangeStateStore,
-        timeControls.comparisonRangeStateStore,
-        timeControls.selectedTimezone,
-        filters.whereFilter,
-        filters.dimensionThresholdFilters,
-        dimensionsStore,
-        measuresStore,
-      ],
-      ([
-        globalTimeRangeState,
-        globalComparisonRangeState,
-        timeZone,
-        whereFilter,
-        dtf,
-        dimensions,
-        measures,
-      ]) => {
-        // Time Range
-        let timeRange: V1TimeRange = {
-          start: globalTimeRangeState?.timeStart,
-          end: globalTimeRangeState?.timeEnd,
+    return derived(componentSpecStore, (componentSpec, set) => {
+      const metricsViewName = componentSpec?.rendererProperties
+        ?.metrics_view as string;
+
+      if (!metricsViewName) {
+        throw new Error("Metrics view name is not set for component");
+      }
+
+      const component = useComponent(componentName);
+      const dimensionsStore = spec.getDimensionsForMetricView(metricsViewName);
+      const measuresStore = spec.getMeasuresForMetricView(metricsViewName);
+
+      return derived(
+        [
+          timeControls.timeRangeStateStore,
+          component.localTimeControls.timeRangeStateStore,
+          timeControls.comparisonRangeStateStore,
+          component.localTimeControls.comparisonRangeStateStore,
+          timeControls.selectedTimezone,
+          component.localTimeControls.showTimeComparison,
+          filters.whereFilter,
+          filters.dimensionThresholdFilters,
+          dimensionsStore,
+          measuresStore,
+        ],
+        ([
+          globalTimeRangeState,
+          localTimeRangeState,
+          globalComparisonRangeState,
+          localComparisonRangeState,
           timeZone,
-        };
-        if (componentTimeRange) {
-          // TODO: update logic
-          timeRange = { isoDuration: componentTimeRange, timeZone };
-        }
-        const timeGrain = globalTimeRangeState?.selectedTimeRange?.interval;
+          showLocalTimeComparison,
+          whereFilter,
+          dtf,
+          dimensions,
+          measures,
+        ]) => {
+          // Time Filters
+          let timeRange: V1TimeRange = {
+            start: globalTimeRangeState?.timeStart,
+            end: globalTimeRangeState?.timeEnd,
+            timeZone,
+          };
 
-        // Comparison Range
-        let comparisonRange: V1TimeRange = {
-          start: globalComparisonRangeState?.comparisonTimeStart,
-          end: globalComparisonRangeState?.comparisonTimeEnd,
-          timeZone,
-        };
-        if (componentComparisonRange) {
-          // TODO: update logic
-          comparisonRange = { isoDuration: componentComparisonRange, timeZone };
-        }
+          let timeGrain = globalTimeRangeState?.selectedTimeRange?.interval;
 
-        // Dimension Filters
-        const globalWhere =
-          buildValidMetricsViewFilter(whereFilter, dtf, dimensions, measures) ??
-          createAndExpression([]);
+          let comparisonTimeRange: V1TimeRange | undefined = {
+            start: globalComparisonRangeState?.comparisonTimeStart,
+            end: globalComparisonRangeState?.comparisonTimeEnd,
+            timeZone,
+          };
+          if (componentSpec?.rendererProperties?.time_filters) {
+            timeRange = {
+              start: localTimeRangeState?.timeStart,
+              end: localTimeRangeState?.timeEnd,
+              timeZone,
+            };
 
-        let where: V1Expression | undefined = globalWhere;
+            comparisonTimeRange = {
+              start: localComparisonRangeState?.comparisonTimeStart,
+              end: localComparisonRangeState?.comparisonTimeEnd,
+              timeZone,
+            };
 
-        if (componentFilter) {
-          let expr = convertFilterParamToExpression(componentFilter);
-          if (
-            expr?.cond?.op !== V1Operation.OPERATION_AND &&
-            expr?.cond?.op !== V1Operation.OPERATION_OR
-          ) {
-            expr = createAndExpression([expr]);
+            if (!showLocalTimeComparison) comparisonTimeRange = undefined;
+            timeGrain = localTimeRangeState?.selectedTimeRange?.interval;
           }
-          where = mergeFilters(globalWhere, expr);
-        }
 
-        return { timeRange, comparisonRange, where, timeGrain };
-      },
-    );
+          // Dimension Filters
+          const globalWhere =
+            buildValidMetricsViewFilter(
+              whereFilter,
+              dtf,
+              dimensions,
+              measures,
+            ) ?? createAndExpression([]);
+
+          let where: V1Expression | undefined = globalWhere;
+
+          if (componentSpec?.rendererProperties?.dimension_filters) {
+            const componentWhere = component.localFilters.getFiltersFromText(
+              componentSpec.rendererProperties.dimension_filters as string,
+            );
+            where = mergeFilters(globalWhere, componentWhere);
+          }
+
+          return { timeRange, comparisonTimeRange, where, timeGrain };
+        },
+      ).subscribe(set);
+    });
   };
 }

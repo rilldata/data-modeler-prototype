@@ -115,6 +115,7 @@
       currentInterval={interval}
       grain={activeTimeGrain}
       zone={activeTimeZone}
+      showFullRange={true}
       {onSelectComparisonRange}
       disabled={disabled ?? false}
     />

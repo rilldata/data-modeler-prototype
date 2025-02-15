@@ -4,6 +4,7 @@ import {
   validateMeasures,
 } from "@rilldata/web-common/features/canvas/components/validators";
 import type { StateManagers } from "@rilldata/web-common/features/canvas/state-managers/state-managers";
+import type { TimeAndFilterStore } from "@rilldata/web-common/features/canvas/stores/types";
 import { canEnablePivotComparison } from "@rilldata/web-common/features/dashboards/pivot/pivot-utils";
 import {
   COMPARISON_DELTA,
@@ -18,28 +19,22 @@ export function getTableConfig(
   ctx: StateManagers,
   tableSpec: TableSpec,
   pivotState: PivotState,
+  timeAndFilterStore: Readable<TimeAndFilterStore>,
 ): Readable<PivotDataStoreConfig> {
-  const { metrics_view, time_range, comparison_range, dimension_filters } =
-    tableSpec;
+  const { metrics_view } = tableSpec;
   const {
     canvasEntity: {
-      createTimeAndFilterStore,
       spec: { getMetricsViewFromName },
     },
   } = ctx;
 
-  const timeAndFilterStore = createTimeAndFilterStore(metrics_view, {
-    componentTimeRange: time_range,
-    componentComparisonRange: comparison_range,
-    componentFilter: dimension_filters,
-  });
-
   return derived(
     [getMetricsViewFromName(metrics_view), timeAndFilterStore],
-    ([metricsView, { timeRange, comparisonRange, where }]) => {
+    ([metricsView, $timeAndFilterStore]) => {
+      const { timeRange, comparisonTimeRange, where } = $timeAndFilterStore;
       const enableComparison = canEnablePivotComparison(
         pivotState,
-        comparisonRange.start,
+        comparisonTimeRange?.start,
       );
 
       const config: PivotDataStoreConfig = {
@@ -62,8 +57,8 @@ export function getTableConfig(
         pivot: pivotState,
         enableComparison,
         comparisonTime: {
-          start: comparisonRange?.start,
-          end: comparisonRange?.end,
+          start: comparisonTimeRange?.start,
+          end: comparisonTimeRange?.end,
         },
         time: {
           timeStart: timeRange?.start,
