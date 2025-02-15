@@ -2,10 +2,10 @@
   import { json } from "@codemirror/lang-json";
   import { EditorState } from "@codemirror/state";
   import { EditorView, placeholder } from "@codemirror/view";
+  import { base as baseExtensions } from "@rilldata/web-common/components/editor/presets/base";
   import type { CanvasComponentObj } from "@rilldata/web-common/features/canvas/components/util";
   import type { V1ComponentSpecRendererProperties } from "@rilldata/web-common/runtime-client";
   import { onDestroy, onMount } from "svelte";
-  import { base as baseExtensions } from "../../../components/editor/presets/base";
 
   export let component: CanvasComponentObj;
   export let paramValues: V1ComponentSpecRendererProperties;
