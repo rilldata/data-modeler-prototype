@@ -73,7 +73,6 @@
   export let unsavedChanges = false;
 
   let searchValue = "";
-
   let confirmation: Confirmation | null = null;
   let tableSelectionOpen = false;
   let collapsed = {

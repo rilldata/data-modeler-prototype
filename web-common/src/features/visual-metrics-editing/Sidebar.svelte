@@ -213,7 +213,9 @@
     .map(({ label }) => label);
 
   $: unsavedChanges = Object.keys(editingClone).some(
-    (key) => editingClone[key] !== item?.[key],
+    (key) =>
+      editingClone[key] !== item?.[key] ||
+      (item?.["format_preset"] && item?.["format_d3"]),
   );
 
   async function saveChanges() {
@@ -232,8 +234,16 @@
     const items = sequence.items as YAMLMap[];
     const newItem = items[index] ?? new YAMLMap();
 
-    properties[type].forEach(({ selected, fields }) => {
+    properties[type].forEach(({ selected, fields, label }) => {
       const { key } = fields[selected];
+      if (label === "Format") {
+        if (key === "format_preset") {
+          newItem.delete("format_d3");
+        } else {
+          newItem.delete("format_preset");
+        }
+      }
+
       if (editingClone[key] || editingClone[key] === false)
         newItem.set(key, editingClone[key]);
     });
