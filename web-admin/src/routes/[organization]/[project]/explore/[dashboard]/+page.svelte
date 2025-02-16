@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onNavigate } from "$app/navigation";
+  import { onNavigate, beforeNavigate } from "$app/navigation";
   import { page } from "$app/stores";
   import { errorStore } from "@rilldata/web-admin/components/errors/error-store";
   import DashboardBuilding from "@rilldata/web-admin/features/dashboards/DashboardBuilding.svelte";
@@ -80,14 +80,17 @@
     });
   }
 
+  // Clear the banner when navigating away from the dashboard
+  beforeNavigate(({ from, to }) => {
+    const leavingExplore = from?.url.pathname !== to?.url.pathname;
+    if (leavingExplore && hasBanner) {
+        eventBus.emit("banner", null);
+    }
+  });
+
   onNavigate(() => {
     viewAsUserStore.set(null);
     errorStore.reset();
-
-    // Clear out any dashboard banners
-    if (hasBanner) {
-      eventBus.emit("banner", null);
-    }
   });
 
   function isDashboardReconcilingForFirstTime(
