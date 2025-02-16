@@ -5,6 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Struct, Timestamp } from "@bufbuild/protobuf";
+import { StructType } from "./schema_pb.js";
 import { RefreshModelTrigger, Resource, ResourceName } from "./resources_pb.js";
 
 /**
@@ -2467,6 +2468,110 @@ export class GenerateRendererResponse extends Message<GenerateRendererResponse> 
 
   static equals(a: GenerateRendererResponse | PlainMessage<GenerateRendererResponse> | undefined, b: GenerateRendererResponse | PlainMessage<GenerateRendererResponse> | undefined): boolean {
     return proto3.util.equals(GenerateRendererResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message rill.runtime.v1.QueryResolverRequest
+ */
+export class QueryResolverRequest extends Message<QueryResolverRequest> {
+  /**
+   * @generated from field: string instance_id = 1;
+   */
+  instanceId = "";
+
+  /**
+   * @generated from field: string resolver = 2;
+   */
+  resolver = "";
+
+  /**
+   * @generated from field: google.protobuf.Struct resolver_properties = 3;
+   */
+  resolverProperties?: Struct;
+
+  /**
+   * @generated from field: google.protobuf.Struct resolver_args = 4;
+   */
+  resolverArgs?: Struct;
+
+  /**
+   * @generated from field: int32 limit = 5;
+   */
+  limit = 0;
+
+  constructor(data?: PartialMessage<QueryResolverRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "rill.runtime.v1.QueryResolverRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "instance_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "resolver", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "resolver_properties", kind: "message", T: Struct },
+    { no: 4, name: "resolver_args", kind: "message", T: Struct },
+    { no: 5, name: "limit", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryResolverRequest {
+    return new QueryResolverRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryResolverRequest {
+    return new QueryResolverRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryResolverRequest {
+    return new QueryResolverRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: QueryResolverRequest | PlainMessage<QueryResolverRequest> | undefined, b: QueryResolverRequest | PlainMessage<QueryResolverRequest> | undefined): boolean {
+    return proto3.util.equals(QueryResolverRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message rill.runtime.v1.QueryResolverResponse
+ */
+export class QueryResolverResponse extends Message<QueryResolverResponse> {
+  /**
+   * @generated from field: rill.runtime.v1.StructType schema = 1;
+   */
+  schema?: StructType;
+
+  /**
+   * @generated from field: repeated google.protobuf.Struct data = 2;
+   */
+  data: Struct[] = [];
+
+  constructor(data?: PartialMessage<QueryResolverResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "rill.runtime.v1.QueryResolverResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "schema", kind: "message", T: StructType },
+    { no: 2, name: "data", kind: "message", T: Struct, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryResolverResponse {
+    return new QueryResolverResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryResolverResponse {
+    return new QueryResolverResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryResolverResponse {
+    return new QueryResolverResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: QueryResolverResponse | PlainMessage<QueryResolverResponse> | undefined, b: QueryResolverResponse | PlainMessage<QueryResolverResponse> | undefined): boolean {
+    return proto3.util.equals(QueryResolverResponse, a, b);
   }
 }
 

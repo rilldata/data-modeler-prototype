@@ -16,6 +16,7 @@ import (
 	"github.com/rilldata/rill/cli/cmd/org"
 	"github.com/rilldata/rill/cli/cmd/project"
 	"github.com/rilldata/rill/cli/cmd/publicurl"
+	"github.com/rilldata/rill/cli/cmd/query"
 	"github.com/rilldata/rill/cli/cmd/runtime"
 	"github.com/rilldata/rill/cli/cmd/service"
 	"github.com/rilldata/rill/cli/cmd/start"
@@ -167,6 +168,7 @@ func runCmd(ctx context.Context, ver cmdutil.Version) error {
 	// Additional sub-commands
 	rootCmd.AddCommand(
 		completionCmd,
+		query.QueryCmd(ch),
 		docs.DocsCmd(ch, rootCmd),
 		versioncmd.VersionCmd(),
 		upgrade.UpgradeCmd(ch),

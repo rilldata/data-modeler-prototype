@@ -5925,6 +5925,337 @@ var _ interface {
 	ErrorName() string
 } = GenerateRendererResponseValidationError{}
 
+// Validate checks the field values on QueryResolverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *QueryResolverRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QueryResolverRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// QueryResolverRequestMultiError, or nil if none found.
+func (m *QueryResolverRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QueryResolverRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for InstanceId
+
+	// no validation rules for Resolver
+
+	if all {
+		switch v := interface{}(m.GetResolverProperties()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, QueryResolverRequestValidationError{
+					field:  "ResolverProperties",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, QueryResolverRequestValidationError{
+					field:  "ResolverProperties",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetResolverProperties()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return QueryResolverRequestValidationError{
+				field:  "ResolverProperties",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetResolverArgs()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, QueryResolverRequestValidationError{
+					field:  "ResolverArgs",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, QueryResolverRequestValidationError{
+					field:  "ResolverArgs",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetResolverArgs()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return QueryResolverRequestValidationError{
+				field:  "ResolverArgs",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Limit
+
+	if len(errors) > 0 {
+		return QueryResolverRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// QueryResolverRequestMultiError is an error wrapping multiple validation
+// errors returned by QueryResolverRequest.ValidateAll() if the designated
+// constraints aren't met.
+type QueryResolverRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QueryResolverRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QueryResolverRequestMultiError) AllErrors() []error { return m }
+
+// QueryResolverRequestValidationError is the validation error returned by
+// QueryResolverRequest.Validate if the designated constraints aren't met.
+type QueryResolverRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QueryResolverRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QueryResolverRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QueryResolverRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QueryResolverRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QueryResolverRequestValidationError) ErrorName() string {
+	return "QueryResolverRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e QueryResolverRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQueryResolverRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QueryResolverRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QueryResolverRequestValidationError{}
+
+// Validate checks the field values on QueryResolverResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *QueryResolverResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on QueryResolverResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// QueryResolverResponseMultiError, or nil if none found.
+func (m *QueryResolverResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *QueryResolverResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetSchema()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, QueryResolverResponseValidationError{
+					field:  "Schema",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, QueryResolverResponseValidationError{
+					field:  "Schema",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSchema()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return QueryResolverResponseValidationError{
+				field:  "Schema",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, QueryResolverResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, QueryResolverResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return QueryResolverResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return QueryResolverResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// QueryResolverResponseMultiError is an error wrapping multiple validation
+// errors returned by QueryResolverResponse.ValidateAll() if the designated
+// constraints aren't met.
+type QueryResolverResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m QueryResolverResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m QueryResolverResponseMultiError) AllErrors() []error { return m }
+
+// QueryResolverResponseValidationError is the validation error returned by
+// QueryResolverResponse.Validate if the designated constraints aren't met.
+type QueryResolverResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e QueryResolverResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e QueryResolverResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e QueryResolverResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e QueryResolverResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e QueryResolverResponseValidationError) ErrorName() string {
+	return "QueryResolverResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e QueryResolverResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sQueryResolverResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = QueryResolverResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = QueryResolverResponseValidationError{}
+
 // Validate checks the field values on Log with the rules defined in the proto
 // definition for this message. If any rules are violated, the first error
 // encountered is returned, or nil if there are no violations.

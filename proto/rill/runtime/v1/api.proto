@@ -4,6 +4,7 @@ package rill.runtime.v1;
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
+import "rill/runtime/v1/schema.proto";
 import "rill/runtime/v1/resources.proto";
 import "validate/validate.proto";
 
@@ -149,6 +150,14 @@ service RuntimeService {
   rpc GenerateRenderer(GenerateRendererRequest) returns (GenerateRendererResponse) {
     option (google.api.http) = {
       post: "/v1/instances/{instance_id}/generate/renderer",
+      body: "*"
+    };
+  }
+
+  // QueryResolver queries a resolver with the given properties and arguments
+  rpc QueryResolver(QueryResolverRequest) returns (QueryResolverResponse) {
+    option (google.api.http) = {
+      post: "/v1/instances/{instance_id}/query/resolver",
       body: "*"
     };
   }
@@ -585,6 +594,19 @@ message GenerateRendererRequest {
 message GenerateRendererResponse {
   string renderer = 1;
   google.protobuf.Struct renderer_properties = 2;
+}
+
+message QueryResolverRequest {
+  string instance_id = 1;
+  string resolver = 2;
+  google.protobuf.Struct resolver_properties = 3;
+  google.protobuf.Struct resolver_args = 4;
+  int32 limit = 5;
+}
+
+message QueryResolverResponse {
+  StructType schema = 1;
+  repeated google.protobuf.Struct data = 2;
 }
 
 // **********
