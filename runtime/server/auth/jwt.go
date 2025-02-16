@@ -28,6 +28,16 @@ type Issuer struct {
 	publicJWKS []byte
 }
 
+// Set issuerURL
+func (i *Issuer) SetIssuerURL(issuerURL string) {
+	i.issuerURL = issuerURL
+}
+
+// Get issuerURL
+func (i *Issuer) GetIssuerURL() string {
+	return i.issuerURL
+}
+
 // NewIssuer creates an issuer from a JWKS. The JWKS must contain private keys.
 // The key identified by signingKeyID will be used to sign new JWTs.
 func NewIssuer(issuerURL, signingKeyID string, jwksJSON []byte) (*Issuer, error) {
