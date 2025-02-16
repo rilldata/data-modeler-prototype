@@ -19,6 +19,10 @@ export function humanReadableErrorMessage(
 
   switch (code) {
     // gRPC error codes: https://pkg.go.dev/google.golang.org/grpc@v1.49.0/codes
+    // Unknown
+    case 2: {
+      return serverError;
+    }
     // InvalidArgument
     case 3: {
       // Rill errors

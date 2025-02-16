@@ -158,13 +158,6 @@ export function maybeRewriteToDuckDb(
       formValues.sql = buildDuckDbQuery(formValues.path as string);
       delete formValues.path;
 
-      connectorCopy.sourceProperties = [
-        {
-          key: "sql",
-          type: ConnectorDriverPropertyType.TYPE_STRING,
-        },
-      ];
-
       break;
     case "sqlite":
       connectorCopy.name = "duckdb";
@@ -175,15 +168,18 @@ export function maybeRewriteToDuckDb(
       delete formValues.db;
       delete formValues.table;
 
-      connectorCopy.sourceProperties = [
-        {
-          key: "sql",
-          type: ConnectorDriverPropertyType.TYPE_STRING,
-        },
-      ];
-
       break;
+
+    default:
+      return [connector, formValues];
   }
+
+  connectorCopy.sourceProperties = [
+    {
+      key: "sql",
+      type: ConnectorDriverPropertyType.TYPE_STRING,
+    },
+  ];
 
   return [connectorCopy, formValues];
 }

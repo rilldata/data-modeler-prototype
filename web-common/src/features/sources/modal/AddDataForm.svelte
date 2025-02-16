@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from "@rilldata/web-common/components/button";
+  import { goto } from "$app/navigation";
   import InformationalField from "@rilldata/web-common/components/forms/InformationalField.svelte";
   import Input from "@rilldata/web-common/components/forms/Input.svelte";
   import SubmissionError from "@rilldata/web-common/components/forms/SubmissionError.svelte";
@@ -11,6 +11,7 @@
   } from "@rilldata/web-common/runtime-client";
   import { defaults, superForm } from "sveltekit-superforms";
   import { yup } from "sveltekit-superforms/adapters";
+  import type { OlapDriver } from "../../connectors/olap/olap-config";
   import { inferSourceName } from "../sourceUtils";
   import { humanReadableErrorMessage } from "./errors";
   import { submitAddDataForm } from "./submitAddDataForm";
@@ -19,10 +20,10 @@
 
   export let connector: V1ConnectorDriver;
   export let formType: AddDataFormType;
-  export let onBack: () => void;
-  export let onClose: () => void;
+  export let olapDriver: OlapDriver;
+  export let onSubmit: (newFilePath: string) => void;
 
-  $: formId = `add-data-${connector.name}-form`;
+  const formId = `add-data-form`;
 
   $: isSourceForm = formType === "source";
   $: isConnectorForm = formType === "connector";
@@ -39,13 +40,21 @@
     {
       SPA: true,
       validators: schema,
+      resetForm: false,
       async onUpdate({ form }) {
         if (!form.valid) return;
         const values = form.data;
         if (isSourceForm) {
           try {
-            await submitAddDataForm(queryClient, formType, connector, values);
-            onClose();
+            const newSourceFilePath = await submitAddDataForm(
+              queryClient,
+              formType,
+              connector,
+              values,
+              olapDriver,
+            );
+            await goto(`/files/${newSourceFilePath}`);
+            onSubmit(newSourceFilePath);
           } catch (e) {
             rpcError = e?.response?.data;
           }
@@ -54,8 +63,14 @@
 
         // Connectors
         try {
-          await submitAddDataForm(queryClient, formType, connector, values);
-          onClose();
+          // submitNewOLAPConnectorForm
+          const newConnectorFilePath = await submitAddDataForm(
+            queryClient,
+            formType,
+            connector,
+            values,
+          );
+          onSubmit(newConnectorFilePath);
         } catch (e) {
           rpcError = e?.response?.data;
         }
@@ -146,10 +161,5 @@
       {/if}
     {/each}
   </form>
-  <div class="flex items-center space-x-2 ml-auto">
-    <Button on:click={onBack} type="secondary">Back</Button>
-    <Button disabled={$submitting} form={formId} submitForm type="primary">
-      Add data
-    </Button>
-  </div>
+  <slot name="actions" submitting={$submitting} />
 </div>

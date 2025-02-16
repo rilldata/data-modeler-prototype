@@ -1,7 +1,9 @@
 import { goto, invalidate } from "$app/navigation";
+import { page } from "$app/stores";
 import { getScreenNameFromPage } from "@rilldata/web-common/features/file-explorer/telemetry";
 import type { QueryClient } from "@tanstack/query-core";
 import { get } from "svelte/store";
+import { waitUntil } from "../../../lib/waitUtils";
 import { behaviourEvent } from "../../../metrics/initMetrics";
 import {
   BehaviourEventAction,
@@ -10,15 +12,19 @@ import {
 import { MetricsEventSpace } from "../../../metrics/service/MetricsTypes";
 import {
   type V1ConnectorDriver,
+  connectorServiceOLAPListTables,
+  getConnectorServiceOLAPListTablesQueryKey,
   runtimeServicePutFile,
   runtimeServiceUnpackEmpty,
 } from "../../../runtime-client";
 import { runtime } from "../../../runtime-client/runtime-store";
+import { compileClickhouseSourceConnectorFile } from "../../connectors/clickhouse/source-templates";
 import {
   compileConnectorYAML,
   updateDotEnvWithSecrets,
   updateRillYAMLWithOlapConnector,
 } from "../../connectors/code-utils";
+import type { OlapDriver } from "../../connectors/olap/olap-config";
 import { getFileAPIPathFromNameAndType } from "../../entity-management/entity-mappers";
 import { fileArtifacts } from "../../entity-management/file-artifacts";
 import { getName } from "../../entity-management/name-utils";
@@ -40,7 +46,8 @@ export async function submitAddDataForm(
   formType: AddDataFormType,
   connector: V1ConnectorDriver,
   values: AddDataFormValues,
-): Promise<void> {
+  olapDriver?: OlapDriver, // only relevant for "source" formType
+): Promise<string> {
   const instanceId = get(runtime).instanceId;
 
   // Emit telemetry
@@ -82,52 +89,93 @@ export async function submitAddDataForm(
   );
 
   /**
-   * Sources
+   * Sources / Models
    */
 
   if (formType === "source") {
-    const [rewrittenConnector, rewrittenFormValues] = maybeRewriteToDuckDb(
-      connector,
-      formValues,
-    );
+    switch (olapDriver) {
+      case "duckdb": {
+        const [rewrittenConnector, rewrittenFormValues] = maybeRewriteToDuckDb(
+          connector,
+          formValues,
+        );
 
-    // Make a new <source>.yaml file
-    const newSourceFilePath = getFileAPIPathFromNameAndType(
-      values.name as string,
-      EntityType.Table,
-    );
-    await runtimeServicePutFile(instanceId, {
-      path: newSourceFilePath,
-      blob: compileSourceYAML(rewrittenConnector, rewrittenFormValues),
-      create: true,
-      createOnly: false, // The modal might be opened from a YAML file with placeholder text, so the file might already exist
-    });
+        // Make a new <source>.yaml file
+        const newSourceFilePath = getFileAPIPathFromNameAndType(
+          values.name as string,
+          EntityType.Source,
+        );
+        await runtimeServicePutFile(instanceId, {
+          path: newSourceFilePath,
+          blob: compileSourceYAML(rewrittenConnector, rewrittenFormValues),
+          create: true,
+          createOnly: false, // The modal might be opened from a YAML file with placeholder text, so the file might already exist
+        });
 
-    // Update the `.env` file
-    await runtimeServicePutFile(instanceId, {
-      path: ".env",
-      blob: await updateDotEnvWithSecrets(
-        queryClient,
-        rewrittenConnector,
-        rewrittenFormValues,
-      ),
-      create: true,
-      createOnly: false,
-    });
+        // Update the `.env` file
+        await runtimeServicePutFile(instanceId, {
+          path: ".env",
+          blob: await updateDotEnvWithSecrets(
+            queryClient,
+            rewrittenConnector,
+            rewrittenFormValues,
+          ),
+          create: true,
+          createOnly: false,
+        });
 
-    await goto(`/files/${newSourceFilePath}`);
+        await goto(`/files/${newSourceFilePath}`);
 
-    return;
+        // Return the path to the new source file
+        return newSourceFilePath;
+      }
+      case "clickhouse": {
+        const newModelFilePath = getFileAPIPathFromNameAndType(
+          values.name as string,
+          EntityType.Model,
+        );
+
+        // Make a new <model>.yaml file
+        await runtimeServicePutFile(instanceId, {
+          path: newModelFilePath,
+          blob: compileClickhouseSourceConnectorFile(connector, formValues),
+          create: true,
+          createOnly: false,
+        });
+
+        // Update the `.env` file
+        await runtimeServicePutFile(instanceId, {
+          path: ".env",
+          blob: await updateDotEnvWithSecrets(
+            queryClient,
+            connector,
+            formValues,
+          ),
+          create: true,
+          createOnly: false,
+        });
+
+        // Return the path to the new model file
+        return newModelFilePath;
+      }
+      default:
+        throw new Error(`Unsupported OLAP driver: ${olapDriver}`);
+    }
   }
 
   /**
    * Connectors
    */
 
-  const newConnectorName = getName(
-    connector.name as string,
-    fileArtifacts.getNamesForKind(ResourceKind.Connector),
-  );
+  // Determine the name of the new connector file
+  const isOnboardingFlow = get(page).url.pathname.includes("/welcome");
+  const connectorDriverName = connector.name as string;
+  const newConnectorName = isOnboardingFlow
+    ? connectorDriverName
+    : getName(
+        connectorDriverName,
+        fileArtifacts.getNamesForKind(ResourceKind.Connector),
+      );
 
   // Make a new `<connector>.yaml` file
   const newConnectorFilePath = getFileAPIPathFromNameAndType(
@@ -157,6 +205,28 @@ export async function submitAddDataForm(
     createOnly: false,
   });
 
-  // Go to the new connector file
-  await goto(`/files/${newConnectorFilePath}`);
+  // Check for a reconcile error
+  const fileArtifact = fileArtifacts.getFileArtifact(newConnectorFilePath);
+  if (fileArtifact.reconciling) {
+    await waitUntil(() => !fileArtifact.reconciling, 500);
+  }
+  const hasErrorsStore = fileArtifact.getHasErrors(queryClient, instanceId);
+  if (get(hasErrorsStore)) {
+    throw fileArtifact.getAllErrors(queryClient, instanceId);
+  }
+
+  // Test the connection by calling `GetTables`
+  const queryKey = getConnectorServiceOLAPListTablesQueryKey({
+    instanceId,
+    connector: newConnectorName,
+  });
+  const queryFn = () =>
+    connectorServiceOLAPListTables({
+      instanceId,
+      connector: newConnectorName,
+    });
+  await queryClient.fetchQuery({ queryKey, queryFn });
+
+  // Return the path to the new connector file
+  return newConnectorFilePath;
 }

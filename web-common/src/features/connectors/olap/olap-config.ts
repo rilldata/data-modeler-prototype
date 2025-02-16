@@ -1,3 +1,7 @@
+export const OLAP_CONNECTOR_NAMES = ["duckdb", "clickhouse", "druid"];
+
+export type OlapDriver = (typeof OLAP_CONNECTOR_NAMES)[number];
+
 export const OLAP_DRIVERS_WITHOUT_MODELING = ["clickhouse", "druid", "pinot"];
 
 export function makeFullyQualifiedTableName(
