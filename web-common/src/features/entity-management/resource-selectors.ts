@@ -30,6 +30,39 @@ export enum ResourceKind {
   RefreshTrigger = "rill.runtime.v1.RefreshTrigger",
 }
 
+export function displayResourceKind(kind: ResourceKind | undefined) {
+  switch (kind) {
+    case ResourceKind.ProjectParser:
+      return "project parser";
+    case ResourceKind.Alert:
+      return "alert";
+    case ResourceKind.Report:
+      return "report";
+    case ResourceKind.Source:
+      return "source";
+    case ResourceKind.Connector:
+      return "connector";
+    case ResourceKind.Model:
+      return "model";
+    case ResourceKind.MetricsView:
+      return "metrics view";
+    case ResourceKind.Explore:
+      return "dashboard";
+    case ResourceKind.Theme:
+      return "theme";
+    case ResourceKind.Component:
+      return "component";
+    case ResourceKind.Canvas:
+      return "dashboard";
+    case ResourceKind.API:
+      return "API";
+    case ResourceKind.RefreshTrigger:
+      return "refresh trigger";
+    default:
+      return undefined;
+  }
+}
+
 export type UserFacingResourceKinds = Exclude<
   ResourceKind,
   ResourceKind.ProjectParser | ResourceKind.RefreshTrigger
