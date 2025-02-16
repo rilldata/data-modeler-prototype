@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/rilldata/rill/admin/pkg/urlutil"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime/drivers"
 	"github.com/rilldata/rill/runtime/pkg/pbutil"
@@ -54,7 +55,6 @@ func (n *notifier) SendScheduledReport(s *drivers.ScheduledReport) error {
 		DownloadFormat:   s.DownloadFormat,
 		OpenLink:         s.OpenLink,
 		DownloadLink:     s.DownloadLink,
-		EditLink:         s.EditLink,
 	}
 
 	buf := new(bytes.Buffer)
@@ -67,10 +67,45 @@ func (n *notifier) SendScheduledReport(s *drivers.ScheduledReport) error {
 	if err := n.sendTextToChannels(txt); err != nil {
 		return err
 	}
-	if err := n.sendTextToUsers(txt); err != nil {
+	if err := n.sendTextViaWebhooks(txt); err != nil {
 		return err
 	}
-	return n.sendTextViaWebhooks(txt)
+
+	d.UnsubscribeLink = s.UnsubscribeLink
+	return n.sendReportToUsers(d)
+}
+
+func (n *notifier) sendReportToUsers(d ReportStatusData) error {
+	if len(n.props.Users) == 0 {
+		return nil
+	}
+
+	if n.api == nil {
+		return fmt.Errorf("slack api is not configured, consider setting a bot token")
+	}
+
+	unsubLink := d.UnsubscribeLink
+
+	for _, email := range n.props.Users {
+		d.UnsubscribeLink = urlutil.MustWithQuery(unsubLink, map[string]string{"slack_user": email})
+
+		buf := new(bytes.Buffer)
+		err := n.templates.Lookup("scheduled_report.slack").Execute(buf, d)
+		if err != nil {
+			return fmt.Errorf("slack template error: %w", err)
+		}
+		txt := buf.String()
+
+		user, err := n.api.GetUserByEmail(email)
+		if err != nil {
+			return fmt.Errorf("slack api error: %w", err)
+		}
+		_, _, err = n.api.PostMessage(user.ID, slack.MsgOptionText(txt, false), slack.MsgOptionDisableLinkUnfurl())
+		if err != nil {
+			return fmt.Errorf("slack api error: %w", err)
+		}
+	}
+	return nil
 }
 
 func (n *notifier) SendAlertStatus(s *drivers.AlertStatus) error {
@@ -224,7 +259,7 @@ type ReportStatusData struct {
 	DownloadFormat   string
 	OpenLink         string
 	DownloadLink     string
-	EditLink         string
+	UnsubscribeLink  string
 }
 
 type AlertStatusData struct {

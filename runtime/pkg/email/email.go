@@ -30,15 +30,15 @@ func New(sender Sender) *Client {
 }
 
 type ScheduledReport struct {
-	ToEmail        string
-	ToName         string
-	DisplayName    string
-	ReportTime     time.Time
-	DownloadFormat string
-	OpenLink       string
-	DownloadLink   string
-	EditLink       string
-	External       bool
+	ToEmail         string
+	ToName          string
+	DisplayName     string
+	ReportTime      time.Time
+	DownloadFormat  string
+	OpenLink        string
+	DownloadLink    string
+	EditLink        string
+	UnsubscribeLink string
 }
 
 type scheduledReportData struct {
@@ -48,7 +48,7 @@ type scheduledReportData struct {
 	OpenLink         template.URL
 	DownloadLink     template.URL
 	EditLink         template.URL
-	External         bool
+	UnsubscribeLink  template.URL
 }
 
 func (c *Client) SendScheduledReport(opts *ScheduledReport) error {
@@ -60,7 +60,7 @@ func (c *Client) SendScheduledReport(opts *ScheduledReport) error {
 		OpenLink:         template.URL(opts.OpenLink),
 		DownloadLink:     template.URL(opts.DownloadLink),
 		EditLink:         template.URL(opts.EditLink),
-		External:         opts.External,
+		UnsubscribeLink:  template.URL(opts.UnsubscribeLink),
 	}
 
 	// Build subject

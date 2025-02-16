@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	adminv1 "github.com/rilldata/rill/proto/gen/rill/admin/v1"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime"
 	"github.com/rilldata/rill/runtime/drivers"
@@ -393,26 +394,52 @@ func (r *ReportReconciler) sendReport(ctx context.Context, self *runtimev1.Resou
 	}
 	defer release()
 
-	var ownerID string
+	var ownerID, explore, canvas, webOpenMode string
 	if id, ok := rep.Spec.Annotations["admin_owner_user_id"]; ok {
 		ownerID = id
 	}
+	if e, ok := rep.Spec.Annotations["explore"]; ok {
+		explore = e
+	}
+	if c, ok := rep.Spec.Annotations["canvas"]; ok {
+		canvas = c
+	}
+	if w, ok := rep.Spec.Annotations["web_open_mode"]; ok {
+		webOpenMode = w
+	} else {
+		webOpenMode = "legacy" // backward compatibility
+		if _, ok = rep.Spec.Annotations["web_open_path"]; !ok {
+			webOpenMode = "none" // for older reports if web_open_path is not set
+		}
+	}
 
+	var reqWebOpenMode adminv1.ReportOptions_OpenMode
+	switch webOpenMode {
+	case "legacy":
+		reqWebOpenMode = adminv1.ReportOptions_OPEN_MODE_LEGACY
+	case "creator":
+		reqWebOpenMode = adminv1.ReportOptions_OPEN_MODE_CREATOR
+	case "none":
+		reqWebOpenMode = adminv1.ReportOptions_OPEN_MODE_NONE
+	case "filtered":
+		reqWebOpenMode = adminv1.ReportOptions_OPEN_MODE_FILTERED
+	default:
+		return false, fmt.Errorf("invalid web open mode: %s", webOpenMode)
+	}
+
+	anonRecipients := false
 	var emailRecipients []string
 	for _, notifier := range rep.Spec.Notifiers {
 		if notifier.Connector == "email" {
 			emailRecipients = pbutil.ToSliceString(notifier.Properties.AsMap()["recipients"])
+		} else {
+			anonRecipients = true
 		}
 	}
 
-	meta, err := admin.GetReportMetadata(ctx, self.Meta.Name.Name, ownerID, emailRecipients, t)
+	meta, err := admin.GetReportMetadata(ctx, self.Meta.Name.Name, ownerID, explore, canvas, reqWebOpenMode, emailRecipients, anonRecipients, t)
 	if err != nil {
 		return false, fmt.Errorf("failed to get report metadata: %w", err)
-	}
-
-	internalUsersExportURL, err := createExportURL(meta.BaseURLs.ExportURL, rep.Spec.ExportFormat.String(), t, int(rep.Spec.ExportLimit))
-	if err != nil {
-		return false, err
 	}
 
 	sent := false
@@ -428,23 +455,19 @@ func (r *ReportReconciler) sendReport(ctx context.Context, self *runtimev1.Resou
 					ReportTime:     t,
 					DownloadFormat: formatExportFormat(rep.Spec.ExportFormat),
 				}
-				openURL := meta.BaseURLs.OpenURL
-				exportURL := internalUsersExportURL.String()
-				editURL := meta.BaseURLs.EditURL
-				if urls, ok := meta.RecipientURLs[recipient]; ok {
-					openURL = urls.OpenURL
-					editURL = urls.EditURL
-					u, err := createExportURL(urls.ExportURL, rep.Spec.ExportFormat.String(), t, int(rep.Spec.ExportLimit))
-					if err != nil {
-						return false, err
-					}
-					exportURL = u.String()
-					opts.External = true
+				urls, ok := meta.RecipientURLs[recipient]
+				if !ok {
+					return false, fmt.Errorf("failed to get recipient URLs for %q", recipient)
 				}
-				opts.OpenLink = openURL
-				opts.DownloadLink = exportURL
-				opts.EditLink = editURL
-				err := r.C.Runtime.Email.SendScheduledReport(opts)
+				opts.OpenLink = urls.OpenURL
+				u, err := createExportURL(urls.ExportURL, rep.Spec.ExportFormat.String(), t, int(rep.Spec.ExportLimit))
+				if err != nil {
+					return false, err
+				}
+				opts.DownloadLink = u.String()
+				opts.EditLink = urls.EditURL
+				opts.UnsubscribeLink = urls.UnsubscribeURL
+				err = r.C.Runtime.Email.SendScheduledReport(opts)
 				sent = true
 				if err != nil {
 					return true, fmt.Errorf("failed to generate report for %q: %w", recipient, err)
@@ -461,13 +484,21 @@ func (r *ReportReconciler) sendReport(ctx context.Context, self *runtimev1.Resou
 				if err != nil {
 					return err
 				}
+				urls, ok := meta.RecipientURLs[""]
+				if !ok {
+					return fmt.Errorf("failed to get recipient URLs for anon user")
+				}
+				u, err := createExportURL(urls.ExportURL, rep.Spec.ExportFormat.String(), t, int(rep.Spec.ExportLimit))
+				if err != nil {
+					return err
+				}
 				msg := &drivers.ScheduledReport{
-					DisplayName:    rep.Spec.DisplayName,
-					ReportTime:     t,
-					DownloadFormat: formatExportFormat(rep.Spec.ExportFormat),
-					OpenLink:       meta.BaseURLs.OpenURL,
-					DownloadLink:   internalUsersExportURL.String(),
-					EditLink:       meta.BaseURLs.EditURL,
+					DisplayName:     rep.Spec.DisplayName,
+					ReportTime:      t,
+					DownloadFormat:  formatExportFormat(rep.Spec.ExportFormat),
+					OpenLink:        urls.OpenURL,
+					DownloadLink:    u.String(),
+					UnsubscribeLink: urls.UnsubscribeURL,
 				}
 				start := time.Now()
 				defer func() {

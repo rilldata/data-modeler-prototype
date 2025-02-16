@@ -5,19 +5,43 @@ import (
 	"time"
 
 	adminv1 "github.com/rilldata/rill/proto/gen/rill/admin/v1"
+	"github.com/rilldata/rill/runtime"
 	"github.com/rilldata/rill/runtime/drivers"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (h *Handle) GetReportMetadata(ctx context.Context, reportName, ownerID string, emailRecipients []string, executionTime time.Time) (*drivers.ReportMetadata, error) {
+func (h *Handle) GetReportMetadata(ctx context.Context, reportName, ownerID, explore, canvas string, webOpenMode adminv1.ReportOptions_OpenMode, emailRecipients []string, anonRecipients bool, executionTime time.Time) (*drivers.ReportMetadata, error) {
+	var resources []*adminv1.ResourceName
+	resources = append(resources, &adminv1.ResourceName{
+		Type: runtime.ResourceKindReport,
+		Name: reportName,
+	})
+
+	if explore != "" {
+		resources = append(resources, &adminv1.ResourceName{
+			Type: runtime.ResourceKindExplore,
+			Name: explore,
+		})
+	}
+
+	if canvas != "" {
+		resources = append(resources, &adminv1.ResourceName{
+			Type: runtime.ResourceKindCanvas,
+			Name: canvas,
+		})
+	}
+
 	res, err := h.admin.GetReportMeta(ctx, &adminv1.GetReportMetaRequest{
 		ProjectId:       h.config.ProjectID,
 		Branch:          h.config.Branch,
 		Report:          reportName,
 		OwnerId:         ownerID,
 		EmailRecipients: emailRecipients,
+		AnonRecipients:  anonRecipients,
 		ExecutionTime:   timestamppb.New(executionTime),
+		Resources:       resources,
+		WebOpenMode:     webOpenMode,
 	})
 	if err != nil {
 		return nil, err
@@ -26,18 +50,14 @@ func (h *Handle) GetReportMetadata(ctx context.Context, reportName, ownerID stri
 	recipientURLs := make(map[string]drivers.ReportURLs, len(res.RecipientUrls))
 	for k, v := range res.RecipientUrls {
 		recipientURLs[k] = drivers.ReportURLs{
-			OpenURL:   v.OpenUrl,
-			ExportURL: v.ExportUrl,
-			EditURL:   v.EditUrl,
+			OpenURL:        v.OpenUrl,
+			ExportURL:      v.ExportUrl,
+			EditURL:        v.EditUrl,
+			UnsubscribeURL: v.UnsubscribeUrl,
 		}
 	}
 
 	return &drivers.ReportMetadata{
-		BaseURLs: drivers.ReportURLs{
-			OpenURL:   res.BaseUrls.OpenUrl,
-			ExportURL: res.BaseUrls.ExportUrl,
-			EditURL:   res.BaseUrls.EditUrl,
-		},
 		RecipientURLs: recipientURLs,
 	}, nil
 }

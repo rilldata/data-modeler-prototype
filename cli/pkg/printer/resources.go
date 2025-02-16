@@ -276,7 +276,6 @@ func toMagicAuthTokenRow(t *adminv1.MagicAuthToken) *magicAuthToken {
 
 	row := &magicAuthToken{
 		ID:        t.Id,
-		Resource:  t.ResourceName,
 		Filter:    filter,
 		CreatedBy: t.CreatedByUserEmail,
 		CreatedOn: t.CreatedOn.AsTime().Local().Format(time.DateTime),

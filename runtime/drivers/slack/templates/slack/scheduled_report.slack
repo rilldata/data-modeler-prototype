@@ -6,4 +6,4 @@ Your report for *{{ .ReportTimeString }}* is ready to view.
 
 Or <{{ .DownloadLink }}|download the {{ .DownloadFormat }} file> directly.
 
-To edit or unsubscribe from this report, <{{ .EditLink }}|click here>.
+{{ if .UnsubscribeLink }}To unsubscribe from this report, <{{ .UnsubscribeLink }}|click here>.{{ end }}

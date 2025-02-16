@@ -1758,10 +1758,10 @@ message IssueMagicAuthTokenRequest {
   string project = 2 [(validate.rules).string.min_len = 1];
   // TTL for the token in minutes. Set to 0 for no expiry. Defaults to no expiry.
   int64 ttl_minutes = 3;
-  // Type of resource to grant access to. Currently only supports "rill.runtime.v1.Explore".
-  string resource_type = 8;
+  // Type of resource to grant access to.
+  string resource_type = 8 [deprecated = true];
   // Name of the resource to grant access to.
-  string resource_name = 9;
+  string resource_name = 9 [deprecated = true];
   // Optional filter to apply as a row filter in queries.
   // This will be translated to a rill.runtime.v1.SecurityRuleRowFilter, which currently applies to metric views queries.
   rill.runtime.v1.Expression filter = 5;
@@ -1772,6 +1772,13 @@ message IssueMagicAuthTokenRequest {
   string state = 7;
   // Optional display name to store with the token.
   string display_name = 10;
+  // list of resources to grant access to.
+  repeated ResourceName resources = 11;
+}
+
+message ResourceName {
+  string type = 1;
+  string name = 2;
 }
 
 message IssueMagicAuthTokenResponse {
@@ -1961,6 +1968,9 @@ message GetReportMetaRequest {
   string owner_id = 5;
   google.protobuf.Timestamp execution_time = 6;
   repeated string email_recipients = 7;
+  bool anon_recipients = 8;
+  repeated ResourceName resources = 9;
+  ReportOptions.OpenMode web_open_mode = 10;
   reserved 4;
 }
 
@@ -1969,9 +1979,10 @@ message GetReportMetaResponse {
     string open_url = 1;
     string export_url = 2;
     string edit_url = 3;
+    string unsubscribe_url = 4;
   }
-  URLs base_urls = 1;
   map<string, URLs> recipient_urls = 2;
+  reserved 1;
 }
 
 message GetAlertMetaRequest {
@@ -2015,6 +2026,8 @@ message UnsubscribeReportRequest {
   string organization = 1;
   string project = 2;
   string name = 3;
+  optional string email = 4 [(validate.rules).string.email = true];
+  optional string slack_user = 5 [(validate.rules).string.email = true];
 }
 
 message UnsubscribeReportResponse {}
@@ -2412,8 +2425,9 @@ message MagicAuthToken {
   string created_by_user_id = 6;
   string created_by_user_email = 7;
   google.protobuf.Struct attributes = 8;
-  string resource_type = 15;
-  string resource_name = 9;
+  repeated ResourceName resources = 17;
+  string resource_type = 15 [deprecated = true];
+  string resource_name = 9 [deprecated = true];
   rill.runtime.v1.Expression filter = 10;
   repeated string fields = 11;
   string state = 12;
@@ -2442,6 +2456,17 @@ message ReportOptions {
   repeated string slack_webhooks = 12;
   string web_open_path = 15; // Annotation for the subpath of <UI host>/org/project to open for the report.
   string web_open_state = 14; // Annotation for the base64-encoded UI state to open for the report.
+  string explore = 16; // either canvas or explore should be set
+  string canvas = 17;
+  enum OpenMode {
+    OPEN_MODE_UNSPECIFIED = 0;
+    OPEN_MODE_LEGACY = 1; // send this for older reports
+    OPEN_MODE_CREATOR = 2; // send this for reports that should be opened with creators permissions
+    OPEN_MODE_NONE = 3; // send this for reports that should not be opened or older reports which do not have any web_open_path
+    OPEN_MODE_FILTERED = 4; // send this for reports that should be opened with creators permissions but with locked filters
+  }
+  OpenMode web_open_mode = 18;
+  optional rill.runtime.v1.Expression filter = 19; // use with OPEN_MODE_FILTERED
 }
 
 message AlertOptions {
