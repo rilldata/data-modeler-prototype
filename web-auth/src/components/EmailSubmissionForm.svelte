@@ -37,7 +37,7 @@
     }
   }
 
-  $: disabled = !(email.length > 0 && validateEmail(email));
+  $: buttonDisabled = disabled || !(email.length > 0 && validateEmail(email));
 </script>
 
 <div class="mb-4 flex flex-col gap-y-4">
@@ -58,7 +58,7 @@
   {/if}
 </div>
 
-<CtaButton {disabled} variant="secondary" on:click={handleClick}>
+<CtaButton disabled={buttonDisabled} variant="secondary" on:click={handleClick}>
   <div class="flex justify-center font-medium">
     <span>Continue with email</span>
   </div>

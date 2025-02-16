@@ -1,9 +1,10 @@
 export enum AuthStep {
   Base = 0,
-  SSO = 1,
+  // SSO = 1,
   Login = 2,
   SignUp = 3,
-  Thanks = 4,
+  // Thanks = 4,
+  Loading = 5,
 }
 
 type InternalOptions = {
