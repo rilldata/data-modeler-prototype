@@ -17,6 +17,7 @@ import (
 	"github.com/orbcorp/orb-go"
 	"github.com/rilldata/rill/admin/jobs"
 	"github.com/rilldata/rill/runtime/pkg/httputil"
+	"github.com/rilldata/rill/runtime/pkg/observability"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +26,7 @@ const (
 	maxBodyBytes                 = int64(65536)
 )
 
-var interestingEvents = []string{"invoice.payment_succeeded", "invoice.payment_failed", "invoice.issue_failed"}
+var interestingEvents = []string{"invoice.payment_succeeded", "invoice.payment_failed", "invoice.issue_failed", "subscription.started", "subscription.ended", "subscription.plan_changed"}
 
 type orbWebhook struct {
 	orb  *Orb
@@ -86,6 +87,36 @@ func (o *orbWebhook) handleWebhook(w http.ResponseWriter, r *http.Request) error
 		}
 		// inefficient one time conversion to named logger as its rare event and no need to log every thing else with named logger
 		o.orb.logger.Named("billing").Warn("invoice issue failed", zap.String("customer_id", ie.OrbInvoice.Customer.ExternalCustomerID), zap.String("invoice_id", ie.OrbInvoice.ID), zap.String("props", fmt.Sprintf("%v", ie.Properties)))
+	case "subscription.started":
+		var se subscriptionEvent
+		err = json.Unmarshal(payload, &se)
+		if err != nil {
+			return httputil.Errorf(http.StatusBadRequest, "error parsing event data: %w", err)
+		}
+		err = o.handlePlanChange(r.Context(), se) // as of now we are just using this to update plan cache
+		if err != nil {
+			return httputil.Errorf(http.StatusInternalServerError, "error handling event: %w", err)
+		}
+	case "subscription.ended":
+		var se subscriptionEvent
+		err = json.Unmarshal(payload, &se)
+		if err != nil {
+			return httputil.Errorf(http.StatusBadRequest, "error parsing event data: %w", err)
+		}
+		err = o.handlePlanChange(r.Context(), se) // as of now we are just using this to update plan cache
+		if err != nil {
+			return httputil.Errorf(http.StatusInternalServerError, "error handling event: %w", err)
+		}
+	case "subscription.plan_changed":
+		var se subscriptionEvent
+		err = json.Unmarshal(payload, &se)
+		if err != nil {
+			return httputil.Errorf(http.StatusBadRequest, "error parsing event data: %w", err)
+		}
+		err = o.handlePlanChange(r.Context(), se) // as of now we are just using this to update plan cache
+		if err != nil {
+			return httputil.Errorf(http.StatusInternalServerError, "error handling event: %w", err)
+		}
 	default:
 		// do nothing
 	}
@@ -97,10 +128,11 @@ func (o *orbWebhook) handleWebhook(w http.ResponseWriter, r *http.Request) error
 func (o *orbWebhook) handleInvoicePaymentSucceeded(ctx context.Context, ie invoiceEvent) error {
 	res, err := o.jobs.PaymentSuccess(ctx, ie.OrbInvoice.Customer.ExternalCustomerID, ie.OrbInvoice.ID)
 	if err != nil {
+		o.orb.logger.Error("failed to insert invoice payment success job", zap.String("billing_customer_id", ie.OrbInvoice.Customer.ExternalCustomerID), zap.Error(err), observability.ZapCtx(ctx))
 		return err
 	}
 	if res.Duplicate {
-		o.orb.logger.Debug("duplicate invoice payment success event", zap.String("event_d", ie.ID))
+		o.orb.logger.Debug("duplicate invoice payment success event", zap.String("event_id", ie.ID))
 	}
 	return nil
 }
@@ -117,10 +149,24 @@ func (o *orbWebhook) handleInvoicePaymentFailed(ctx context.Context, ie invoiceE
 		ie.OrbInvoice.PaymentFailedAt,
 	)
 	if err != nil {
+		o.orb.logger.Error("failed to insert invoice payment failed job", zap.String("billing_customer_id", ie.OrbInvoice.Customer.ExternalCustomerID), zap.Error(err), observability.ZapCtx(ctx))
 		return err
 	}
 	if res.Duplicate {
 		o.orb.logger.Debug("duplicate invoice payment failed event", zap.String("event_id", ie.ID))
+	}
+	return nil
+}
+
+func (o *orbWebhook) handlePlanChange(ctx context.Context, se subscriptionEvent) error {
+	if se.OrbSubscription.Customer.ExternalCustomerID == "" {
+		return nil
+	}
+
+	_, err := o.jobs.PlanChanged(ctx, se.OrbSubscription.Customer.ExternalCustomerID)
+	if err != nil {
+		o.orb.logger.Error("failed to insert plan changed job", zap.String("billing_customer_id", se.OrbSubscription.Customer.ExternalCustomerID), zap.Error(err), observability.ZapCtx(ctx))
+		return err
 	}
 	return nil
 }
@@ -191,4 +237,12 @@ type invoiceEvent struct {
 	Type       string      `json:"type"`
 	Properties interface{} `json:"properties"`
 	OrbInvoice orb.Invoice `json:"invoice"`
+}
+
+type subscriptionEvent struct {
+	ID              string           `json:"id"`
+	CreatedAt       time.Time        `json:"created_at"`
+	Type            string           `json:"type"`
+	Properties      interface{}      `json:"properties"`
+	OrbSubscription orb.Subscription `json:"subscription"`
 }

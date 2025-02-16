@@ -332,6 +332,8 @@ type Organization struct {
 	BillingCustomerID                   string    `db:"billing_customer_id"`
 	PaymentCustomerID                   string    `db:"payment_customer_id"`
 	BillingEmail                        string    `db:"billing_email"`
+	BillingPlanName                     *string   `db:"billing_plan_name"`
+	BillingPlanDisplayName              *string   `db:"billing_plan_display_name"`
 	CreatedByUserID                     *string   `db:"created_by_user_id"`
 }
 
@@ -372,6 +374,8 @@ type UpdateOrganizationOptions struct {
 	BillingCustomerID                   string
 	PaymentCustomerID                   string
 	BillingEmail                        string
+	BillingPlanName                     *string
+	BillingPlanDisplayName              *string
 	CreatedByUserID                     *string
 }
 

@@ -869,6 +869,8 @@ export interface V1Organization {
   billingCustomerId?: string;
   paymentCustomerId?: string;
   billingEmail?: string;
+  billingPlanName?: string;
+  billingPlanDisplayName?: string;
   createdOn?: string;
   updatedOn?: string;
 }
