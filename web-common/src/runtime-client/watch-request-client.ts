@@ -48,6 +48,7 @@ export class WatchRequestClient<Res extends WatchResponse> {
     ["reconnect", []],
   ]);
   public closed = writable(false);
+  public error = writable<string | null>(null);
 
   public on<K extends keyof EventMap<Res>>(
     event: K,
@@ -130,6 +131,7 @@ export class WatchRequestClient<Res extends WatchResponse> {
       }
 
       this.closed.set(false);
+      this.error.set(null);
       for await (const res of this.stream) {
         if (this.controller?.signal.aborted) break;
         if (res.error) throw new Error(res.error.message);
@@ -137,10 +139,11 @@ export class WatchRequestClient<Res extends WatchResponse> {
         if (res.result)
           this.listeners.get("response")?.forEach((cb) => void cb(res.result));
       }
-    } catch {
+    } catch (e) {
       clearTimeout(this.retryTimeout);
 
       this.cancel();
+      this.error.set(e);
       if (get(this.closed)) return;
 
       this.reconnect().catch((e) => {

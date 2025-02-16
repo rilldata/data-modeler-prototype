@@ -9,10 +9,16 @@
 
   const fileWatcher = new WatchFilesClient().client;
   const resourceWatcher = new WatchResourcesClient().client;
-  const { retryAttempts: fileAttempts, closed: fileWatcherClosed } =
-    fileWatcher;
-  const { retryAttempts: resourceAttempts, closed: resourceWatcherClosed } =
-    fileWatcher;
+  const {
+    retryAttempts: fileAttempts,
+    closed: fileWatcherClosed,
+    error: fileError,
+  } = fileWatcher;
+  const {
+    retryAttempts: resourceAttempts,
+    closed: resourceWatcherClosed,
+    error: resourceError,
+  } = fileWatcher;
 
   export let host: string;
   export let instanceId: string;
@@ -79,6 +85,14 @@
         message:
           "Connection closed due to inactivity. Interact with the page to reconnect.",
         type: "warning",
+        iconType: "alert",
+      }}
+    />
+  {:else if $fileError || $resourceError}
+    <Banner
+      banner={{
+        message: `Runtime connection unstable. Made ${$fileError ? $fileAttempts : $resourceAttempts} attempt(s) to reconnect.`,
+        type: "error",
         iconType: "alert",
       }}
     />
