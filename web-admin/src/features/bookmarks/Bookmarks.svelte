@@ -7,7 +7,7 @@
     getAdminServiceListBookmarksQueryKey,
   } from "@rilldata/web-admin/client";
   import BookmarkDialog from "@rilldata/web-admin/features/bookmarks/BookmarkDialog.svelte";
-  import BookmarksContent from "@rilldata/web-admin/features/bookmarks/BookmarksDropdownMenuContent.svelte";
+  import BookmarksDropdownMenuContent from "@rilldata/web-admin/features/bookmarks/BookmarksDropdownMenuContent.svelte";
   import { createHomeBookmarkModifier } from "@rilldata/web-admin/features/bookmarks/createOrUpdateHomeBookmark";
   import { getBookmarkDataForDashboard } from "@rilldata/web-admin/features/bookmarks/getBookmarkDataForDashboard";
   import type { BookmarkEntry } from "@rilldata/web-admin/features/bookmarks/selectors";
@@ -21,7 +21,7 @@
   import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
   import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
   import { useQueryClient } from "@tanstack/svelte-query";
-  import { BookmarkIcon } from "lucide-svelte";
+  import { BookmarkIcon, BookOpenText } from "lucide-svelte";
 
   export let metricsViewName: string;
   export let exploreName: string;
@@ -89,26 +89,28 @@
 
 <DropdownMenu bind:open typeahead={false}>
   <DropdownMenuTrigger asChild let:builder>
-    <Button builders={[builder]} compact type="secondary">
+    <Button builders={[builder]} compact type="secondary" selected={open}>
       <BookmarkIcon
-        class="inline-flex"
-        fill={open ? "black" : "none"}
+        class="inline-flex {open && 'fill-primary-600'}"
         size="16px"
       />
     </Button>
   </DropdownMenuTrigger>
-  <BookmarksContent
-    onCreate={(isHome) => {
-      isHome ? createHomeBookmark() : (showDialog = true);
-    }}
-    onEdit={(editingBookmark) => {
-      showDialog = true;
-      bookmark = editingBookmark;
-    }}
-    onDelete={deleteBookmark}
-    {metricsViewName}
-    {exploreName}
-  />
+
+  {#key BookOpenText}
+    <BookmarksDropdownMenuContent
+      onCreate={(isHome) => {
+        isHome ? createHomeBookmark() : (showDialog = true);
+      }}
+      onEdit={(editingBookmark) => {
+        showDialog = true;
+        bookmark = editingBookmark;
+      }}
+      onDelete={deleteBookmark}
+      {metricsViewName}
+      {exploreName}
+    />
+  {/key}
 </DropdownMenu>
 
 {#if showDialog}

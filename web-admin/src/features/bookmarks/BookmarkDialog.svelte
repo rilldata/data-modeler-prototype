@@ -6,7 +6,6 @@
     getAdminServiceListBookmarksQueryKey,
   } from "@rilldata/web-admin/client";
   import BaseBookmarkForm from "@rilldata/web-admin/features/bookmarks/BaseBookmarkForm.svelte";
-  import type { BookmarkFormValues } from "@rilldata/web-admin/features/bookmarks/form-utils";
   import { getBookmarkDataForDashboard } from "@rilldata/web-admin/features/bookmarks/getBookmarkDataForDashboard";
   import type { BookmarkEntry } from "@rilldata/web-admin/features/bookmarks/selectors";
   import { useProjectId } from "@rilldata/web-admin/features/projects/selectors";
@@ -18,8 +17,9 @@
   import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
   import { eventBus } from "@rilldata/web-common/lib/event-bus/event-bus";
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
-  import { createForm } from "svelte-forms-lib";
-  import * as yup from "yup";
+  import { defaults, superForm } from "sveltekit-superforms";
+  import { yup } from "sveltekit-superforms/adapters";
+  import { bool, object, string } from "yup";
 
   export let metricsViewName: string;
   export let exploreName: string;
@@ -32,19 +32,32 @@
   const bookmarkUpdater = createAdminServiceUpdateBookmark();
   const timeControlsStore = useTimeControlStore(StateManagers);
 
-  const formState = createForm<BookmarkFormValues>({
-    initialValues: {
-      displayName: bookmark?.resource.displayName || "Default Label",
-      description: bookmark?.resource.description ?? "",
-      shared: bookmark?.resource.shared ? "true" : "false",
-      filtersOnly: bookmark?.filtersOnly ?? false,
-      absoluteTimeRange: bookmark?.absoluteTimeRange ?? false,
-    },
-    validationSchema: yup.object({
-      displayName: yup.string().required("Required"),
-      description: yup.string(),
+  const schema = yup(
+    object({
+      displayName: string().required("Required"),
+      description: string(),
+      shared: string().oneOf(["true", "false"]),
+      filtersOnly: bool(),
+      absoluteTimeRange: bool(),
     }),
-    onSubmit: async (values) => {
+  );
+
+  const initialValues = {
+    displayName: bookmark?.resource.displayName || "Default Label",
+    description: bookmark?.resource.description ?? "",
+    shared: bookmark?.resource.shared ? "true" : "false",
+    filtersOnly: bookmark?.filtersOnly ?? false,
+    absoluteTimeRange: bookmark?.absoluteTimeRange ?? false,
+  };
+
+  const formState = superForm(defaults(initialValues, schema), {
+    SPA: true,
+    validators: schema,
+    async onUpdate({ form }) {
+      if (!form.valid) return;
+
+      const values = form.data;
+
       if (bookmark) {
         await $bookmarkUpdater.mutateAsync({
           data: {
@@ -77,7 +90,7 @@
             ),
           },
         });
-        handleReset();
+        formState.reset();
       }
       onClose();
 
@@ -92,9 +105,8 @@
         message: bookmark ? "Bookmark updated" : "Bookmark created",
       });
     },
+    validationMethod: "oninput",
   });
-
-  const { handleSubmit, handleReset } = formState;
 
   $: ({ params } = $page);
   $: exploreState = useExploreState(exploreName);
@@ -119,7 +131,7 @@
     <div class="flex flex-row mt-4 gap-2">
       <div class="grow" />
       <Button on:click={onClose} type="secondary">Cancel</Button>
-      <Button on:click={handleSubmit} type="primary">Save</Button>
+      <Button on:click={formState.submit} type="primary">Save</Button>
     </div>
   </Dialog.Content>
 </Dialog.Root>

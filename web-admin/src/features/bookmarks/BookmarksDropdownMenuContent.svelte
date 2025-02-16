@@ -14,13 +14,7 @@
     getProjectPermissions,
     useProjectId,
   } from "@rilldata/web-admin/features/projects/selectors";
-  import {
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-  } from "@rilldata/web-common/components/dropdown-menu";
+  import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
   import HomeBookmarkPlus from "@rilldata/web-common/components/icons/HomeBookmarkPlus.svelte";
   import { Search } from "@rilldata/web-common/components/search";
   import { useMetricsViewTimeRange } from "@rilldata/web-common/features/dashboards/selectors";
@@ -34,7 +28,6 @@
 
   export let metricsViewName: string;
   export let exploreName: string;
-
   export let onCreate: (isHome: boolean) => void;
   export let onEdit: (bookmark: BookmarkEntry) => void;
   export let onDelete: (bookmark: BookmarkEntry) => Promise<void>;
@@ -92,17 +85,18 @@
   $: manageProject = $projectPermissions.data?.manageProject;
 </script>
 
-<DropdownMenuContent class="w-[450px]">
-  <DropdownMenuItem on:click={() => onCreate(false)}>
-    <div class="flex flex-row gap-x-2 items-center">
-      <BookmarkPlusIcon size="16px" strokeWidth={1.5} />
-      <div class="text-xs">Bookmark current view</div>
+<DropdownMenu.Content class="w-[450px]">
+  <DropdownMenu.Item on:click={() => onCreate(false)}>
+    <div class="flex flex-row gap-x-2.5 items-center h-7">
+      <BookmarkPlusIcon size="18px" strokeWidth={1.5} />
+      <div>Bookmark current view</div>
     </div>
-  </DropdownMenuItem>
+  </DropdownMenu.Item>
+
   {#if manageProject}
-    <DropdownMenuItem on:click={() => onCreate(true)} slot="manage-project">
-      <div class="flex flex-row gap-x-2">
-        <HomeBookmarkPlus size="16px" />
+    <DropdownMenu.Item on:click={() => onCreate(true)} slot="manage-project">
+      <div class="flex flex-row gap-x-2.5 items-center h-7">
+        <HomeBookmarkPlus size="18px" />
         <div>
           <div class="text-xs font-medium text-gray-700 h-4">
             Bookmark current view as Home.
@@ -112,9 +106,11 @@
           </div>
         </div>
       </div>
-    </DropdownMenuItem>
+    </DropdownMenu.Item>
   {/if}
-  <DropdownMenuSeparator />
+
+  <DropdownMenu.Separator />
+
   <div class="p-2">
     <Search
       autofocus={false}
@@ -122,56 +118,61 @@
       showBorderOnFocus={false}
     />
   </div>
+
   {#if filteredBookmarks}
-    <DropdownMenuSeparator />
-    <DropdownMenuGroup>
-      <DropdownMenuLabel class="text-gray-500 text-[10px] h-6 uppercase">
+    <DropdownMenu.Separator />
+    <DropdownMenu.Group class="gap-y-1 flex flex-col">
+      <DropdownMenu.Label class="text-gray-500 text-[10px] h-6 uppercase">
         Your bookmarks
-      </DropdownMenuLabel>
-      {#if filteredBookmarks.personal?.length}
-        {#each filteredBookmarks.personal as bookmark}
-          {#key bookmark.resource.id}
-            <BookmarkItem {bookmark} {onEdit} {onDelete} on:select />
-          {/key}
-        {/each}
+      </DropdownMenu.Label>
+
+      {#each filteredBookmarks.personal as bookmark (bookmark.resource.id)}
+        <BookmarkItem
+          {bookmark}
+          {onEdit}
+          {onDelete}
+          selected={$page.url.toString() === bookmark.url}
+        />
       {:else}
         <div class="my-2 ui-copy-disabled text-center">
           You have no bookmarks for this dashboard.
         </div>
-      {/if}
-    </DropdownMenuGroup>
-    <DropdownMenuSeparator />
-    <DropdownMenuGroup>
-      <DropdownMenuLabel class="text-gray-500">
+      {/each}
+    </DropdownMenu.Group>
+    <DropdownMenu.Separator />
+
+    <DropdownMenu.Group class="gap-y-1">
+      <DropdownMenu.Label class="text-gray-500">
         <div class="text-[10px] h-4 uppercase">Managed bookmarks</div>
         <div class="text-[11px] font-normal">Created by project admin</div>
-      </DropdownMenuLabel>
+      </DropdownMenu.Label>
+
       {#if filteredBookmarks.shared?.length || filteredBookmarks.home}
         {#if filteredBookmarks.home}
-          {#key filteredBookmarks.home.resource.id}
-            <BookmarkItem
-              bookmark={filteredBookmarks.home}
-              {onEdit}
-              {onDelete}
-              readOnly={!manageProject}
-            />
-          {/key}
+          <BookmarkItem
+            bookmark={filteredBookmarks.home}
+            {onEdit}
+            {onDelete}
+            readOnly={!manageProject}
+            selected={$page.url.toString() === filteredBookmarks.home.url}
+          />
         {/if}
-        {#each filteredBookmarks.shared as bookmark}
-          {#key bookmark.resource.id}
-            <BookmarkItem
-              {bookmark}
-              {onEdit}
-              {onDelete}
-              readOnly={!manageProject}
-            />
-          {/key}
+
+        {#each filteredBookmarks.shared as bookmark (bookmark.resource.id)}
+          <BookmarkItem
+            {bookmark}
+            readOnly={!manageProject}
+            selected={$page.url.toString() === bookmark.url}
+            {onEdit}
+            {onDelete}
+          />
+          {bookmark.url}
         {/each}
       {:else}
         <div class="my-2 ui-copy-disabled text-center">
           There are no shared bookmarks for this dashboard.
         </div>
       {/if}
-    </DropdownMenuGroup>
+    </DropdownMenu.Group>
   {/if}
-</DropdownMenuContent>
+</DropdownMenu.Content>

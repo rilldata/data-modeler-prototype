@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from "$app/stores";
-  import type { BookmarkFormValues } from "@rilldata/web-admin/features/bookmarks/form-utils";
   import { getPrettySelectedTimeRange } from "@rilldata/web-admin/features/bookmarks/selectors";
   import ProjectAccessControls from "@rilldata/web-admin/features/projects/ProjectAccessControls.svelte";
   import Input from "@rilldata/web-common/components/forms/Input.svelte";
@@ -15,11 +14,20 @@
   import type { V1TimeRange } from "@rilldata/web-common/runtime-client";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import { InfoIcon } from "lucide-svelte";
-  import type { createForm } from "svelte-forms-lib";
+  import type { SuperForm } from "sveltekit-superforms";
 
   export let metricsViewName: string;
   export let exploreName: string;
-  export let formState: ReturnType<typeof createForm<BookmarkFormValues>>;
+  export let formState: SuperForm<
+    {
+      displayName?: string;
+      description?: string;
+      shared?: string;
+      filtersOnly?: boolean;
+      absoluteTimeRange?: boolean;
+    },
+    any
+  >;
 
   $: ({ instanceId } = $runtime);
 
@@ -39,7 +47,7 @@
     exploreName,
   );
 
-  const { form, errors } = formState;
+  const { form, errors, enhance, submit } = formState;
 
   // Adding it here to get a newline in
   const CategoryTooltip = `Your bookmarks can only be viewed by you.
@@ -47,11 +55,10 @@ Managed bookmarks will be available to all viewers of this dashboard.`;
 </script>
 
 <form
+  use:enhance
   class="flex flex-col gap-4 z-50"
   id="create-bookmark-dialog"
-  on:submit|preventDefault={() => {
-    /* Switch was triggering this causing clicking on them submitting the form */
-  }}
+  on:submit|preventDefault={submit}
 >
   <Input
     bind:value={$form["displayName"]}

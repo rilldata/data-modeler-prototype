@@ -44,6 +44,7 @@
   export let loadingCopy = "Loading";
   // needed to set certain style that could be overridden by the style block in this component
   export let forcedStyle = "";
+  export let onClick: ((e: MouseEvent) => void) | undefined = undefined;
 
   let className: string | undefined = undefined;
   export { className as class };
@@ -51,6 +52,7 @@
   const handleClick = (event: MouseEvent) => {
     if (!disabled) {
       dispatch("click", event);
+      onClick?.(event);
     }
   };
 </script>
