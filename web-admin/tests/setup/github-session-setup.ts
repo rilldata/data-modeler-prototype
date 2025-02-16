@@ -5,6 +5,7 @@ import { updateEnvVariable } from "../utils/dotenv";
 import { execAsync } from "../utils/spawn";
 import { test as setup } from "./base";
 import { GITHUB_STORAGE_STATE } from "./constants";
+import dotenv from "dotenv";
 
 const githubEnvVarName = "RILL_DEVTOOL_E2E_GITHUB_STORAGE_STATE_JSON";
 
@@ -14,6 +15,9 @@ const envFilePath = path.resolve(__dirname, "../../../.env");
 setup(
   "should authenticate to GitHub and save the session",
   async ({ page }) => {
+
+    // Load environment variables from our root `.env` file
+    dotenv.config({ path: envFilePath });
     if (
       !process.env.RILL_DEVTOOL_E2E_ADMIN_ACCOUNT_EMAIL ||
       !process.env.RILL_DEVTOOL_E2E_ADMIN_ACCOUNT_PASSWORD

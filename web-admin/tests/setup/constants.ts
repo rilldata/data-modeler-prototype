@@ -4,3 +4,5 @@ export const VIEWER_STORAGE_STATE = "playwright/.auth/viewer.json";
 
 export const RILL_DEVTOOL_BACKGROUND_PROCESS_PID_FILE =
   "playwright/rill-devtool-background-process-pid.txt";
+
+export const RILL_EMBED_TOKEN = "playwright/rill-embed-token.txt";

@@ -18,7 +18,7 @@ const config: PlaywrightTestConfig = {
   },
   testDir: "tests",
   projects: [
-    ...(process.env.CI
+    /* ...(process.env.CI
       ? [] // skip in CI
       : [
           {
@@ -29,7 +29,7 @@ const config: PlaywrightTestConfig = {
             name: "setup-github-session",
             testMatch: "github-session-setup.ts",
           },
-        ]),
+        ]),*/
     {
       name: "setup",
       testMatch: "setup.ts",
@@ -40,14 +40,14 @@ const config: PlaywrightTestConfig = {
     ...(process.env.CI
       ? [] // skip in CI, since the GitHub Action uses an ephemeral runner
       : [
-          {
-            name: "teardown",
-            testMatch: "teardown.ts",
-            use: {
-              storageState: ADMIN_STORAGE_STATE,
-            },
+        {
+          name: "teardown",
+          testMatch: "teardown.ts",
+          use: {
+            storageState: ADMIN_STORAGE_STATE,
           },
-        ]),
+        },
+      ]),
     {
       name: "e2e",
       dependencies: process.env.E2E_NO_SETUP_OR_TEARDOWN ? [] : ["setup"],
