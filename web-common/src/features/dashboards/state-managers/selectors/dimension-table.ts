@@ -3,7 +3,6 @@ import type {
   MetricsViewSpecDimensionV2,
   RpcStatus,
   V1MetricsViewAggregationResponse,
-  V1MetricsViewTotalsResponse,
 } from "@rilldata/web-common/runtime-client";
 import type { QueryObserverResult } from "@tanstack/svelte-query";
 import { isSummableMeasure } from "../../dashboard-utils";
@@ -39,7 +38,10 @@ export const virtualizedTableColumns =
   (
     dashData: DashboardDataSources,
   ): ((
-    totalsQuery: QueryObserverResult<V1MetricsViewTotalsResponse, RpcStatus>,
+    totalsQuery: QueryObserverResult<
+      V1MetricsViewAggregationResponse,
+      RpcStatus
+    >,
   ) => VirtualizedTableColumns[]) =>
   (totalsQuery) => {
     const dimension = primaryDimension(dashData);
