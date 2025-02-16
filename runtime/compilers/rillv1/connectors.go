@@ -71,9 +71,7 @@ func (a *connectorAnalyzer) analyze(ctx context.Context) {
 // analyzeResource extracts connector metadata for a single resource.
 // NOTE: If we add more resource kinds that use connectors, add connector extraction logic here.
 func (a *connectorAnalyzer) analyzeResource(ctx context.Context, r *Resource) {
-	if r.SourceSpec != nil {
-		a.analyzeSource(ctx, r)
-	} else if r.ModelSpec != nil {
+	if r.ModelSpec != nil {
 		a.analyzeModel(ctx, r)
 	} else if r.MetricsViewSpec != nil {
 		a.trackConnector(r.MetricsViewSpec.Connector, r, false)
@@ -90,40 +88,6 @@ func (a *connectorAnalyzer) analyzeResource(ctx context.Context, r *Resource) {
 		a.trackConnector(r.Name.Name, nil, false)
 	}
 	// Other resource kinds currently don't use connectors.
-}
-
-// analyzeSource extracts connector metadata for a source resource.
-// The logic for extracting metadata from sources is more complex than for other resource kinds, hence the separate function.
-func (a *connectorAnalyzer) analyzeSource(ctx context.Context, r *Resource) {
-	// No analysis necessary for the sink connector
-	a.trackConnector(r.SourceSpec.SinkConnector, r, false)
-
-	// Prep for analyzing SourceConnector
-	spec := r.SourceSpec
-	srcProps := spec.Properties.AsMap()
-	_, sourceDriver, driverErr := a.parser.driverForConnector(spec.SourceConnector)
-	if driverErr != nil {
-		// Track the errored source connector and return
-		a.trackConnector(spec.SourceConnector, r, false)
-		return
-	}
-
-	// Check if we have anonymous access (unless we already know that we don't)
-	var anonAccess bool
-	if res, ok := a.result[spec.SourceConnector]; !ok || res.AnonymousAccess {
-		anonAccess, _ = sourceDriver.HasAnonymousSourceAccess(ctx, srcProps, zap.NewNop())
-	}
-
-	// Track the source connector
-	a.trackConnector(spec.SourceConnector, r, anonAccess)
-
-	// Track any tertiary connectors (like a DuckDB source referencing S3 in its SQL).
-	// NOTE: Not checking anonymous access for these since we don't know what properties to use.
-	// TODO: Can we solve that issue?
-	otherConnectors, _ := sourceDriver.TertiarySourceConnectors(ctx, srcProps, zap.NewNop())
-	for _, connector := range otherConnectors {
-		a.trackConnector(connector, r, false)
-	}
 }
 
 // analyzeModel extracts connector metadata for a model resource.

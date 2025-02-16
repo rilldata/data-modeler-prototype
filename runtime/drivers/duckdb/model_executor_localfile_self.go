@@ -83,6 +83,8 @@ func (e *localFileToSelfExecutor) Execute(ctx context.Context, opts *drivers.Mod
 
 	if inputProps.Format == "" {
 		inputProps.Format = fileutil.FullExt(localPaths[0])
+	} else {
+		inputProps.Format = "." + inputProps.Format
 	}
 
 	from, err := sourceReader(localPaths, inputProps.Format, inputProps.DuckDB)

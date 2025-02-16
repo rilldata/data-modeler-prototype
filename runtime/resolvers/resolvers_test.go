@@ -29,6 +29,7 @@ import (
 type TestFileYAML struct {
 	Connectors   []string             `yaml:"connectors,omitempty"`
 	Variables    map[string]string    `yaml:"variables,omitempty"`
+	DataFiles    map[string]string    `yaml:"data_files,omitempty"`
 	ProjectFiles map[string]yaml.Node `yaml:"project_files"`
 	Tests        []*TestYAML          `yaml:"tests"`
 }
@@ -93,6 +94,13 @@ func TestResolvers(t *testing.T) {
 			projectFiles["rill.yaml"] = ""
 			for name, node := range tf.ProjectFiles {
 				bytes, err := yaml.Marshal(&node)
+				require.NoError(t, err)
+				projectFiles[name] = string(bytes)
+			}
+
+			// Add local data files to project files
+			for name, data := range tf.DataFiles {
+				bytes, err := os.ReadFile(data)
 				require.NoError(t, err)
 				projectFiles[name] = string(bytes)
 			}

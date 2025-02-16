@@ -1,3 +1,5 @@
+data_files:
+  data/AdBids_mini.csv: ../testruntime/testdata/ad_bids/data/AdBids_mini.csv
 project_files:
   ad_bids_mini.yaml:
     type: model
@@ -5,7 +7,7 @@ project_files:
     materialize: true
     sql: |
       select id, timestamp, publisher, domain, volume, impressions, clicks
-      from read_csv('../testruntime/testdata/ad_bids/data/AdBids_mini.csv')
+      from read_csv('data/AdBids_mini.csv')
   metrics_with_policy.yaml:
     type: metrics_view
     model: ad_bids_mini

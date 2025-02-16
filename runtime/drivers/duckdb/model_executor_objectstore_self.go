@@ -19,15 +19,21 @@ import (
 var errGCSUsesNativeCreds = errors.New("GCS uses native credentials")
 
 type objectStoreInputProps struct {
-	Path   string             `mapstructure:"path"`
+	Path string `mapstructure:"path"`
+	// URI is renamed to path now. It is kept for backward compatibility.
+	URI    string             `mapstructure:"uri"`
 	Format drivers.FileFormat `mapstructure:"format"`
 	DuckDB map[string]any     `mapstructure:"duckdb"`
 }
 
 func (p *objectStoreInputProps) Validate() error {
-	if p.Path == "" {
+	if p.Path == "" && p.URI == "" {
 		return fmt.Errorf("missing property `path`")
 	}
+	if p.Path != "" && p.URI != "" {
+		return fmt.Errorf("cannot specify both `path` and `uri`")
+	}
+	p.Path = p.URI
 	return nil
 }
 
@@ -80,18 +86,38 @@ func (e *objectStoreToSelfExecutor) modelInputProperties(model, inputConnector s
 		format = fileutil.FullExt(parsed.Path)
 	}
 
+	// Generate secret SQL to access the service and set as pre_exec_query
+	var err error
+	m.PreExec, err = objectStoreSecretSQL(model, inputConnector, inputHandle, inputProps)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set SQL to read from the external source
+	from, err := sourceReader([]string{parsed.Path}, format, parsed.DuckDB)
+	if err != nil {
+		return nil, err
+	}
+	m.SQL = "SELECT * FROM " + from
+
+	propsMap := make(map[string]any)
+	if err := mapstructure.Decode(m, &propsMap); err != nil {
+		return nil, err
+	}
+	return propsMap, nil
+}
+
+func objectStoreSecretSQL(model, inputConnector string, inputHandle drivers.Handle, inputProps map[string]any) (string, error) {
 	config := inputHandle.Config()
 	// config properties can also be set as input properties
 	maps.Copy(config, inputProps)
-
-	// Generate secret SQL to access the service and set as pre_exec_query
 	safeSecretName := safeName(fmt.Sprintf("%s__%s__secret", model, inputConnector))
 	switch inputHandle.Driver() {
 	case "s3":
 		s3Config := &s3.ConfigProperties{}
 		err := mapstructure.WeakDecode(config, s3Config)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse s3 config properties: %w", err)
+			return "", fmt.Errorf("failed to parse s3 config properties: %w", err)
 		}
 		var sb strings.Builder
 		sb.WriteString("CREATE OR REPLACE TEMPORARY SECRET ")
@@ -115,16 +141,16 @@ func (e *objectStoreToSelfExecutor) modelInputProperties(model, inputConnector s
 			sb.WriteString(safeSQLString(s3Config.Region))
 		}
 		sb.WriteRune(')')
-		m.PreExec = sb.String()
+		return sb.String(), nil
 	case "gcs":
 		// GCS works via S3 compatibility mode
 		gcsConfig, err := gcs.NewConfigProperties(config)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		// If no credentials are provided we assume that the user wants to use the native credentials
 		if gcsConfig.SecretJSON != "" || (gcsConfig.KeyID == "" && gcsConfig.Secret == "" && gcsConfig.SecretJSON == "") {
-			return nil, errGCSUsesNativeCreds
+			return "", errGCSUsesNativeCreds
 		}
 		var sb strings.Builder
 		sb.WriteString("CREATE OR REPLACE TEMPORARY SECRET ")
@@ -137,12 +163,12 @@ func (e *objectStoreToSelfExecutor) modelInputProperties(model, inputConnector s
 			fmt.Fprintf(&sb, ", KEY_ID %s, SECRET %s", safeSQLString(gcsConfig.KeyID), safeSQLString(gcsConfig.Secret))
 		}
 		sb.WriteRune(')')
-		m.PreExec = sb.String()
+		return sb.String(), nil
 	case "azure":
 		azureConfig := &azure.ConfigProperties{}
 		err := mapstructure.WeakDecode(config, azureConfig)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse s3 config properties: %w", err)
+			return "", fmt.Errorf("failed to parse s3 config properties: %w", err)
 		}
 		var sb strings.Builder
 		sb.WriteString("CREATE OR REPLACE TEMPORARY SECRET ")
@@ -158,23 +184,10 @@ func (e *objectStoreToSelfExecutor) modelInputProperties(model, inputConnector s
 			fmt.Fprintf(&sb, ", ACCOUNT_NAME %s", safeSQLString(azureConfig.Account))
 		}
 		sb.WriteRune(')')
-		m.PreExec = sb.String()
+		return sb.String(), nil
 	default:
-		return nil, fmt.Errorf("internal error: unsupported object store: %s", inputHandle.Driver())
+		return "", fmt.Errorf("internal error: unsupported object store: %s", inputHandle.Driver())
 	}
-
-	// Set SQL to read from the external source
-	from, err := sourceReader([]string{parsed.Path}, format, parsed.DuckDB)
-	if err != nil {
-		return nil, err
-	}
-	m.SQL = "SELECT * FROM " + from
-
-	propsMap := make(map[string]any)
-	if err := mapstructure.Decode(m, &propsMap); err != nil {
-		return nil, err
-	}
-	return propsMap, nil
 }
 
 // objectStoreToSelfExecutorNonNative is a non-native implementation of objectStoreToSelfExecutor.

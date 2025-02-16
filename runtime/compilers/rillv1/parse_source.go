@@ -85,25 +85,32 @@ func (p *Parser) parseSource(ctx context.Context, node *Node) error {
 		return fmt.Errorf("encountered invalid property type: %w", err)
 	}
 
-	// Track source
-	r, err := p.insertResource(ResourceKindSource, node.Name, node.Paths, node.Refs...)
+	outputProps, err := structpb.NewStruct(map[string]any{"materialize": true})
+	if err != nil {
+		return fmt.Errorf("internal error: can not create output properties for source: %w", err)
+	}
+
+	// Track as a model
+	// We allowed a special resource type (source) to ingest data from external connector
+	// After the unification of sources and models everything is a model
+	r, err := p.insertResource(ResourceKindModel, node.Name, node.Paths, node.Refs...)
 	if err != nil {
 		return err
 	}
 	// NOTE: After calling insertResource, an error must not be returned. Any validation should be done before calling it.
 
-	r.SourceSpec.Properties = mergeStructPB(r.SourceSpec.Properties, props)
-	r.SourceSpec.SinkConnector = p.defaultOLAPConnector() // Sink connector not currently configurable
-	if node.Connector != "" {
-		r.SourceSpec.SourceConnector = node.Connector // Source connector
-	}
-	if timeout != 0 {
-		r.SourceSpec.TimeoutSeconds = uint32(timeout.Seconds())
-	}
 	if schedule != nil {
-		r.SourceSpec.RefreshSchedule = schedule
+		r.ModelSpec.RefreshSchedule = schedule
 	}
 
+	if timeout > 0 {
+		r.ModelSpec.TimeoutSeconds = uint32(timeout.Seconds())
+	}
+	r.ModelSpec.InputConnector = node.Connector
+	r.ModelSpec.InputProperties = mergeStructPB(r.ModelSpec.InputProperties, props)
+
+	r.ModelSpec.OutputConnector = p.defaultOLAPConnector()
+	r.ModelSpec.OutputProperties = outputProps
 	return nil
 }
 
