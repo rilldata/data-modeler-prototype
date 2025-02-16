@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { updateEnvVariable } from "../utils/dotenv";
-import { execAsync } from "../utils/spawn";
+import { execAsync } from "web-common/tests/utils/spawn";
 import { test as setup } from "./base";
 import { GITHUB_STORAGE_STATE } from "./constants";
 

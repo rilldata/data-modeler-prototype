@@ -17,6 +17,7 @@ temp/
 dev-project/
 proto/
 playwright-report/
+web-local/tests/data/projects
 
 .env
 *.sql

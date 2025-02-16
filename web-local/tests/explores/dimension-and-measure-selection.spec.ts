@@ -1,13 +1,16 @@
 import { expect } from "@playwright/test";
-import { useDashboardFlowTestSetup } from "web-local/tests/explores/dashboard-flow-test-setup";
+import { gotoNavEntry } from "web-local/tests/utils/waitHelpers";
 import { clickMenuButton } from "../utils/commonHelpers";
 import { test } from "../utils/test";
 
 test.describe("dimension and measure selectors", () => {
-  // dashboard test setup
-  useDashboardFlowTestSetup();
+  test.use({
+    projectInit: { name: "AdBids" },
+  });
 
   test("dimension and measure selectors flow", async ({ page }) => {
+    await page.getByLabel("/dashboards").click();
+    await gotoNavEntry(page, "/dashboards/AdBids_metrics_explore.yaml");
     await page.getByRole("button", { name: "Preview" }).click();
 
     const measuresButton = page.getByRole("button", {

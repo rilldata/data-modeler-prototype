@@ -3,7 +3,7 @@ import {
   execAsync,
   spawnAndMatch,
   type SpawnAndMatchResult,
-} from "../../utils/spawn";
+} from "web-common/tests/utils/spawn";
 
 export async function cliLogin(page: Page) {
   // Run the login command and capture the verification URL
