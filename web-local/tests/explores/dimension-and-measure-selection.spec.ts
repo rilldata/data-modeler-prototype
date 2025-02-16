@@ -31,8 +31,8 @@ test.describe("dimension and measure selectors", () => {
     await escape();
     await expect(measuresButton).toHaveText("1 of 2 Measures");
 
-    await expect(page.getByText("Sum of Bid Price 301k")).toBeVisible();
-    await expect(page.getByText("Total records 100k")).not.toBeVisible();
+    await expect(page.getByText("Sum of Bid Price 46,239")).toBeVisible();
+    await expect(page.getByText("Total records 15,427")).not.toBeVisible();
 
     await measuresButton.click();
     await clickMenuItem("Total records");
@@ -40,8 +40,8 @@ test.describe("dimension and measure selectors", () => {
     await expect(measuresButton).toHaveText("1 of 2 Measures");
     await escape();
 
-    await expect(page.getByText("Sum of Bid Price 301k")).not.toBeVisible();
-    await expect(page.getByText("Total records 100k")).toBeVisible();
+    await expect(page.getByText("Sum of Bid Price 46,239")).not.toBeVisible();
+    await expect(page.getByText("Total records 15,427")).toBeVisible();
 
     await dimensionsButton.click();
     await clickMenuItem("Publisher");

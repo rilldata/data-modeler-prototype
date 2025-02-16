@@ -234,7 +234,7 @@ test.describe("time controls settings from explore preset", () => {
 function getDashboardYaml(defaults: string, extras = "") {
   return `
 type: explore
-title: "AdBids_model_metrics_explore"
+display_name: "AdBids_model_metrics_explore"
 metrics_view: "AdBids_model_metrics"
 ${extras}
 

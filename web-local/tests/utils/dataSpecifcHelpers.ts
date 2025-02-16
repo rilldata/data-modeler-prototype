@@ -38,18 +38,18 @@ export async function assertAdBidsDashboard(page: Page) {
     assertLeaderboards(page, [
       {
         label: "Publisher",
-        values: ["null", "Facebook", "Google", "Yahoo", "Microsoft"],
+        values: ["null", "Facebook", "Microsoft", "Google", "Yahoo"],
       },
       {
         label: "Domain",
         values: [
           "facebook.com",
           "msn.com",
-          "google.com",
-          "news.yahoo.com",
-          "instagram.com",
-          "sports.yahoo.com",
           "news.google.com",
+          "sports.yahoo.com",
+          "news.yahoo.com",
+          "google.com",
+          "instagram.com",
         ],
       },
     ]),

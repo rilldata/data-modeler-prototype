@@ -19,6 +19,20 @@ test.describe("leaderboard and dimension table sorting", () => {
   test("leaderboard and dimension table sorting", async ({ page }) => {
     await page.waitForTimeout(1000);
 
+    const timeRangeMenu = page.getByRole("button", {
+      name: "Select time range",
+    });
+
+    async function openTimeRangeMenu() {
+      await timeRangeMenu.click();
+      await page
+        .getByRole("menu", { name: "Select time range" })
+        .waitFor({ state: "visible" });
+    }
+
+    await openTimeRangeMenu();
+    await page.getByRole("menuitem", { name: "All Time" }).click();
+
     /**
      * LEADERBOARD
      */
@@ -37,16 +51,6 @@ test.describe("leaderboard and dimension table sorting", () => {
       page.getByRole("row", { name: "null 32.9k" }),
     );
 
-    const timeRangeMenu = page.getByRole("button", {
-      name: "Select time range",
-    });
-
-    async function openTimeRangeMenu() {
-      await timeRangeMenu.click();
-      await page
-        .getByRole("menu", { name: "Select time range" })
-        .waitFor({ state: "visible" });
-    }
 
     await assertAAboveB(
       page.getByRole("row", { name: "Microsoft 10.4k" }),

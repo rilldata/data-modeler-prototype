@@ -170,19 +170,31 @@ measures:
 
 type: explore
 
-title: "${metricsViewTitle ? metricsViewTitle : metricsViewName} dashboard"
 metrics_view: ${metricsViewName}
+display_name: "${metricsViewTitle ? metricsViewTitle : metricsViewName} explore dashboard"
+
+defaults:
+  time_range: P14D
+  comparison_mode: none
 
 dimensions: '*'
 measures: '*'
-`;
+
+time_zones:
+  - America/Los_Angeles
+  - America/Chicago
+  - America/New_York
+  - Europe/London
+  - Europe/Paris
+  
+  `;
       }
       return `# Explore YAML
 # Reference documentation: https://docs.rilldata.com/reference/project-files/explore-dashboards
 
 type: explore
 
-title: "My metrics dashboard"
+display_name: "My metrics dashboard"
 metrics_view: example_metrics_view # Choose a metrics view to underpin the dashboard
 
 dimensions: '*'
@@ -199,51 +211,9 @@ metrics_sql: |
   select measure, dimension from metrics_view
 `;
     case ResourceKind.Component:
-      return `# Component YAML
-# Reference documentation: https://docs.rilldata.com/reference/project-files/components
-    
+      return `# Component YAML    
 type: component
-
-data:
-  sql: |
-    SELECT * FROM (VALUES 
-      ('Monday', 300),
-      ('Tuesday', 150),
-      ('Wednesday', 200),
-      ('Thursday', 400),
-      ('Friday', 650),
-      ('Saturday', 575),
-      ('Sunday', 500)
-    ) AS t(day_of_week, revenue)
-
-vega_lite: |
-  {
-    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-    "data": { "name": "table" },
-    "mark": "line",
-    "width": "container",
-    "encoding": {
-      "x": {
-        "field": "day_of_week",
-        "type": "ordinal",
-        "axis": { "title": "Day of the Week" },
-        "sort": [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday"
-        ]
-      },
-      "y": {
-        "field": "revenue",
-        "type": "quantitative",
-        "axis": { "title": "Revenue" }
-      }
-    }
-  }`;
+`;
     case ResourceKind.Canvas:
       return `# Explore YAML
 # Reference documentation: https://docs.rilldata.com/reference/project-files/canvas-dashboards

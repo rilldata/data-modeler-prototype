@@ -33,13 +33,18 @@ test.describe("explores", () => {
     await createExploreFromModel(page, true);
     await assertAdBidsDashboard(page);
 
+    // Change the time range
+    await interactWithTimeRangeMenu(page, async () => {
+      await page.getByRole("menuitem", { name: "All Time" }).click();
+    });
+
     // click on publisher=Facebook leaderboard value
     await page.getByRole("row", { name: "Facebook 19.3k" }).click();
     await wrapRetryAssertion(() =>
       assertLeaderboards(page, [
         {
           label: "Publisher",
-          values: ["null", "Facebook", "Google", "Yahoo", "Microsoft"],
+          values: ["null", "Facebook", "Microsoft", "Google", "Yahoo"],
         },
         {
           label: "Domain",
@@ -63,6 +68,11 @@ test.describe("explores", () => {
 
     await createAdBidsModel(page);
     await createExploreFromModel(page, true);
+
+    // Change the time range
+    await interactWithTimeRangeMenu(page, async () => {
+      await page.getByRole("menuitem", { name: "All Time" }).click();
+    });
 
     // Check the total records are 100k
     await expect(page.getByText("Total records 100k")).toBeVisible();
@@ -215,7 +225,7 @@ test.describe("explores", () => {
     const changeDisplayNameDoc = `
 type: explore
 
-title: "Adbids dashboard renamed"
+display_name: "Adbids dashboard renamed"
 metrics_view: AdBids_model_metrics
 
 dimensions: '*'
@@ -247,7 +257,7 @@ measures: '*'
 
     version: 1
     type: metrics_view
-    title: "AdBids_model_dashboard"
+    display_name: "AdBids_model_dashboard"
     model: "AdBids_model"
     default_time_range: ""
     smallest_time_grain: "week"
@@ -294,7 +304,7 @@ measures: '*'
 
     version: 1
     type: metrics_view
-    title: "AdBids_model_dashboard"
+    display_name: "AdBids_model_dashboard"
     model: "AdBids_model"
     default_time_range: ""
     smallest_time_grain: "week"
@@ -323,7 +333,7 @@ measures: '*'
 
 version: 1
 type: metrics_view
-title: "AdBids_model_dashboard_rename"
+display_name: "AdBids_model_dashboard_rename"
 model: "AdBids_model"
 default_time_range: ""
 smallest_time_grain: "week"

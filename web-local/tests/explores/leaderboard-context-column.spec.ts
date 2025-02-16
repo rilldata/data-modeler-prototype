@@ -23,7 +23,7 @@ test.describe("leaderboard context column", () => {
 
   version: 1
   type: metrics_view
-  title: "AdBids_model_dashboard"
+  display_name: "AdBids_model_dashboard"
   model: "AdBids_model"
   default_time_range: ""
   smallest_time_grain: ""

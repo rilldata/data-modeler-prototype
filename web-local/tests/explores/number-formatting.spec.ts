@@ -20,7 +20,7 @@ test.describe("smoke tests for number formatting", () => {
     // This is a metrics spec with all available formatting options
     const formatterFlowDashboard = `# Visit https://docs.rilldata.com/reference/project-files to learn more about Rill project files.
 kind: metrics_view
-title: "AdBids_model_dashboard"
+display_name: "AdBids_model_dashboard"
 model: "AdBids_model"
 timeseries: "timestamp"
 measures:
