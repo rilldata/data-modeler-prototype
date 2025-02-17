@@ -1,12 +1,15 @@
 import { test as base, type Page } from "@playwright/test";
 import { ADMIN_STORAGE_STATE, VIEWER_STORAGE_STATE } from "./constants";
 import { cliLogin, cliLogout } from "./fixtures/cli";
+import path from "path";
+import { fileURLToPath } from "url";
 
 type MyFixtures = {
   adminPage: Page;
   viewerPage: Page;
   anonPage: Page;
   cli: void;
+  embedPage: Page;
 };
 
 export const test = base.extend<MyFixtures>({
@@ -43,5 +46,19 @@ export const test = base.extend<MyFixtures>({
     await cliLogin(page);
     await use();
     await cliLogout();
+  },
+
+  embedPage: async ({ browser }, use) => {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const filePath = "file://" + path.resolve(__dirname, "..", "embed.html");
+
+    const context = await browser.newContext();
+    const embedPage = await context.newPage();
+    await embedPage.goto(filePath);
+    await embedPage.waitForTimeout(500);
+
+    await use(embedPage);
+
+    await context.close();
   },
 });

@@ -5,12 +5,14 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { writeFileEnsuringDir } from "../utils/fs";
+import { generateEmbed } from "../utils/generateEmbed";
 import { execAsync, spawnAndMatch } from "../utils/spawn";
 import type { StorageState } from "../utils/storage-state";
 import { test as setup } from "./base";
 import {
   ADMIN_STORAGE_STATE,
   RILL_DEVTOOL_BACKGROUND_PROCESS_PID_FILE,
+  RILL_EMBED_SERVICE_TOKEN,
 } from "./constants";
 import { cliLogin } from "./fixtures/cli";
 
@@ -134,6 +136,13 @@ setup(
     const { stdout: orgCreateStdout } = await execAsync("rill org create e2e");
     expect(orgCreateStdout).toContain("Created organization");
 
+    const { stdout: orgCreateService } = await execAsync(
+      "rill service create e2e",
+    );
+    expect(orgCreateService).toContain("Created service");
+
+    const embedToken = orgCreateService.match(/Access token:\s+(\S+)/);
+
     // Go to the organization's page
     await page.goto("/e2e");
     await expect(page.getByRole("heading", { name: "e2e" })).toBeVisible();
@@ -193,6 +202,10 @@ setup(
         { intervals: Array(24).fill(5_000), timeout: 180_000 },
       )
       .toContain("Last refreshed");
+
+    // generate a embed file
+    writeFileEnsuringDir(RILL_EMBED_SERVICE_TOKEN, embedToken![1]);
+    await generateEmbed("bids_explore", embedToken![1]);
   },
 );
 
