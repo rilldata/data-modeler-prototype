@@ -3,8 +3,8 @@ package env
 import (
 	"context"
 	"fmt"
-	"maps"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -76,8 +76,10 @@ func PullCmd(ch *cmdutil.Helper) *cobra.Command {
 				resVars[v.Name] = v.Value
 			}
 
+			dotEnv := parser.GetDotEnv()
+
 			// If the variables match any existing .env file, do nothing
-			if maps.Equal(resVars, parser.DotEnv) {
+			if reflect.DeepEqual(resVars, dotEnv) {
 				if len(res.Variables) == 0 {
 					ch.Printf("No cloud credentials found for project %q.\n", projectName)
 				} else {
@@ -88,7 +90,7 @@ func PullCmd(ch *cmdutil.Helper) *cobra.Command {
 
 			// Merge the current .env file with pulled variables
 			vars := make(map[string]string)
-			for k, v := range parser.DotEnv {
+			for k, v := range dotEnv {
 				vars[k] = v
 			}
 			for k, v := range resVars {

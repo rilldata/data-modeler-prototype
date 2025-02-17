@@ -71,7 +71,9 @@ func PushCmd(ch *cmdutil.Helper) *cobra.Command {
 			}
 			added := 0
 			changed := 0
-			for k, v := range parser.DotEnv {
+
+			dotEnv := parser.GetDotEnv()
+			for k, v := range dotEnv {
 				if _, ok := vars[k]; !ok {
 					added++
 				} else if vars[k] != v {
