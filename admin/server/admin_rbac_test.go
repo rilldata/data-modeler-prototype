@@ -183,6 +183,8 @@ func TestAdmin_RBAC(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Equal(t, adminOrg.Organization.Name, "foo")
+	// We expect the Organization.DisplayName to be empty since it was not set
+	require.Equal(t, adminOrg.Organization.DisplayName, "")
 
 	// add a viewer to the organization
 	res, err := adminClient.AddOrganizationMemberUser(ctx, &adminv1.AddOrganizationMemberUserRequest{
