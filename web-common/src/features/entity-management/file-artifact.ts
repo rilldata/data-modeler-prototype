@@ -166,11 +166,7 @@ export class FileArtifact {
 
       if (inferred) this.inferredResourceKind.set(inferred);
 
-      if (
-        editorContent === null ||
-        get(this.autoSave) ||
-        !get(this.hasUnsavedChanges)
-      ) {
+      if (editorContent === null || !get(this.hasUnsavedChanges)) {
         this.updateEditorContent(fetchedContent, false, false, true);
       } else if (!isSaveConfirmation) {
         // This is the secondary sequence wherein a file is saved in an external editor

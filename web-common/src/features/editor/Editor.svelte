@@ -157,8 +157,8 @@
     <AlertDialog.Content>
       <AlertDialog.Title>File update detected</AlertDialog.Title>
       <AlertDialog.Description>
-        This file has been modified by another application. Please resolve
-        conflicts with your unsaved changes before proceeding.
+        This file has been modified by another application. Please compare or
+        overwrite your local version with the latest changes.
       </AlertDialog.Description>
 
       <AlertDialog.Footer>
@@ -171,7 +171,16 @@
               merging.set(true);
             }}
           >
-            Resolve conflicts
+            Compare
+          </Button>
+
+          <Button
+            builders={[builder]}
+            type="secondary"
+            large
+            on:click={revertContent}
+          >
+            Overwrite
           </Button>
         </AlertDialog.Action>
       </AlertDialog.Footer>
