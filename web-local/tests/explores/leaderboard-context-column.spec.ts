@@ -1,30 +1,29 @@
 import { expect } from "@playwright/test";
-import {
-  AD_BIDS_EXPLORE_PATH,
-  AD_BIDS_METRICS_PATH,
-} from "web-local/tests/utils/dataSpecifcHelpers";
 import { interactWithTimeRangeMenu } from "web-local/tests/utils/metricsViewHelpers";
 import { ResourceWatcher } from "web-local/tests/utils/ResourceWatcher";
 import { gotoNavEntry } from "web-local/tests/utils/waitHelpers";
 import { clickMenuButton } from "../utils/commonHelpers";
 import { test } from "../utils/test";
-import { useDashboardFlowTestSetup } from "./dashboard-flow-test-setup";
 
 test.describe("leaderboard context column", () => {
-  useDashboardFlowTestSetup();
+  test.use({
+    projectInit: { name: "AdBids" },
+  });
 
   test("Leaderboard context column", async ({ page }) => {
     const watcher = new ResourceWatcher(page);
 
-    await gotoNavEntry(page, AD_BIDS_METRICS_PATH);
+    await page.getByLabel("/metrics").click();
+    await page.getByLabel("/dashboards").click();
+    await gotoNavEntry(page, "/metrics/AdBids_metrics.yaml");
 
     // reset metrics, and add a metric with `valid_percent_of_total: true`
     const metricsWithValidPercentOfTotal = `# Visit https://docs.rilldata.com/reference/project-files to learn more about Rill project files.
 
   version: 1
   type: metrics_view
-  title: "AdBids_model_dashboard"
-  model: "AdBids_model"
+  title: "AdBids_dashboard"
+  model: "AdBids"
   default_time_range: ""
   smallest_time_grain: ""
   timeseries: "timestamp"
@@ -52,7 +51,7 @@ test.describe("leaderboard context column", () => {
 
     await page.getByLabel("code").click();
     await watcher.updateAndWaitForDashboard(metricsWithValidPercentOfTotal);
-    await gotoNavEntry(page, AD_BIDS_EXPLORE_PATH);
+    await gotoNavEntry(page, "/dashboards/AdBids_metrics_explore.yaml");
 
     async function clickMenuItem(itemName: string, wait = true) {
       await clickMenuButton(page, itemName, "option");

@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { writeFileEnsuringDir } from "../utils/fs";
-import { execAsync, spawnAndMatch } from "../utils/spawn";
+import { execAsync, spawnAndMatch } from "web-common/tests/utils/spawn";
 import type { StorageState } from "../utils/storage-state";
 import { test as setup } from "./base";
 import {

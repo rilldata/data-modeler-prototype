@@ -1,27 +1,26 @@
 import { expect } from "@playwright/test";
-import { useDashboardFlowTestSetup } from "web-local/tests/explores/dashboard-flow-test-setup";
-import {
-  AD_BIDS_EXPLORE_PATH,
-  AD_BIDS_METRICS_PATH,
-} from "web-local/tests/utils/dataSpecifcHelpers";
 import { interactWithTimeRangeMenu } from "web-local/tests/utils/metricsViewHelpers";
 import { ResourceWatcher } from "web-local/tests/utils/ResourceWatcher";
 import { gotoNavEntry } from "web-local/tests/utils/waitHelpers";
 import { test } from "../utils/test";
 
 test.describe("smoke tests for number formatting", () => {
-  useDashboardFlowTestSetup();
+  test.use({
+    projectInit: { name: "AdBids" },
+  });
 
   test("smoke tests for number formatting", async ({ page }) => {
     const watcher = new ResourceWatcher(page);
 
-    await gotoNavEntry(page, AD_BIDS_METRICS_PATH);
+    await page.getByLabel("/metrics").click();
+    await page.getByLabel("/dashboards").click();
+    await gotoNavEntry(page, "/metrics/AdBids_metrics.yaml");
 
     // This is a metrics spec with all available formatting options
     const formatterFlowDashboard = `# Visit https://docs.rilldata.com/reference/project-files to learn more about Rill project files.
 kind: metrics_view
-title: "AdBids_model_dashboard"
-model: "AdBids_model"
+title: "AdBids_dashboard"
+table: "AdBids"
 timeseries: "timestamp"
 measures:
 - label: no preset format
@@ -72,7 +71,7 @@ dimensions:
     await page.getByLabel("code").click();
     // update the code editor with the new spec
     await watcher.updateAndWaitForDashboard(formatterFlowDashboard);
-    await gotoNavEntry(page, AD_BIDS_EXPLORE_PATH);
+    await gotoNavEntry(page, "/dashboards/AdBids_metrics_explore.yaml");
 
     const previewButton = page.getByRole("button", { name: "Preview" });
 

@@ -1,0 +1,29 @@
+# Metrics view YAML
+# Reference documentation: https://docs.rilldata.com/reference/project-files/dashboards
+
+version: 1
+type: metrics_view 
+
+display_name: Adbids
+table: AdBids
+timeseries: timestamp
+
+dimensions:
+  - name: publisher
+    display_name: Publisher
+    column: publisher
+  - name: domain
+    display_name: Domain
+    column: domain
+
+measures:
+  - name: total_records
+    display_name: Total records
+    expression: COUNT(*)
+    description: ""
+    format_preset: humanize
+  - name: bid_price_sum
+    display_name: Sum of Bid Price
+    expression: SUM(bid_price)
+    description: ""
+    format_preset: humanize

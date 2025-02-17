@@ -1,10 +1,5 @@
 import { expect } from "@playwright/test";
-import { useDashboardFlowTestSetup } from "web-local/tests/explores/dashboard-flow-test-setup";
 import { clickMenuButton } from "web-local/tests/utils/commonHelpers";
-import {
-  AD_BIDS_EXPLORE_PATH,
-  AD_BIDS_METRICS_PATH,
-} from "web-local/tests/utils/dataSpecifcHelpers";
 import { interactWithTimeRangeMenu } from "web-local/tests/utils/metricsViewHelpers";
 import { ResourceWatcher } from "web-local/tests/utils/ResourceWatcher";
 import { validateTableContents } from "web-local/tests/utils/tableHelpers";
@@ -13,7 +8,7 @@ import { test } from "../utils/test";
 
 const pivotDashboard = `kind: metrics_view
 display_name: Ad Bids
-model: AdBids_model
+table: AdBids
 timeseries: timestamp
 dimensions:
   - display_name: Publisher
@@ -528,18 +523,21 @@ const expectSortedDeltaCol = [
 ];
 
 test.describe("pivot run through", () => {
-  // dashboard test setup
-  useDashboardFlowTestSetup();
+  test.use({
+    projectInit: { name: "AdBids" },
+  });
 
   test("pivot run through", async ({ page }) => {
     const watcher = new ResourceWatcher(page);
 
-    await gotoNavEntry(page, AD_BIDS_METRICS_PATH);
-
+    await page.getByLabel("/metrics").click();
+    await page.getByLabel("/dashboards").click();
+    await gotoNavEntry(page, "/metrics/AdBids_metrics.yaml");
     await page.getByLabel("code").click();
+
     // update the code editor with the new spec
     await watcher.updateAndWaitForDashboard(pivotDashboard);
-    await gotoNavEntry(page, AD_BIDS_EXPLORE_PATH);
+    await gotoNavEntry(page, "/dashboards/AdBids_metrics_explore.yaml");
     const previewButton = page.getByRole("button", { name: "Preview" });
     await previewButton.click();
 
