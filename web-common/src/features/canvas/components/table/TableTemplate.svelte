@@ -3,21 +3,30 @@
   import type { TableSpec } from "@rilldata/web-common/features/canvas/components/table";
   import { getCanvasStateManagers } from "@rilldata/web-common/features/canvas/state-managers/state-managers";
   import { createPivotDataStore } from "@rilldata/web-common/features/dashboards/pivot/pivot-data-store";
+  import PivotEmpty from "@rilldata/web-common/features/dashboards/pivot/PivotEmpty.svelte";
+  import PivotError from "@rilldata/web-common/features/dashboards/pivot/PivotError.svelte";
+  import PivotTable from "@rilldata/web-common/features/dashboards/pivot/PivotTable.svelte";
   import {
     PivotChipType,
     type PivotDashboardContext,
     type PivotDataStore,
-    type PivotDataStoreConfig,
     type PivotState,
   } from "@rilldata/web-common/features/dashboards/pivot/types";
+  import Spinner from "@rilldata/web-common/features/entity-management/Spinner.svelte";
+  import { EntityStatus } from "@rilldata/web-common/features/entity-management/types";
   import type { V1ComponentSpecRendererProperties } from "@rilldata/web-common/runtime-client";
-  import { readable, type Readable, writable } from "svelte/store";
+  import { readable, writable } from "svelte/store";
   import { getTableConfig, validateTableSchema } from "./selector";
-  import TableRenderer from "./TableRenderer.svelte";
 
   export let rendererProperties: V1ComponentSpecRendererProperties;
 
   const ctx = getCanvasStateManagers();
+  let pivotDataStore: PivotDataStore;
+  let isFetching = false;
+  let assembled = false;
+
+  // Cache for pivot data stores
+  const pivotStoreCache = new Map<string, PivotDataStore>();
 
   $: tableSpec = rendererProperties as TableSpec;
 
@@ -58,31 +67,65 @@
     activeCell: null,
   });
 
-  let pivotDataStore: PivotDataStore | undefined = undefined;
-  let pivotConfig: Readable<PivotDataStoreConfig> | undefined = undefined;
+  $: pivotConfig = getTableConfig(ctx, tableSpec, $pivotState);
 
-  // TODO: Consider moving to a memoized store
-  $: if ($schema.isValid) {
-    const pivotDashboardContext: PivotDashboardContext = {
-      metricsViewName: readable(tableSpec.metrics_view),
-      queryClient: ctx.queryClient,
-      enabled: !!ctx.canvasEntity.spec.canvasSpec,
-    };
-    pivotConfig = getTableConfig(ctx, tableSpec, $pivotState);
-    pivotDataStore = createPivotDataStore(pivotDashboardContext, pivotConfig);
+  $: if ($schema.isValid && tableSpec.metrics_view) {
+    const cacheKey = tableSpec.metrics_view;
+    let store = pivotStoreCache.get(cacheKey);
+    if (!store) {
+      const pivotDashboardContext: PivotDashboardContext = {
+        metricsViewName: readable(tableSpec.metrics_view),
+        queryClient: ctx.queryClient,
+        enabled: !!ctx.canvasEntity.spec.canvasSpec,
+      };
+      store = createPivotDataStore(pivotDashboardContext, pivotConfig);
+      pivotStoreCache.set(cacheKey, store);
+    }
+    pivotDataStore = store;
+    ({ isFetching, assembled } = $pivotDataStore);
   }
+
+  $: hasColumnAndNoMeasure =
+    $pivotState.columns.dimension.length > 0 &&
+    $pivotState.columns.measure.length === 0;
 </script>
 
 <div class="overflow-y-auto h-full">
   {#if !$schema.isValid}
     <ComponentError error={$schema.error} />
-  {:else if pivotDataStore && pivotConfig && $pivotConfig}
-    <TableRenderer
-      {pivotDataStore}
-      config={$pivotConfig}
-      pivotDashboardStore={pivotState}
-    />
+  {:else if pivotDataStore && $pivotDataStore && pivotConfig && $pivotConfig}
+    {#if $pivotDataStore?.error?.length}
+      <PivotError errors={$pivotDataStore.error} />
+    {:else if !$pivotDataStore?.data || $pivotDataStore?.data?.length === 0}
+      <PivotEmpty {assembled} {isFetching} {hasColumnAndNoMeasure} />
+    {:else}
+      <PivotTable
+        {pivotDataStore}
+        config={pivotConfig}
+        {pivotState}
+        setPivotExpanded={(expanded) => {
+          pivotState.update((state) => ({
+            ...state,
+            expanded,
+          }));
+        }}
+        setPivotSort={(sorting) => {
+          pivotState.update((state) => ({
+            ...state,
+            sorting,
+          }));
+        }}
+        setPivotRowPage={(page) => {
+          pivotState.update((state) => ({
+            ...state,
+            rowPage: page,
+          }));
+        }}
+      />
+    {/if}
   {:else}
-    <div>Loading...</div>
+    <div class="flex items-center justify-center w-full h-full">
+      <Spinner status={EntityStatus.Running} />
+    </div>
   {/if}
 </div>

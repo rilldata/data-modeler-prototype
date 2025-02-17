@@ -13,9 +13,6 @@
     COLUMN_WIDTH_CONSTANTS as WIDTHS,
   } from "@rilldata/web-common/features/dashboards/pivot/pivot-column-width-utils";
   import { NUM_ROWS_PER_PAGE } from "@rilldata/web-common/features/dashboards/pivot/pivot-infinite-scroll";
-  import { getStateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
-  import { metricsExplorerStore } from "@rilldata/web-common/features/dashboards/stores/dashboard-stores";
-  import { featureFlags } from "@rilldata/web-common/features/feature-flags";
   import Resizer from "@rilldata/web-common/layout/Resizer.svelte";
   import { copyToClipboard } from "@rilldata/web-common/lib/actions/copy-to-clipboard";
   import { modified } from "@rilldata/web-common/lib/actions/modified-click";
@@ -24,7 +21,6 @@
     type ExpandedState,
     type SortingState,
     type TableOptions,
-    type Updater,
     createSvelteTable,
     flexRender,
     getCoreRowModel,
@@ -37,8 +33,12 @@
   import { onMount } from "svelte";
   import type { Readable } from "svelte/motion";
   import { derived } from "svelte/store";
-  import { getPivotConfig } from "./pivot-data-config";
-  import type { PivotDataRow, PivotDataStore } from "./types";
+  import type {
+    PivotDataRow,
+    PivotDataStore,
+    PivotDataStoreConfig,
+    PivotState,
+  } from "./types";
 
   // Distance threshold (in pixels) for triggering data fetch
   const ROW_THRESHOLD = 200;
@@ -47,24 +47,19 @@
   const HEADER_HEIGHT = 30;
 
   export let pivotDataStore: PivotDataStore;
-
-  const stateManagers = getStateManagers();
-
-  const { dashboardStore, exploreName } = stateManagers;
-
-  const config = getPivotConfig(stateManagers);
-
-  const pivotDashboardStore = derived(dashboardStore, (dashboard) => {
-    return dashboard?.pivot;
-  });
-
-  const { cloudDataViewer, readOnly } = featureFlags;
-  $: isRillDeveloper = $readOnly === false;
-  $: canShowDataViewer = Boolean($cloudDataViewer || isRillDeveloper);
+  export let config: Readable<PivotDataStoreConfig>;
+  export let pivotState: Readable<PivotState>;
+  export let canShowDataViewer = false;
+  export let setPivotExpanded: (expanded: ExpandedState) => void;
+  export let setPivotSort: (sorting: SortingState) => void;
+  export let setPivotRowPage: (page: number) => void;
+  export let setPivotActiveCell:
+    | ((rowId: string, columnId: string) => void)
+    | undefined = undefined;
 
   const options: Readable<TableOptions<PivotDataRow>> = derived(
-    [pivotDashboardStore, pivotDataStore],
-    ([pivotConfig, pivotData]) => {
+    [pivotDataStore, pivotState],
+    ([pivotData, state]) => {
       let tableData = [...pivotData.data];
       if (pivotData.totalsRowData) {
         tableData = [pivotData.totalsRowData, ...pivotData.data];
@@ -73,12 +68,20 @@
         data: tableData,
         columns: pivotData.columnDef,
         state: {
-          expanded: pivotConfig.expanded,
-          sorting: pivotConfig.sorting,
+          expanded: state.expanded,
+          sorting: state.sorting,
         },
-        onExpandedChange,
+        onExpandedChange: (updater) => {
+          const expanded =
+            typeof updater === "function" ? updater(state.expanded) : updater;
+          setPivotExpanded(expanded);
+        },
         getSubRows: (row) => row.subRows,
-        onSortingChange,
+        onSortingChange: (updater) => {
+          const sorting =
+            typeof updater === "function" ? updater(state.sorting) : updater;
+          setPivotSort(sorting);
+        },
         getExpandedRowModel: getExpandedRowModel(),
         getCoreRowModel: getCoreRowModel(),
         enableSortingRemoval: false,
@@ -100,18 +103,9 @@
   let resizingMeasure = false;
   let resizing = false;
 
-  $: ({
-    expanded,
-    sorting,
-    rowPage,
-    rows: rowPills,
-    columns: columnPills,
-    activeCell,
-  } = $pivotDashboardStore);
-
   $: timeDimension = $config.time.timeDimension;
-  $: hasDimension = rowPills.dimension.length > 0;
-  $: hasColumnDimension = columnPills.dimension.length > 0;
+  $: hasDimension = $pivotState.rows.dimension.length > 0;
+  $: hasColumnDimension = $pivotState.columns.dimension.length > 0;
   $: reachedEndForRows = !!$pivotDataStore?.reachedEndForRowData;
   $: assembled = $pivotDataStore.assembled;
   $: dataRows = $pivotDataStore.data;
@@ -210,24 +204,6 @@
       { description: "View raw data for aggregated cell", shortcut: "Click" },
     ];
   }
-  function onExpandedChange(updater: Updater<ExpandedState>) {
-    if (updater instanceof Function) {
-      expanded = updater(expanded);
-    } else {
-      expanded = updater;
-    }
-    metricsExplorerStore.setPivotExpanded($exploreName, expanded);
-  }
-
-  function onSortingChange(updater: Updater<SortingState>) {
-    if (updater instanceof Function) {
-      sorting = updater(sorting);
-    } else {
-      sorting = updater;
-    }
-    metricsExplorerStore.setPivotSort($exploreName, sorting);
-    rowScrollOffset = 0;
-  }
 
   const handleScroll = (containerRefElement?: HTMLDivElement | null) => {
     if (containerRefElement) {
@@ -242,7 +218,7 @@
       const hasMoreDataThanOnePage = rows.length >= NUM_ROWS_PER_PAGE;
 
       if (isReachingPageEnd && hasMoreDataThanOnePage && canFetchMoreData) {
-        metricsExplorerStore.setPivotRowPage($exploreName, rowPage + 1);
+        setPivotRowPage($pivotState.rowPage + 1);
       }
     }
   };
@@ -282,11 +258,8 @@
   };
 
   function handleCellClick(cell: Cell<PivotDataRow, unknown>) {
-    if (!canShowDataViewer) return;
-    const rowId = cell.row.id;
-    const columnId = cell.column.id;
-
-    metricsExplorerStore.setPivotActiveCell($exploreName, rowId, columnId);
+    if (!canShowDataViewer || !setPivotActiveCell) return;
+    setPivotActiveCell(cell.row.id, cell.column.id);
   }
 
   function handleHover(
@@ -340,8 +313,8 @@
 
   function isCellActive(cell: Cell<PivotDataRow, unknown>) {
     return (
-      cell.row.id === activeCell?.rowId &&
-      cell.column.id === activeCell?.columnId
+      cell.row.id === $pivotState.activeCell?.rowId &&
+      cell.column.id === $pivotState.activeCell?.columnId
     );
   }
 </script>

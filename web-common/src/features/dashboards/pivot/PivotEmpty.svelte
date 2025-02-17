@@ -1,22 +1,12 @@
 <script>
   import Spinner from "../../entity-management/Spinner.svelte";
   import { EntityStatus } from "../../entity-management/types";
-  import { getStateManagers } from "../state-managers/state-managers";
   import EmptyMeasureIcon from "./EmptyMeasureIcon.svelte";
   import EmptyTableIcon from "./EmptyTableIcon.svelte";
 
   export let isFetching = false;
   export let assembled = false;
-
-  const stateManagers = getStateManagers();
-  const {
-    selectors: {
-      pivot: { columns },
-    },
-  } = stateManagers;
-
-  $: hasColumnAndNoMeasure =
-    $columns.dimension.length > 0 && $columns.measure.length === 0;
+  export let hasColumnAndNoMeasure = false;
 </script>
 
 <div class="flex flex-col items-center w-full h-full justify-center gap-y-6">
