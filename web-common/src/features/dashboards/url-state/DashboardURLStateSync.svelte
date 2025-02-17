@@ -174,7 +174,13 @@
   });
 
   async function handleExploreInit(isManualUrlChange: boolean) {
-    if (!exploreSpec || !metricsSpec || initializing) return;
+    if (
+      !exploreSpec ||
+      !metricsSpec ||
+      initializing ||
+      exploreStateFromYAMLConfig.activePage === undefined
+    )
+      return;
     initializing = true;
 
     let initState: Partial<MetricsExplorerEntity> | undefined;
@@ -276,6 +282,15 @@
   // but gotoNewState checks other fields
   $: if ($dashboardStore) {
     gotoNewState();
+  }
+
+  // reactive statement to try re-init if not already initialised
+  // this can happen during the initial deploy of project and the user is on dashboard page while it completes reconcile
+  $: if (
+    !$dashboardStore &&
+    exploreStateFromYAMLConfig.activePage !== undefined
+  ) {
+    void handleExploreInit(true);
   }
 </script>
 

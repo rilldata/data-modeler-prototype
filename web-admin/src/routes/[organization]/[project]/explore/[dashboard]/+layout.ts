@@ -19,7 +19,7 @@ export const load = async ({ params, depends, parent }) => {
 
   const { dashboard: exploreName } = params;
 
-  depends(exploreName, "explore");
+  depends(`explore:${exploreName}`);
 
   let explore: V1Resource | undefined;
   let metricsView: V1Resource | undefined;

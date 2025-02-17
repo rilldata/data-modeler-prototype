@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onNavigate } from "$app/navigation";
+  import { invalidate, onNavigate } from "$app/navigation";
   import { page } from "$app/stores";
   import { errorStore } from "@rilldata/web-admin/components/errors/error-store";
   import DashboardBuilding from "@rilldata/web-admin/features/dashboards/DashboardBuilding.svelte";
@@ -119,6 +119,21 @@
       !exploreResponse.explore?.explore?.state?.validSpec &&
       !!exploreResponse.explore?.meta?.reconcileError;
     return isMetricsViewErrored || isExploreErrored;
+  }
+
+  let reconcilingForFirstTime: boolean | undefined;
+  $: if ($explore.isSuccess) {
+    const newReconcilingForFirstTime = isDashboardReconcilingForFirstTime(
+      $explore.data,
+    );
+    if (
+      reconcilingForFirstTime !== undefined &&
+      newReconcilingForFirstTime !== undefined &&
+      reconcilingForFirstTime !== newReconcilingForFirstTime
+    ) {
+      void invalidate(`explore:${exploreName}`);
+    }
+    reconcilingForFirstTime = newReconcilingForFirstTime;
   }
 </script>
 
