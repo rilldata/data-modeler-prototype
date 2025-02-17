@@ -12,7 +12,8 @@
     const unsubscribeNotification = eventBus.on(
       "notification",
       (notification) => {
-        notifications = [...notifications, notification];
+        // Clear existing notifications before showing new one
+        notifications = [notification];
 
         // Clear any existing timeout
         if (currentTimeoutId) {

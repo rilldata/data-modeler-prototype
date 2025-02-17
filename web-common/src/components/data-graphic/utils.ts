@@ -202,10 +202,12 @@ export function barplotPolyline(
 
     return pointsPathString + `${p1} ${p2} ${p3} ${p4} ${closedBottom} `;
   }, " ");
+  const lastElement = data.findLast((d) => d[yAccessor]);
+  if (!lastElement) return "";
   return (
     `M${X(data[0][xLow]) + separator},${Y(0)} ` +
     path +
-    ` ${X(data.findLast((d) => d[yAccessor])[xHigh]) - separator},${Y(0)} `
+    ` ${X(lastElement[xHigh]) - separator},${Y(0)} `
   );
 }
 
@@ -217,9 +219,9 @@ export function createAdaptiveLineThicknessStore(yAccessor) {
   let data;
 
   // get xScale, yScale, and config from contexts
-  const xScale = getContext(contexts.scale("x")) as ScaleStore;
-  const yScale = getContext(contexts.scale("y")) as ScaleStore;
-  const config = getContext(contexts.config) as SimpleConfigurationStore;
+  const xScale = getContext<ScaleStore>(contexts.scale("x"));
+  const yScale = getContext<ScaleStore>(contexts.scale("y"));
+  const config = getContext<SimpleConfigurationStore>(contexts.config);
 
   // capture data state.
   const dataStore = writable(data);

@@ -45,6 +45,7 @@
         <mj-text padding-top="0" padding-bottom="32px">
           We are constantly shipping new features. Follow our release notes to stay up to date.
         </mj-text>
+        <mj-text>We are here to help you and your team. If you have any questions, feel free to contact us via <a href="mailto:support@rilldata.com" style="color:#4736F5">email</a>, or via chat on <a href="https://docs.rilldata.com/contact#in-app-chat" style="color:#4736F5">Rill Developer or Rill Cloud.</a></mj-text>
         <mj-text>- The Rill Team</mj-text>
       </mj-column>
     </mj-section>

@@ -712,7 +712,7 @@ func (r *ModelReconciler) resolveAndSyncPartitions(ctx context.Context, self *ru
 
 	// Log
 	count := batchStartIdx + len(batch)
-	defer r.C.Logger.Debug("Resolved model partitions", zap.String("model", self.Meta.Name.Name), zap.Int("partitions", count))
+	defer r.C.Logger.Info("Resolved model partitions", zap.String("model", self.Meta.Name.Name), zap.Int("partitions", count))
 
 	// Flush the remaining rows not handled in the loop
 	return r.syncPartitions(ctx, mdl, batchStartIdx, batch)
@@ -870,7 +870,7 @@ func (r *ModelReconciler) executeAll(ctx context.Context, self *runtimev1.Resour
 	if model.Spec.StageConnector != "" {
 		logArgs = append(logArgs, zap.String("stage_connector", model.Spec.StageConnector))
 	}
-	r.C.Logger.Debug("Building model", logArgs...)
+	r.C.Logger.Info("Executing model", logArgs...)
 
 	// Apply the timeout to the ctx
 	timeout := _modelDefaultTimeout

@@ -2,12 +2,13 @@ package server
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
 	"strings"
-	"time"
 
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime"
@@ -22,10 +23,6 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
-
-// timeLayoutUnseparated formats an absolute timestamp as a string with millisecond precision without any separators.
-// E.g. for "2006-01-02T15:04:05.999Z" it outputs "200601021504059999".
-const timeLayoutUnseparated = "200601021504059999"
 
 // ListResources implements runtimev1.RuntimeServiceServer
 func (s *Server) ListResources(ctx context.Context, req *runtimev1.ListResourcesRequest) (*runtimev1.ListResourcesResponse, error) {
@@ -398,10 +395,10 @@ func (s *Server) CreateTrigger(ctx context.Context, req *runtimev1.CreateTrigger
 	}
 
 	// Create the trigger resource
-	name := fmt.Sprintf("trigger_adhoc_%s", time.Now().Format(timeLayoutUnseparated))
+	name := fmt.Sprintf("trigger_%s", randomString(8))
 	n := &runtimev1.ResourceName{Kind: runtime.ResourceKindRefreshTrigger, Name: name}
 	r := &runtimev1.Resource{Resource: &runtimev1.Resource_RefreshTrigger{RefreshTrigger: &runtimev1.RefreshTrigger{Spec: spec}}}
-	err = ctrl.Create(ctx, n, nil, nil, nil, true, r)
+	err = ctrl.Create(ctx, n, nil, nil, nil, false, r)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Errorf("failed to create trigger: %w", err).Error())
 	}
@@ -602,6 +599,15 @@ func modelPartitionToPB(partition drivers.ModelPartition) *runtimev1.ModelPartit
 		Error:      partition.Error,
 		ElapsedMs:  uint32(partition.Elapsed.Milliseconds()),
 	}
+}
+
+func randomString(n int) string {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(b)
 }
 
 func must[T any](v T, err error) T {

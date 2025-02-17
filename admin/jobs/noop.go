@@ -64,6 +64,6 @@ func (n *noop) StartOrgTrial(ctx context.Context, orgID string) (*InsertResult, 
 	return nil, nil
 }
 
-func (n *noop) PurgeOrg(ctx context.Context, orgID string) (*InsertResult, error) {
+func (n *noop) DeleteOrg(ctx context.Context, orgID string) (*InsertResult, error) {
 	return nil, nil
 }

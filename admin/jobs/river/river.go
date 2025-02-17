@@ -94,7 +94,7 @@ func New(ctx context.Context, dsn string, adm *admin.Service) (jobs.Client, erro
 	river.AddWorker(workers, &InitOrgBillingWorker{admin: adm, logger: billingLogger})
 	river.AddWorker(workers, &RepairOrgBillingWorker{admin: adm, logger: billingLogger})
 	river.AddWorker(workers, &StartTrialWorker{admin: adm, logger: billingLogger})
-	river.AddWorker(workers, &PurgeOrgWorker{admin: adm, logger: billingLogger})
+	river.AddWorker(workers, &DeleteOrgWorker{admin: adm, logger: billingLogger})
 
 	periodicJobs := []*river.PeriodicJob{
 		// NOTE: Add new periodic jobs here
@@ -359,8 +359,8 @@ func (c *Client) StartOrgTrial(ctx context.Context, orgID string) (*jobs.InsertR
 	}, nil
 }
 
-func (c *Client) PurgeOrg(ctx context.Context, orgID string) (*jobs.InsertResult, error) {
-	res, err := c.riverClient.Insert(ctx, PurgeOrgArgs{
+func (c *Client) DeleteOrg(ctx context.Context, orgID string) (*jobs.InsertResult, error) {
+	res, err := c.riverClient.Insert(ctx, DeleteOrgArgs{
 		OrgID: orgID,
 	}, &river.InsertOpts{})
 	if err != nil {

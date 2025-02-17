@@ -33,6 +33,8 @@
   const addOrganizationMemberUser =
     createAdminServiceAddOrganizationMemberUser();
 
+  let failedInvites: string[] = [];
+
   async function handleCreate(
     newEmail: string,
     newRole: string,
@@ -59,15 +61,9 @@
       email = "";
       role = "";
       isSuperUser = false;
-      open = false;
-
-      eventBus.emit("notification", { message: "User added to organization" });
     } catch (error) {
       console.error("Error adding user to organization", error);
-      eventBus.emit("notification", {
-        message: "Error adding user to organization",
-        type: "error",
-      });
+      throw error;
     }
   }
 
@@ -98,36 +94,61 @@
       SPA: true,
       validators: schema,
       async onUpdate({ form }) {
+        failedInvites = [];
+        let succeeded = [];
+        let failed = [];
+
         if (!form.valid) return;
         const values = form.data;
         const emails = values.emails.map((e) => e.trim()).filter(Boolean);
         if (emails.length === 0) return;
 
-        const succeeded = [];
-        let errored = false;
-        await Promise.all(
-          emails.map(async (email) => {
+        const results = await Promise.all(
+          emails.map(async (email, index) => {
             try {
               await handleCreate(email, values.role, isSuperUser);
-              succeeded.push(email);
+              return { index, email, success: true };
             } catch (error) {
               console.error("Error adding user to organization", error);
-              errored = true;
+              return { index, email, success: false };
             }
           }),
         );
 
-        eventBus.emit("notification", {
-          type: "success",
-          message: `Invited ${succeeded.length} ${succeeded.length === 1 ? "person" : "people"} as ${values.role}`,
-        });
+        results
+          .sort((a, b) => a.index - b.index)
+          .forEach(({ email, success }) => {
+            if (success) {
+              succeeded.push(email);
+            } else {
+              failed.push(email);
+            }
+          });
 
-        if (errored) {
+        // Only show success notification if any invites succeeded
+        if (succeeded.length > 0) {
+          eventBus.emit("notification", {
+            type: "success",
+            message: `Successfully invited ${succeeded.length} ${
+              succeeded.length === 1 ? "person" : "people"
+            } as ${values.role}`,
+          });
+        }
+
+        // Show error notification if any invites failed
+        if (failed.length > 0) {
+          failedInvites = failed; // Store failed emails
           eventBus.emit("notification", {
             type: "error",
-            message:
-              "Some invitations could not be sent. Please check the email addresses and try again.",
+            message: `Failed to invite ${failed.length} ${
+              failed.length === 1 ? "person" : "people"
+            }`,
           });
+        }
+
+        // Close dialog after showing notifications
+        if (failedInvites.length === 0) {
+          open = false;
         }
       },
       validationMethod: "oninput",
@@ -147,12 +168,14 @@
     email = "";
     role = "";
     isSuperUser = false;
+    failedInvites = [];
   }}
   onOpenChange={(open) => {
     if (!open) {
       email = "";
       role = "";
       isSuperUser = false;
+      failedInvites = [];
     }
   }}
 >
@@ -194,6 +217,11 @@
           </Button>
         </svelte:fragment>
       </MultiInput>
+      {#if failedInvites.length > 0}
+        <div class="text-sm text-red-500 py-2">
+          Failed to invite {failedInvites.join(", ")}
+        </div>
+      {/if}
     </form>
   </DialogContent>
 </Dialog>

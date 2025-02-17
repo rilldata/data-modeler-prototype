@@ -21,12 +21,21 @@ export const commonOptions: Record<
   keyof ComponentCommonProperties,
   ComponentInputParam
 > = {
-  title: { type: "text", optional: true, showInUI: true, label: "Title" },
+  title: {
+    type: "text",
+    optional: true,
+    showInUI: true,
+    label: "Title",
+    meta: { placeholder: "Add a title to describe this component" },
+  },
   description: {
     type: "text",
     optional: true,
     showInUI: true,
-    label: "Caption",
+    label: "Description",
+    meta: {
+      placeholder: "Add additional context for this component",
+    },
   },
 };
 

@@ -260,7 +260,7 @@
     const validComparison =
       allTimeRange &&
       getValidComparisonOption(
-        exploreSpec,
+        exploreSpec.timeRanges,
         range,
         $exploreState.selectedComparisonTimeRange?.name as
           | TimeComparisonOption

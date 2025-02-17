@@ -5,7 +5,7 @@
 
 import { derived, writable, type Writable } from "svelte/store";
 
-export interface ErrorStoreState {
+export interface UserFacingError {
   statusCode: number | null;
   header: string;
   body: string;
@@ -13,7 +13,7 @@ export interface ErrorStoreState {
   fatal?: boolean;
 }
 
-export interface ErrorStore extends Writable<ErrorStoreState> {
+export interface ErrorStore extends Writable<UserFacingError> {
   reset: () => void;
 }
 

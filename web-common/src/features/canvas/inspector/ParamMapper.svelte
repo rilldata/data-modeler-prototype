@@ -7,9 +7,7 @@
     type CanvasComponentObj,
   } from "@rilldata/web-common/features/canvas/components/util";
   import AlignmentInput from "@rilldata/web-common/features/canvas/inspector/AlignmentInput.svelte";
-  import ChartTypeSelector from "@rilldata/web-common/features/canvas/inspector/ChartTypeSelector.svelte";
   import ComparisonInput from "@rilldata/web-common/features/canvas/inspector/ComparisonInput.svelte";
-  import MarkSelector from "@rilldata/web-common/features/canvas/inspector/MarkSelector.svelte";
   import MetricSelectorDropdown from "@rilldata/web-common/features/canvas/inspector/MetricSelectorDropdown.svelte";
   import MultiFieldInput from "@rilldata/web-common/features/canvas/inspector/MultiFieldInput.svelte";
   import SingleFieldInput from "@rilldata/web-common/features/canvas/inspector/SingleFieldInput.svelte";
@@ -17,7 +15,9 @@
   import { type V1ComponentSpecRendererProperties } from "@rilldata/web-common/runtime-client";
   import { onMount } from "svelte";
   import type { CanvasComponentType } from "../components/types";
-  import PositionalFieldConfig from "./PositionalFieldConfig.svelte";
+  import ChartTypeSelector from "./chart/ChartTypeSelector.svelte";
+  import MarkSelector from "./chart/MarkSelector.svelte";
+  import PositionalFieldConfig from "./chart/PositionalFieldConfig.svelte";
 
   export let component: CanvasComponentObj;
   export let componentType: CanvasComponentType;
@@ -57,6 +57,7 @@
             capitalizeLabel={false}
             textClass="text-sm"
             size="sm"
+            placeholder={config?.meta?.placeholder ?? ""}
             labelGap={2}
             label={config.label ?? key}
             bind:value={localParamValues[key]}

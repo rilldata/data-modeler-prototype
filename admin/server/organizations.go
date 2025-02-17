@@ -146,7 +146,7 @@ func (s *Server) DeleteOrganization(ctx context.Context, req *adminv1.DeleteOrga
 		return nil, status.Error(codes.PermissionDenied, "not allowed to delete org")
 	}
 
-	_, err = s.admin.Jobs.PurgeOrg(ctx, org.ID)
+	_, err = s.admin.Jobs.DeleteOrg(ctx, org.ID)
 	if err != nil {
 		return nil, err
 	}

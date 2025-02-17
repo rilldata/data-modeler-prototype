@@ -1,11 +1,9 @@
 <script lang="ts">
-  import IconButton from "@rilldata/web-common/components/button/IconButton.svelte";
-  import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
   import InputLabel from "@rilldata/web-common/components/forms/InputLabel.svelte";
-  import ThreeDot from "@rilldata/web-common/components/icons/ThreeDot.svelte";
+  import type { FieldConfig } from "@rilldata/web-common/features/canvas/components/charts/types";
   import SingleFieldInput from "@rilldata/web-common/features/canvas/inspector/SingleFieldInput.svelte";
   import { getCanvasStateManagers } from "@rilldata/web-common/features/canvas/state-managers/state-managers";
-  import type { FieldConfig } from "../components/charts/types";
+  import FieldConfigDropdown from "./FieldConfigDropdown.svelte";
 
   export let key: string;
   export let config: { label?: string };
@@ -51,43 +49,12 @@
 
     onChange(updatedConfig);
   }
-
-  let isDropdownOpen = false;
 </script>
 
 <div class="gap-y-1">
   <div class="flex justify-between items-center">
     <InputLabel small label={config.label ?? key} id={key} />
-    <DropdownMenu.Root bind:open={isDropdownOpen}>
-      <DropdownMenu.Trigger class="flex-none">
-        <IconButton rounded active={isDropdownOpen}>
-          <ThreeDot size="16px" />
-        </IconButton>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content align="start" class="w-[250px]">
-        <DropdownMenu.CheckboxItem
-          checked={fieldConfig?.showAxisTitle}
-          on:click={async () => {
-            updateFieldProperty("showAxisTitle", !fieldConfig?.showAxisTitle);
-          }}
-        >
-          <span class="ml-2">Show axis title</span>
-        </DropdownMenu.CheckboxItem>
-        {#if !isDimension}
-          <DropdownMenu.CheckboxItem
-            checked={fieldConfig?.zeroBasedOrigin}
-            on:click={async () => {
-              updateFieldProperty(
-                "zeroBasedOrigin",
-                !fieldConfig?.zeroBasedOrigin,
-              );
-            }}
-          >
-            <span class="ml-2">Zero based origin</span>
-          </DropdownMenu.CheckboxItem>
-        {/if}
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+    <FieldConfigDropdown {key} {fieldConfig} onChange={updateFieldProperty} />
   </div>
 
   <SingleFieldInput

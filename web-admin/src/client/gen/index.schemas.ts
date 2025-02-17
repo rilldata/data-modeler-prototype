@@ -77,6 +77,7 @@ export type AdminServiceUpdateProjectBody = {
   newName?: string;
   prodTtlSeconds?: string;
   prodVersion?: string;
+  superuserForceAccess?: boolean;
 };
 
 export type AdminServiceGetProjectParams = {

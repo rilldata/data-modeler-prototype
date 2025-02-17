@@ -1,10 +1,12 @@
 import {
   adminServiceGetBillingSubscription,
   getAdminServiceGetBillingSubscriptionQueryKey,
+  type RpcStatus,
 } from "@rilldata/web-admin/client";
 import { getNeverSubscribedIssue } from "@rilldata/web-admin/features/billing/issues/getMessageForCancelledIssue";
 import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient.js";
 import { error } from "@sveltejs/kit";
+import { isAxiosError } from "axios";
 import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ parent, params }) => {
@@ -26,8 +28,11 @@ export const load: PageLoad = async ({ parent, params }) => {
       billingPortalUrl: billingSubscription.billingPortalUrl,
       neverSubscribed,
     };
-  } catch (err) {
-    const statusCode = err?.response?.status || 500;
-    throw error(statusCode, "Failed to fetch billing subscription");
+  } catch (e) {
+    if (!isAxiosError<RpcStatus>(e) || !e.response) {
+      throw error(500, "Failed to fetch billing subscription");
+    }
+
+    throw error(e.response.status, e.response.data.message);
   }
 };

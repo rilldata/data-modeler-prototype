@@ -105,7 +105,7 @@ func (c *connection) FindOrganizationByName(ctx context.Context, name string) (*
 
 func (c *connection) CountProjectsForOrganization(ctx context.Context, orgID string) (int, error) {
 	var count int
-	err := c.getDB(ctx).SelectContext(ctx, &count, "SELECT COUNT(*) FROM projects WHERE org_id=$1", orgID)
+	err := c.getDB(ctx).QueryRowxContext(ctx, "SELECT COUNT(*) FROM projects WHERE org_id=$1", orgID).Scan(&count)
 	if err != nil {
 		return 0, parseErr("projects", err)
 	}

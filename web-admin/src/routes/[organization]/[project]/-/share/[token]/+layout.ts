@@ -24,7 +24,7 @@ export const load = async ({ params: { token }, parent }) => {
       metricsView,
       defaultExplorePreset,
       exploreStateFromYAMLConfig,
-    } = await fetchExploreSpec(runtime?.instanceId, exploreName);
+    } = await fetchExploreSpec(runtime.instanceId, exploreName);
     const metricsViewSpec = metricsView.metricsView?.state?.validSpec ?? {};
     const exploreSpec = explore.explore?.state?.validSpec ?? {};
 
@@ -32,7 +32,7 @@ export const load = async ({ params: { token }, parent }) => {
       undefined;
     if (tokenData.token?.state) {
       const schema = await fetchMetricsViewSchema(
-        runtime?.instanceId,
+        runtime.instanceId,
         exploreSpec.metricsView ?? "",
       );
       tokenExploreState = getDashboardStateFromUrl(

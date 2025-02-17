@@ -2633,6 +2633,8 @@ paths:
                 format: int64
               prodVersion:
                 type: string
+              superuserForceAccess:
+                type: boolean
       tags:
         - AdminService
   /v1/organizations/{organizationName}/services:

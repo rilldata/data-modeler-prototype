@@ -1,6 +1,7 @@
-import type { V1BillingIssue } from "@rilldata/web-admin/client";
+import type { RpcStatus, V1BillingIssue } from "@rilldata/web-admin/client";
 import { fetchOrganizationBillingIssues } from "@rilldata/web-admin/features/billing/selectors";
 import { error } from "@sveltejs/kit";
+import { isAxiosError } from "axios";
 
 export const load = async ({ params: { organization }, parent }) => {
   const { user, organizationPermissions } = await parent();
@@ -12,9 +13,11 @@ export const load = async ({ params: { organization }, parent }) => {
     try {
       issues = await fetchOrganizationBillingIssues(organization);
     } catch (e) {
-      if (e.response?.status !== 403) {
-        throw error(e.response.status, "Error fetching billing issues");
+      if (!isAxiosError<RpcStatus>(e) || !e.response) {
+        throw error(500, "Error fetching billing issues");
       }
+
+      throw error(e.response.status, e.response.data.message);
     }
   }
 

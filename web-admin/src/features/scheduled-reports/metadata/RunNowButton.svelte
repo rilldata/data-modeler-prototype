@@ -37,8 +37,9 @@
 
     // Refetch the resource query until the new report run shows up in the recent history table
     while (
+      !$reportQuery.data ||
       $reportQuery.data.resource.report.state.executionHistory[0] ===
-      lastExecution
+        lastExecution
     ) {
       await queryClient.invalidateQueries(
         getRuntimeServiceGetResourceQueryKey(instanceId, {

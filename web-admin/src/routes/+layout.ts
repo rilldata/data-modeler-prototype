@@ -9,6 +9,7 @@ import { dev } from "$app/environment";
 import {
   adminServiceGetCurrentUser,
   getAdminServiceGetCurrentUserQueryKey,
+  type RpcStatus,
   type V1GetCurrentUserResponse,
   type V1OrganizationPermissions,
   type V1ProjectPermissions,
@@ -22,6 +23,7 @@ import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryCl
 import { fixLocalhostRuntimePort } from "@rilldata/web-common/runtime-client/fix-localhost-runtime-port";
 import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
 import { error, redirect, type Page } from "@sveltejs/kit";
+import { isAxiosError } from "axios";
 
 export const load = async ({ params, url, route, depends }) => {
   depends("root");
@@ -86,9 +88,18 @@ export const load = async ({ params, url, route, depends }) => {
       organizationPermissions = organizationResp.permissions ?? {};
       organizationLogoUrl = organizationResp.organization?.logoUrl;
       organizationFaviconUrl = organizationResp.organization?.faviconUrl;
-    } catch (e) {
-      if (e.response?.status !== 403) {
-        throw error(e.response.status, "Error fetching organization");
+    } catch (e: unknown) {
+      if (!isAxiosError<RpcStatus>(e) || !e.response) {
+        throw error(500, "Error fetching organization");
+      }
+
+      const shouldRedirectToRequestAccess =
+        e.response.status === 403 && !!project;
+
+      if (shouldRedirectToRequestAccess) {
+        // The redirect is handled below after the call to `GetProject`
+      } else {
+        throw error(e.response.status, e.response.data.message);
       }
     }
   }
@@ -128,12 +139,18 @@ export const load = async ({ params, url, route, depends }) => {
       runtime: runtimeData,
     };
   } catch (e) {
-    if (e.response?.status !== 403) {
-      throw error(e.response.status, "Error fetching deployment");
+    if (!isAxiosError<RpcStatus>(e) || !e.response) {
+      throw error(500, "Error fetching project");
     }
-    const didRedirect = await redirectToLoginOrRequestAccess(pageState);
-    if (!didRedirect) {
-      throw error(e.response.status, "Error fetching organization");
+
+    const shouldRedirectToRequestAccess =
+      e.response.status === 403 && !!project;
+
+    if (shouldRedirectToRequestAccess) {
+      const didRedirect = await redirectToLoginOrRequestAccess(pageState);
+      if (didRedirect) return;
     }
+
+    throw error(e.response.status, e.response.data.message);
   }
 };

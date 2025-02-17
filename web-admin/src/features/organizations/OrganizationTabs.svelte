@@ -13,7 +13,7 @@
   $: tabs = [
     {
       route: `/${organization}`,
-      label: "Overview",
+      label: "Projects",
       hasPermission: true,
     },
     {

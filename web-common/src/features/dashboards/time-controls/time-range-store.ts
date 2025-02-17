@@ -24,6 +24,7 @@ import {
 } from "@rilldata/web-common/lib/time/types";
 import {
   type V1ExploreSpec,
+  type V1ExploreTimeRange,
   type V1MetricsViewSpec,
   type V1MetricsViewTimeRangeResponse,
   V1TimeGrain,
@@ -217,17 +218,17 @@ export function timeComparisonOptionsSelector([
 }
 
 export function getValidComparisonOption(
-  explore: V1ExploreSpec,
+  timeRanges: V1ExploreTimeRange[] | undefined,
   selectedTimeRange: TimeRange,
   prevComparisonOption: TimeComparisonOption | undefined,
   allTimeRange: TimeRange,
 ) {
-  if (!explore.timeRanges?.length) {
+  if (!timeRanges?.length) {
     return DEFAULT_TIME_RANGES[selectedTimeRange.name as TimeRangePreset]
       ?.defaultComparison as TimeComparisonOption;
   }
 
-  const timeRange = explore.timeRanges.find(
+  const timeRange = timeRanges.find(
     (tr) => tr.range === selectedTimeRange.name,
   );
   if (!timeRange) return undefined;

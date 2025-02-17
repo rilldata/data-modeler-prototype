@@ -40,17 +40,16 @@ jobs:
 
       - name: Build & Publish Rill docker image
         run: |-
+          echo "Fetch tags to get the last tagged version"
+          git fetch --all --tags;
+
           if [ "$RELEASE" == "true" ] || [ "$GITHUB_REF_NAME" == "main" ]; then
             echo "DEPLOY_CLOUD=1" >> $GITHUB_ENV
           else
+            echo "LATEST_BRANCH=$(git branch -r | grep release-0 | sort | tail -1)"
             echo "DEPLOY_CLOUD=$(git branch -r | grep release-0 | sort | tail -1 | grep -c $GITHUB_REF_NAME)" >> $GITHUB_ENV
           fi
           
-          if [ ${RELEASE} == "false" ]; then
-            echo "Fetch tags to get the last tagged version"
-            git fetch --all --tags;
-          fi
-
           # Embed DuckDB extensions in the Rill binary
           go run scripts/embed_duckdb_ext/main.go
           if [ ${RELEASE} == "true" ]; then

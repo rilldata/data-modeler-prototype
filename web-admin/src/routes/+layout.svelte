@@ -1,5 +1,8 @@
 <script lang="ts">
   import { page } from "$app/stores";
+  import { isAdminServerQuery } from "@rilldata/web-admin/client/utils";
+  import { errorStore } from "@rilldata/web-admin/components/errors/error-store";
+  import { createUserFacingError } from "@rilldata/web-admin/components/errors/user-facing-errors";
   import BillingBannerManager from "@rilldata/web-admin/features/billing/banner/BillingBannerManager.svelte";
   import {
     isBillingUpgradePage,
@@ -17,10 +20,10 @@
   import RillTheme from "@rilldata/web-common/layout/RillTheme.svelte";
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
   import { errorEventHandler } from "@rilldata/web-common/metrics/initMetrics";
-  import { QueryClientProvider } from "@tanstack/svelte-query";
+  import { type Query, QueryClientProvider } from "@tanstack/svelte-query";
+  import type { AxiosError } from "axios";
   import { onMount } from "svelte";
-  import ErrorBoundary from "../features/errors/ErrorBoundary.svelte";
-  import { createGlobalErrorCallback } from "../features/errors/error-utils";
+  import ErrorBoundary from "../components/errors/ErrorBoundary.svelte";
   import TopNavigationBar from "../features/navigation/TopNavigationBar.svelte";
 
   export let data;
@@ -36,11 +39,23 @@
     url: { pathname },
   } = $page);
 
-  // Motivation:
+  // Remember:
   // - https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose#a-bad-api
   // - https://tkdodo.eu/blog/react-query-error-handling#the-global-callbacks
-  queryClient.getQueryCache().config.onError =
-    createGlobalErrorCallback(queryClient);
+  queryClient.getQueryCache().config.onError = (
+    error: AxiosError,
+    query: Query,
+  ) => {
+    // Add TanStack Query errors to telemetry
+    errorEventHandler?.requestErrorEventHandler(error, query);
+
+    // Handle network errors
+    // Note: ideally, we'd throw this in the root `+layout.ts` file, but we're blocked by
+    // https://github.com/sveltejs/kit/issues/10201
+    if (isAdminServerQuery(query) && error.message === "Network Error") {
+      errorStore.set(createUserFacingError(null, error.message));
+    }
+  };
 
   // The admin server enables some dashboard features like scheduled reports and alerts
   // Set read-only mode so that the user can't edit the dashboard

@@ -1,16 +1,16 @@
 <script lang="ts">
+  import { isErrorStoreEmpty } from "@rilldata/web-admin/components/errors/error-store";
   import BreadcrumbItem from "@rilldata/web-common/components/navigation/breadcrumbs/BreadcrumbItem.svelte";
   import TwoTieredBreadcrumbItem from "@rilldata/web-common/components/navigation/breadcrumbs/TwoTieredBreadcrumbItem.svelte";
   import { useValidDashboards } from "@rilldata/web-common/features/dashboards/selectors";
   import { ResourceKind } from "@rilldata/web-common/features/entity-management/resource-selectors";
+  import { featureFlags } from "@rilldata/web-common/features/feature-flags";
   import type {
     V1Resource,
     V1ResourceName,
   } from "@rilldata/web-common/runtime-client";
   import { createEventDispatcher } from "svelte";
   import LastRefreshedDate from "../dashboards/listing/LastRefreshedDate.svelte";
-  import { isErrorStoreEmpty } from "../errors/error-store";
-  import { featureFlags } from "@rilldata/web-common/features/feature-flags";
 
   const dispatch = createEventDispatcher();
 
@@ -74,7 +74,7 @@
         {/if}
 
         {#if currentResource}
-          {#if twoTieredNavigation}
+          {#if $twoTieredNavigation}
             <TwoTieredBreadcrumbItem
               options={breadcrumbOptions}
               current={currentResourceName}

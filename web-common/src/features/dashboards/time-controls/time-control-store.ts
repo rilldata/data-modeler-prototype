@@ -1,11 +1,11 @@
 import type { StateManagers } from "@rilldata/web-common/features/dashboards/state-managers/state-managers";
 import type { MetricsExplorerEntity } from "@rilldata/web-common/features/dashboards/stores/metrics-explorer-entity";
+import { getValidComparisonOption } from "@rilldata/web-common/features/dashboards/time-controls/time-range-store";
 import { getOrderedStartEnd } from "@rilldata/web-common/features/dashboards/time-series/utils";
 import {
   getComparionRangeForScrub,
   getComparisonRange,
   getTimeComparisonParametersForComponent,
-  inferCompareTimeRange,
 } from "@rilldata/web-common/lib/time/comparisons";
 import { DEFAULT_TIME_RANGES } from "@rilldata/web-common/lib/time/config";
 import {
@@ -422,7 +422,12 @@ export function getComparisonTimeRange(
   if (!timeRange || !timeRange.name || !allTimeRange) return undefined;
 
   if (!comparisonTimeRange?.name) {
-    const comparisonOption = inferCompareTimeRange(timeRanges, timeRange.name);
+    const comparisonOption = getValidComparisonOption(
+      timeRanges,
+      timeRange,
+      undefined,
+      allTimeRange,
+    );
     const range = getTimeComparisonParametersForComponent(
       comparisonOption,
       allTimeRange.start,
@@ -431,7 +436,7 @@ export function getComparisonTimeRange(
       timeRange.end,
     );
 
-    if (range.isComparisonRangeAvailable && range.start && range.end) {
+    if (range.start && range.end) {
       return {
         start: range.start,
         end: range.end,

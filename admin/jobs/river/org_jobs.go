@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/rilldata/rill/admin"
+	"github.com/rilldata/rill/admin/billing"
 	"github.com/rilldata/rill/admin/database"
 	"github.com/rilldata/rill/runtime/pkg/email"
 	"github.com/riverqueue/river"
@@ -124,20 +125,20 @@ func (w *StartTrialWorker) Work(ctx context.Context, job *river.Job[StartTrialAr
 	return nil
 }
 
-type PurgeOrgArgs struct {
+type DeleteOrgArgs struct {
 	OrgID string
 }
 
-func (PurgeOrgArgs) Kind() string { return "purge_org" }
+func (DeleteOrgArgs) Kind() string { return "delete_org" }
 
-type PurgeOrgWorker struct {
-	river.WorkerDefaults[PurgeOrgArgs]
+type DeleteOrgWorker struct {
+	river.WorkerDefaults[DeleteOrgArgs]
 	admin  *admin.Service
 	logger *zap.Logger
 }
 
-// Work This worker handles the deletion of an organization and all its associated data
-func (w *PurgeOrgWorker) Work(ctx context.Context, job *river.Job[PurgeOrgArgs]) error {
+// Work This worker handles the deletion of an organization and cancels all subscriptions related to it
+func (w *DeleteOrgWorker) Work(ctx context.Context, job *river.Job[DeleteOrgArgs]) error {
 	org, err := w.admin.DB.FindOrganization(ctx, job.Args.OrgID)
 	if err != nil {
 		if errors.Is(err, database.ErrNotFound) {
@@ -147,17 +148,11 @@ func (w *PurgeOrgWorker) Work(ctx context.Context, job *river.Job[PurgeOrgArgs])
 		return err
 	}
 
+	// cancel all subscriptions for the customer immediately but keep the customer in billing and payment system for issued invoices
 	if org.BillingCustomerID != "" {
-		err = w.admin.Biller.DeleteCustomer(ctx, org.BillingCustomerID)
+		_, err = w.admin.Biller.CancelSubscriptionsForCustomer(ctx, org.BillingCustomerID, billing.SubscriptionCancellationOptionImmediate)
 		if err != nil {
-			w.logger.Error("failed to delete billing customer", zap.String("org_id", org.ID), zap.String("org_name", org.Name), zap.Error(err))
-		}
-	}
-
-	if org.PaymentCustomerID != "" {
-		err = w.admin.PaymentProvider.DeleteCustomer(ctx, org.PaymentCustomerID)
-		if err != nil {
-			w.logger.Error("failed to delete payment customer", zap.String("org_id", org.ID), zap.String("org_name", org.Name), zap.Error(err))
+			w.logger.Error("failed to cancel subscriptions for customer", zap.String("org_id", org.ID), zap.String("org_name", org.Name), zap.Error(err))
 		}
 	}
 
@@ -167,7 +162,7 @@ func (w *PurgeOrgWorker) Work(ctx context.Context, job *river.Job[PurgeOrgArgs])
 		return err
 	}
 
-	w.logger.Warn("organization purged", zap.String("org_id", org.ID), zap.String("org_name", org.Name))
+	w.logger.Warn("organization deleted", zap.String("org_id", org.ID), zap.String("org_name", org.Name))
 
 	return nil
 }

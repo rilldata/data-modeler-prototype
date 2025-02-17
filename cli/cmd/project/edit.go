@@ -11,7 +11,6 @@ import (
 func EditCmd(ch *cmdutil.Helper) *cobra.Command {
 	var name, description, prodVersion, prodBranch, subpath, path, provisioner string
 	var public bool
-	var slots int
 	var prodTTL int64
 
 	editCmd := &cobra.Command{
@@ -51,11 +50,6 @@ func EditCmd(ch *cmdutil.Helper) *cobra.Command {
 				Name:             name,
 			}
 			promptFlagValues := ch.Interactive
-			if cmd.Flags().Changed("prod-slots") {
-				promptFlagValues = false
-				prodSlots := int64(slots)
-				req.ProdSlots = &prodSlots
-			}
 			if cmd.Flags().Changed("provisioner") {
 				promptFlagValues = false
 				req.Provisioner = &provisioner
@@ -134,12 +128,6 @@ func EditCmd(ch *cmdutil.Helper) *cobra.Command {
 	editCmd.Flags().StringVar(&provisioner, "provisioner", "", "Project provisioner (default: current provisioner)")
 	editCmd.Flags().Int64Var(&prodTTL, "prod-ttl-seconds", 0, "Prod deployment TTL in seconds")
 	editCmd.Flags().StringVar(&prodVersion, "prod-version", "", "Rill version (default: current version)")
-	editCmd.Flags().IntVar(&slots, "prod-slots", 0, "Slots to allocate for production deployments (default: current slots)")
-	if !ch.IsDev() {
-		if err := editCmd.Flags().MarkHidden("prod-slots"); err != nil {
-			panic(err)
-		}
-	}
 
 	return editCmd
 }

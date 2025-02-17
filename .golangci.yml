@@ -104,7 +104,6 @@ linters-settings:
       - lostcancel
       - nilfunc
       - nilness
-      - nlreturn
       - printf
       - reflectvaluecompare
       - shift

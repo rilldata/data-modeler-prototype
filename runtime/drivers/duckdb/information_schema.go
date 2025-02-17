@@ -196,7 +196,7 @@ func databaseTypeToPB(dbt string, nullable bool) (*runtimev1.Type, error) {
 		t.Code = runtimev1.Type_CODE_DATE
 	case "TIME":
 		t.Code = runtimev1.Type_CODE_TIME
-	case "TIME WITH TIME ZONE":
+	case "TIME WITH TIME ZONE", "TIMETZ":
 		t.Code = runtimev1.Type_CODE_TIME
 	case "INTERVAL":
 		t.Code = runtimev1.Type_CODE_INTERVAL

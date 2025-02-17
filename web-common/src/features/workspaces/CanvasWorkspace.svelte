@@ -1,12 +1,9 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import ErrorPage from "@rilldata/web-common/components/ErrorPage.svelte";
-  import Canvas from "@rilldata/web-common/features/canvas/Canvas.svelte";
   import CanvasEditor from "@rilldata/web-common/features/canvas/CanvasEditor.svelte";
   import CanvasThemeProvider from "@rilldata/web-common/features/canvas/CanvasThemeProvider.svelte";
-  import { getComponentRegistry } from "@rilldata/web-common/features/canvas/components/util";
   import VisualCanvasEditing from "@rilldata/web-common/features/canvas/inspector/VisualCanvasEditing.svelte";
-  import { useDefaultMetrics } from "@rilldata/web-common/features/canvas/selector";
   import StateManagersProvider from "@rilldata/web-common/features/canvas/state-managers/StateManagersProvider.svelte";
   import { getNameFromFile } from "@rilldata/web-common/features/entity-management/entity-mappers";
   import type { FileArtifact } from "@rilldata/web-common/features/entity-management/file-artifact";
@@ -26,29 +23,22 @@
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import PreviewButton from "../explores/PreviewButton.svelte";
-  import type { CanvasComponentType } from "../canvas/components/types";
-  import { parseDocument } from "yaml";
-  import { findNextAvailablePosition } from "../canvas/util";
-  import AddComponentMenu from "../canvas/components/AddComponentMenu.svelte";
+  import RowBasedCanvas from "../canvas/RowBasedCanvas.svelte";
 
   export let fileArtifact: FileArtifact;
 
   let canvasName: string;
   let selectedView: "split" | "code" | "viz";
 
-  const componentRegistry = getComponentRegistry();
-
   $: ({
     autoSave,
     path: filePath,
     fileName,
-    updateEditorContent,
-    editorContent,
+
     getResource,
     getAllErrors,
     remoteContent,
     hasUnsavedChanges,
-    saveLocalContent,
   } = fileArtifact);
 
   $: resourceQuery = getResource(queryClient, instanceId);
@@ -67,8 +57,6 @@
   $: canvasResource = data?.canvas;
   $: canvasName = getNameFromFile(filePath);
 
-  $: metricsViewQuery = useDefaultMetrics(instanceId);
-
   $: ({ instanceId } = $runtime);
 
   $: lineBasedRuntimeErrors = mapParseErrorsToLines(
@@ -86,54 +74,6 @@
       fileName,
     );
     if (newRoute) await goto(newRoute);
-  }
-
-  async function addComponent(componentType: CanvasComponentType) {
-    const defaultMetrics = $metricsViewQuery?.data;
-    if (!defaultMetrics) return;
-
-    const newSpec = componentRegistry[componentType].newComponentSpec(
-      defaultMetrics.metricsView,
-      defaultMetrics.measure,
-      defaultMetrics.dimension,
-    );
-
-    const { width, height } = componentRegistry[componentType].defaultSize;
-
-    const parsedDocument = parseDocument($editorContent ?? "");
-    const items = parsedDocument.get("items") as any;
-    const itemsJson = parsedDocument.toJSON();
-    const existingItems = itemsJson?.items || [];
-
-    const [x, y] = findNextAvailablePosition(existingItems, width, height);
-
-    const newComponent = {
-      component: { [componentType]: newSpec },
-      height,
-      width,
-      x,
-      y,
-    };
-
-    if (!items) {
-      parsedDocument.set("items", [newComponent]);
-    } else {
-      items.add(newComponent);
-    }
-
-    const newIndex = existingItems.length;
-    updateEditorContent(parsedDocument.toString(), true);
-    await saveLocalContent();
-    scrollToComponent(newIndex);
-  }
-
-  function scrollToComponent(index: number) {
-    setTimeout(() => {
-      const component = document.querySelector(`[data-index="${index}"]`);
-      if (component) {
-        component.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }, 100);
   }
 </script>
 
@@ -157,7 +97,7 @@
               reconciling={resourceIsReconciling}
             />
 
-            <AddComponentMenu {addComponent} />
+            <!-- <AddComponentMenu {addComponent} /> -->
             <ViewSelector
               allowSplit={false}
               bind:selectedView={$selectedViewStore}
@@ -187,7 +127,7 @@
                 statusCode={404}
               />
             {:else if canvasResource}
-              <Canvas {fileArtifact} />
+              <RowBasedCanvas {fileArtifact} />
             {/if}
           {/if}
         </WorkspaceEditorContainer>

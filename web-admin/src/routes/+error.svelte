@@ -1,19 +1,14 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import ErrorPage from "@rilldata/web-common/components/ErrorPage.svelte";
-  import { createErrorPagePropsFromRoutingError } from "../features/errors/error-utils";
+  import { createUserFacingError } from "../components/errors/user-facing-errors";
 
-  $: ({ status, error } = $page);
+  $: ({ status, error } = $page); // Triggered by `throw error(status, message)`
 
-  $: errorPageProps = createErrorPagePropsFromRoutingError(
+  $: ({ statusCode, header, body, detail } = createUserFacingError(
     status,
     error.message,
-  );
+  ));
 </script>
 
-<ErrorPage
-  statusCode={errorPageProps.statusCode}
-  header={errorPageProps.header}
-  body={errorPageProps.body}
-  detail={errorPageProps?.detail}
-/>
+<ErrorPage {statusCode} {header} {body} {detail} />

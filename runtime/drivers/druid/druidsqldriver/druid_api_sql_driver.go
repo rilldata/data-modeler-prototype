@@ -73,7 +73,9 @@ func (c *sqlConnection) QueryContext(ctx context.Context, query string, args []d
 		c: c,
 	})
 	return re.RunCtx(ctx, func(ctx context.Context) (driver.Rows, retrier.Action, error) {
-		dr := newDruidRequest(query, args)
+		queryCfg := queryConfigFromContext(ctx)
+
+		dr := newDruidRequest(query, args, queryCfg)
 		b, err := json.Marshal(dr)
 		if err != nil {
 			return nil, retrier.Fail, err
@@ -362,7 +364,7 @@ var _ retrier.AdditionalTest = &coordinatorHTTPCheck{}
 // b) if the coordinator has a transient error -> not a hard-failure - the table 'A' can exist
 // c) if the coordinator returns not a transient error (ie access-denied) -> hard-failure - we shouldn't wait until the configuration is changed by someone
 func (chc *coordinatorHTTPCheck) IsHardFailure(ctx context.Context) (bool, error) {
-	dr := newDruidRequest("SELECT * FROM sys.segments LIMIT 1", nil)
+	dr := newDruidRequest("SELECT * FROM sys.segments LIMIT 1", nil, nil)
 	b, err := json.Marshal(dr)
 	if err != nil {
 		return false, err
@@ -419,6 +421,8 @@ func (chc *coordinatorHTTPCheck) IsHardFailure(ctx context.Context) (bool, error
 type DruidQueryContext struct {
 	SQLQueryID                 string `json:"sqlQueryId"`
 	EnableTimeBoundaryPlanning bool   `json:"enableTimeBoundaryPlanning"`
+	UseCache                   *bool  `json:"useCache,omitempty"`
+	PopulateCache              *bool  `json:"populateCache,omitempty"`
 }
 
 type DruidParameter struct {
@@ -435,13 +439,18 @@ type DruidRequest struct {
 	Context        DruidQueryContext `json:"context"`
 }
 
-func newDruidRequest(query string, args []driver.NamedValue) *DruidRequest {
+func newDruidRequest(query string, args []driver.NamedValue, queryCfg *QueryConfig) *DruidRequest {
 	parameters := make([]DruidParameter, len(args))
 	for i, arg := range args {
 		parameters[i] = DruidParameter{
 			Type:  toType(arg.Value),
 			Value: arg.Value,
 		}
+	}
+	var useCache, populateCache *bool
+	if queryCfg != nil {
+		useCache = queryCfg.UseCache
+		populateCache = queryCfg.PopulateCache
 	}
 	return &DruidRequest{
 		Query:          query,
@@ -452,6 +461,8 @@ func newDruidRequest(query string, args []driver.NamedValue) *DruidRequest {
 		Context: DruidQueryContext{
 			SQLQueryID:                 uuid.New().String(),
 			EnableTimeBoundaryPlanning: true,
+			UseCache:                   useCache,
+			PopulateCache:              populateCache,
 		},
 	}
 }
@@ -462,6 +473,24 @@ func (s *stmt) Exec(args []driver.Value) (driver.Result, error) {
 
 func (s *stmt) Query(args []driver.Value) (driver.Rows, error) {
 	return nil, fmt.Errorf("unsupported")
+}
+
+type QueryConfig struct {
+	UseCache      *bool
+	PopulateCache *bool
+}
+
+type queryCfgCtxKey struct{}
+
+func WithQueryConfig(ctx context.Context, cfg *QueryConfig) context.Context {
+	return context.WithValue(ctx, queryCfgCtxKey{}, cfg)
+}
+
+func queryConfigFromContext(ctx context.Context) *QueryConfig {
+	if cfg, ok := ctx.Value(queryCfgCtxKey{}).(*QueryConfig); ok {
+		return cfg
+	}
+	return nil
 }
 
 func identityTransformer(v any) (any, error) {

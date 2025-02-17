@@ -28,7 +28,12 @@
       <AlertDialogTitle>Refresh all sources and models?</AlertDialogTitle>
       <AlertDialogDescription>
         <div class="mt-1">
-          This will refresh all sources and models in the project.
+          This will refresh all project sources and models.
+          <br />
+          <br />
+          <span class="font-medium">Note:</span> To refresh a single resource, scroll
+          to the source or model, click the '...' button, and select the refresh
+          option.
         </div>
       </AlertDialogDescription>
     </AlertDialogHeader>

@@ -32,6 +32,7 @@ jobs:
         GOEXPERIMENT=nocoverageredesign go test ./... -short -v -race -covermode=atomic -coverprofile=coverage.out -coverpkg=$PACKAGES
       env:
         RILL_RUNTIME_DRUID_TEST_DSN: ${{ secrets.RILL_RUNTIME_DRUID_TEST_DSN }}
+        RILL_RUNTIME_BIGQUERY_TEST_GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.RILL_RUNTIME_BIGQUERY_TEST_GOOGLE_APPLICATION_CREDENTIALS_JSON }}
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v4
       with:

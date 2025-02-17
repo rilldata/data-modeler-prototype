@@ -1,11 +1,11 @@
 <script lang="ts">
   import { json } from "@codemirror/lang-json";
   import { EditorState } from "@codemirror/state";
-  import { EditorView } from "@codemirror/view";
+  import { EditorView, placeholder } from "@codemirror/view";
+  import { base as baseExtensions } from "@rilldata/web-common/components/editor/presets/base";
   import type { CanvasComponentObj } from "@rilldata/web-common/features/canvas/components/util";
   import type { V1ComponentSpecRendererProperties } from "@rilldata/web-common/runtime-client";
   import { onDestroy, onMount } from "svelte";
-  import { base as baseExtensions } from "../../../components/editor/presets/base";
 
   export let component: CanvasComponentObj;
   export let paramValues: V1ComponentSpecRendererProperties;
@@ -15,6 +15,17 @@
   let configEditor: EditorView;
   let editorContainer: HTMLElement;
 
+  const placeholderConfig = `Your config should look like this:
+{
+  legend: {
+    orient: "top",
+  },
+  axisX: {
+    grid: false,
+  },
+  ...
+}`;
+
   onMount(() => {
     configEditor = new EditorView({
       state: EditorState.create({
@@ -22,6 +33,7 @@
         extensions: [
           baseExtensions(),
           json(),
+          placeholder(placeholderConfig),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
               const newValue = update.state.doc.toString();

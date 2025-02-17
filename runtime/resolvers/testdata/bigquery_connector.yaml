@@ -1,0 +1,77 @@
+connectors:
+  - bigquery
+project_files:
+  all_datatypes_column_duckdb.yaml:
+    type: model
+    connector: bigquery
+    materialize: true
+    sql: "select int_col,float_col,numeric_col,bignumeric_col,bool_col,string_col,bytes_col,date_col,datetime_col,time_col,timestamp_col,json_col,geography_col,range_date_col,range_datetime_col,range_timestamp_col,array_int_col,array_float_col,array_numeric_col,array_bignumeric_col,array_bool_col,array_string_col,array_bytes_col,array_date_col,array_datetime_col,array_time_col,array_timestamp_col,array_json_col,array_geography_col,array_range_date_col,array_range_datetime_col,array_range_timestamp_col,array_struct_col,struct_col from rilldata.integration_test.all_datatypes"
+    output:
+      connector: duckdb
+  all_datatypes_star_duckdb.yaml:
+    type: model
+    connector: bigquery
+    materialize: true
+    sql: "select * from rilldata.integration_test.all_datatypes"
+    output:
+      connector: duckdb
+tests:
+  - name: query_all_datatypes_star_duckdb
+    resolver: sql
+    properties:
+      sql: "select * from all_datatypes_star_duckdb order by int_col"
+    result_csv: |
+      int_col,float_col,numeric_col,bignumeric_col,bool_col,string_col,bytes_col,date_col,datetime_col,time_col,timestamp_col,json_col,geography_col,range_date_col,range_datetime_col,range_timestamp_col,array_int_col,array_float_col,array_numeric_col,array_bignumeric_col,array_bool_col,array_string_col,array_bytes_col,array_date_col,array_datetime_col,array_time_col,array_timestamp_col,array_json_col,array_geography_col,array_range_date_col,array_range_datetime_col,array_range_timestamp_col,array_struct_col,struct_col
+      0,0,0,0,false,,,1970-01-01,1970-01-01T00:00:00Z,0001-01-01T00:00:00Z,1970-01-01T00:00:00Z,{},POINT(0 0),"{""end"":""1970-01-02"",""start"":""1970-01-01""}","{""end"":""1970-01-01T00:00:01Z"",""start"":""1970-01-01T00:00:00Z""}","{""end"":""1970-01-01T00:00:01Z"",""start"":""1970-01-01T00:00:00Z""}",[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],"{""field_array_bignumeric"":[],""field_array_bool"":[],""field_array_bytes"":[],""field_array_date"":[],""field_array_datetime"":[],""field_array_float"":[],""field_array_geography"":[],""field_array_int"":[],""field_array_json"":[],""field_array_numeric"":[],""field_array_string"":[],""field_array_time"":[],""field_array_timestamp"":[],""field_bignumeric"":0,""field_bool"":false,""field_bytes"":"""",""field_date"":""1970-01-01"",""field_datetime"":""1970-01-01T00:00:00Z"",""field_float"":0,""field_geography"":""POINT(0 0)"",""field_int"":0,""field_json"":""{}"",""field_numeric"":0,""field_string"":"""",""field_time"":""0001-01-01T00:00:00Z"",""field_timestamp"":""1970-01-01T00:00:00Z""}"
+      1,1.1,123.45,1e+38,true,sample1,YWJj,2023-01-01,2023-01-01T12:34:56Z,0001-01-01T12:34:56Z,2023-01-01T12:34:56Z,"{""key"":""value1""}",POINT(1 2),"{""end"":""2023-02-01"",""start"":""2023-01-01""}","{""end"":""2024-01-01T12:34:56Z"",""start"":""2023-01-01T12:34:56Z""}","{""end"":""2024-01-01T12:34:56Z"",""start"":""2023-01-01T12:34:56Z""}",[1],[1.1],[123.45],[1e+38],[true],"[""sample1""]","[""YWJj""]","[""2023-01-01""]","[""2023-01-01T12:34:56Z""]","[""0001-01-01T12:34:56Z""]","[""2023-01-01T12:34:56Z""]","[""{\""key\"":\""value1\""}""]","[""POINT(1 2)""]","[{""end"":""2023-02-01"",""start"":""2023-01-01""}]","[{""end"":""2024-01-01T12:34:56Z"",""start"":""2023-01-01T12:34:56Z""}]","[{""end"":""2024-01-01T12:34:56Z"",""start"":""2023-01-01T12:34:56Z""}]","[{""field_bignumeric"":1e+38,""field_bool"":true,""field_bytes"":""YWJj"",""field_date"":""2023-01-01"",""field_datetime"":""2023-01-01T12:34:56Z"",""field_float"":1.1,""field_geography"":""POINT(1 2)"",""field_int"":1,""field_json"":""{\""key\"":\""value1\""}"",""field_numeric"":123.45,""field_string"":""sample1"",""field_time"":""0001-01-01T12:34:56Z"",""field_timestamp"":""2023-01-01T12:34:56Z""}]","{""field_array_bignumeric"":[1e+38],""field_array_bool"":[true],""field_array_bytes"":[""YWJj""],""field_array_date"":[""2023-01-01""],""field_array_datetime"":[""2023-01-01T12:34:56Z""],""field_array_float"":[1.1],""field_array_geography"":[""POINT(1 2)""],""field_array_int"":[1],""field_array_json"":[""{\""key\"":\""value1\""}""],""field_array_numeric"":[123.45],""field_array_string"":[""sample1""],""field_array_time"":[""0001-01-01T12:34:56Z""],""field_array_timestamp"":[""2023-01-01T12:34:56Z""],""field_bignumeric"":1e+38,""field_bool"":true,""field_bytes"":""YWJj"",""field_date"":""2023-01-01"",""field_datetime"":""2023-01-01T12:34:56Z"",""field_float"":1.1,""field_geography"":""POINT(1 2)"",""field_int"":1,""field_json"":""{\""key\"":\""value1\""}"",""field_numeric"":123.45,""field_string"":""sample1"",""field_time"":""0001-01-01T12:34:56Z"",""field_timestamp"":""2023-01-01T12:34:56Z""}"
+      ,,,,,,,,,,,,,,,,[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],
+  - name: query_all_datatypes_column_duckdb # TODO: fix the test case when we fix order of column issue
+    resolver: sql
+    properties:
+      sql: "select * from all_datatypes_column_duckdb order by int_col"
+    result_csv: |
+      array_bignumeric_col,array_bool_col,array_bytes_col,array_date_col,array_datetime_col,array_float_col,array_geography_col,array_int_col,array_json_col,array_numeric_col,array_range_date_col,array_range_datetime_col,array_range_timestamp_col,array_string_col,array_struct_col,array_time_col,array_timestamp_col,bignumeric_col,bool_col,bytes_col,date_col,datetime_col,float_col,geography_col,int_col,json_col,numeric_col,range_date_col,range_datetime_col,range_timestamp_col,string_col,struct_col,time_col,timestamp_col
+      [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],0,false,,1970-01-01,1970-01-01T00:00:00,0,POINT(0 0),0,{},0,"{""end"":""1970-01-02"",""start"":""1970-01-01""}","{""end"":""1970-01-01T00:00:01"",""start"":""1970-01-01T00:00:00""}","{""end"":""1970-01-01T00:00:01Z"",""start"":""1970-01-01T00:00:00Z""}",,"{""field_array_bignumeric"":[],""field_array_bool"":[],""field_array_bytes"":[],""field_array_date"":[],""field_array_datetime"":[],""field_array_float"":[],""field_array_geography"":[],""field_array_int"":[],""field_array_json"":[],""field_array_numeric"":[],""field_array_string"":[],""field_array_time"":[],""field_array_timestamp"":[],""field_bignumeric"":""0"",""field_bool"":false,""field_bytes"":"""",""field_date"":""1970-01-01"",""field_datetime"":""1970-01-01T00:00:00"",""field_float"":0,""field_geography"":""POINT(0 0)"",""field_int"":0,""field_json"":""{}"",""field_numeric"":""0"",""field_string"":"""",""field_time"":""0001-01-01T00:00:00Z"",""field_timestamp"":""1970-01-01T00:00:00Z""}",0001-01-01T00:00:00Z,1970-01-01T00:00:00Z
+      "[""9999999999999999999999999999999999999999/100""]",[true],"[""YWJj""]","[""2023-01-01""]","[""2023-01-01T12:34:56""]",[1.1],"[""POINT(1 2)""]",[1],"[""{\""key\"":\""value1\""}""]","[""2469/20""]","[{""end"":""2023-02-01"",""start"":""2023-01-01""}]","[{""end"":""2024-01-01T12:34:56"",""start"":""2023-01-01T12:34:56""}]","[{""end"":""2024-01-01T12:34:56Z"",""start"":""2023-01-01T12:34:56Z""}]","[""sample1""]","[{""field_bignumeric"":""9999999999999999999999999999999999999999/100"",""field_bool"":true,""field_bytes"":""YWJj"",""field_date"":""2023-01-01"",""field_datetime"":""2023-01-01T12:34:56"",""field_float"":1.1,""field_geography"":""POINT(1 2)"",""field_int"":1,""field_json"":""{\""key\"":\""value1\""}"",""field_numeric"":""2469/20"",""field_string"":""sample1"",""field_time"":""0001-01-01T12:34:56Z"",""field_timestamp"":""2023-01-01T12:34:56Z""}]","[""0001-01-01T12:34:56Z""]","[""2023-01-01T12:34:56Z""]","""99999999999999999999999999999999999999.99000000000000000000000000000000000000""",true,YWJj,2023-01-01,2023-01-01T12:34:56,1.1,POINT(1 2),1,"{""key"":""value1""}",2469/20,"{""end"":""2023-02-01"",""start"":""2023-01-01""}","{""end"":""2024-01-01T12:34:56"",""start"":""2023-01-01T12:34:56""}","{""end"":""2024-01-01T12:34:56Z"",""start"":""2023-01-01T12:34:56Z""}",sample1,"{""field_array_bignumeric"":[""9999999999999999999999999999999999999999/100""],""field_array_bool"":[true],""field_array_bytes"":[""YWJj""],""field_array_date"":[""2023-01-01""],""field_array_datetime"":[""2023-01-01T12:34:56""],""field_array_float"":[1.1],""field_array_geography"":[""POINT(1 2)""],""field_array_int"":[1],""field_array_json"":[""{\""key\"":\""value1\""}""],""field_array_numeric"":[""2469/20""],""field_array_string"":[""sample1""],""field_array_time"":[""0001-01-01T12:34:56Z""],""field_array_timestamp"":[""2023-01-01T12:34:56Z""],""field_bignumeric"":""9999999999999999999999999999999999999999/100"",""field_bool"":true,""field_bytes"":""YWJj"",""field_date"":""2023-01-01"",""field_datetime"":""2023-01-01T12:34:56"",""field_float"":1.1,""field_geography"":""POINT(1 2)"",""field_int"":1,""field_json"":""{\""key\"":\""value1\""}"",""field_numeric"":""2469/20"",""field_string"":""sample1"",""field_time"":""0001-01-01T12:34:56Z"",""field_timestamp"":""2023-01-01T12:34:56Z""}",0001-01-01T12:34:56Z,2023-01-01T12:34:56Z
+      [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],,,,,,,,,,,,,,,,,
+  - name: query_all_datatypes_duckdb
+    resolver: sql
+    properties:
+      sql: "describe all_datatypes_star_duckdb"
+    result_csv: |
+      column_name,column_type,null,key,default,extra
+      int_col,BIGINT,YES,,,
+      float_col,DOUBLE,YES,,,
+      numeric_col,"DECIMAL(38,9)",YES,,,
+      bignumeric_col,DOUBLE,YES,,,
+      bool_col,BOOLEAN,YES,,,
+      string_col,VARCHAR,YES,,,
+      bytes_col,BLOB,YES,,,
+      date_col,DATE,YES,,,
+      datetime_col,TIMESTAMP WITH TIME ZONE,YES,,,
+      time_col,TIME WITH TIME ZONE,YES,,,
+      timestamp_col,TIMESTAMP WITH TIME ZONE,YES,,,
+      json_col,VARCHAR,YES,,,
+      geography_col,VARCHAR,YES,,,
+      range_date_col,"STRUCT(""start"" DATE, ""end"" DATE)",YES,,,
+      range_datetime_col,"STRUCT(""start"" TIMESTAMP WITH TIME ZONE, ""end"" TIMESTAMP WITH TIME ZONE)",YES,,,
+      range_timestamp_col,"STRUCT(""start"" TIMESTAMP WITH TIME ZONE, ""end"" TIMESTAMP WITH TIME ZONE)",YES,,,
+      array_int_col,BIGINT[],YES,,,
+      array_float_col,DOUBLE[],YES,,,
+      array_numeric_col,"DECIMAL(38,9)[]",YES,,,
+      array_bignumeric_col,DOUBLE[],YES,,,
+      array_bool_col,BOOLEAN[],YES,,,
+      array_string_col,VARCHAR[],YES,,,
+      array_bytes_col,BLOB[],YES,,,
+      array_date_col,DATE[],YES,,,
+      array_datetime_col,TIMESTAMP WITH TIME ZONE[],YES,,,
+      array_time_col,TIME WITH TIME ZONE[],YES,,,
+      array_timestamp_col,TIMESTAMP WITH TIME ZONE[],YES,,,
+      array_json_col,VARCHAR[],YES,,,
+      array_geography_col,VARCHAR[],YES,,,
+      array_range_date_col,"STRUCT(""start"" DATE, ""end"" DATE)[]",YES,,,
+      array_range_datetime_col,"STRUCT(""start"" TIMESTAMP WITH TIME ZONE, ""end"" TIMESTAMP WITH TIME ZONE)[]",YES,,,
+      array_range_timestamp_col,"STRUCT(""start"" TIMESTAMP WITH TIME ZONE, ""end"" TIMESTAMP WITH TIME ZONE)[]",YES,,,
+      array_struct_col,"STRUCT(field_int BIGINT, field_float DOUBLE, field_numeric DECIMAL(38,9), field_bignumeric DOUBLE, field_bool BOOLEAN, field_string VARCHAR, field_bytes BLOB, field_date DATE, field_datetime TIMESTAMP WITH TIME ZONE, field_time TIME WITH TIME ZONE, field_timestamp TIMESTAMP WITH TIME ZONE, field_json VARCHAR, field_geography VARCHAR)[]",YES,,,
+      struct_col,"STRUCT(field_int BIGINT, field_float DOUBLE, field_numeric DECIMAL(38,9), field_bignumeric DOUBLE, field_bool BOOLEAN, field_string VARCHAR, field_bytes BLOB, field_date DATE, field_datetime TIMESTAMP WITH TIME ZONE, field_time TIME WITH TIME ZONE, field_timestamp TIMESTAMP WITH TIME ZONE, field_json VARCHAR, field_geography VARCHAR, field_array_int BIGINT[], field_array_float DOUBLE[], field_array_numeric DECIMAL(38,9)[], field_array_bignumeric DOUBLE[], field_array_bool BOOLEAN[], field_array_string VARCHAR[], field_array_bytes BLOB[], field_array_date DATE[], field_array_datetime TIMESTAMP WITH TIME ZONE[], field_array_time TIME WITH TIME ZONE[], field_array_timestamp TIMESTAMP WITH TIME ZONE[], field_array_json VARCHAR[], field_array_geography VARCHAR[])",YES,,,
+  

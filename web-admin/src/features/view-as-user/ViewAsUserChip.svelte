@@ -2,7 +2,7 @@
   import { page } from "$app/stores";
   import { Chip } from "@rilldata/web-common/components/chip";
   import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
-  import { errorStore } from "../../features/errors/error-store";
+  import { errorStore } from "../../components/errors/error-store";
   import ViewAsUserPopover from "./ViewAsUserPopover.svelte";
   import { viewAsUserStore } from "./viewAsUserStore";
 

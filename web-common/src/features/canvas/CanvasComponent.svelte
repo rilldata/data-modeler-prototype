@@ -49,7 +49,7 @@
   use:builderActions={{ builders }}
   role="presentation"
   data-index={i}
-  class="canvas-component pointer-events-auto size-full"
+  class="canvas-component size-full"
   data-selected={selected}
   data-hovered={isHovered}
   class:!cursor-default={embed}

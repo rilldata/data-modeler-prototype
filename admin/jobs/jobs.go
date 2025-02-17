@@ -26,7 +26,7 @@ type Client interface {
 	InitOrgBilling(ctx context.Context, orgID string) (*InsertResult, error)
 	RepairOrgBilling(ctx context.Context, orgID string) (*InsertResult, error) // biller is just used for deduplication
 	StartOrgTrial(ctx context.Context, orgID string) (*InsertResult, error)
-	PurgeOrg(ctx context.Context, orgID string) (*InsertResult, error)
+	DeleteOrg(ctx context.Context, orgID string) (*InsertResult, error)
 }
 
 type InsertResult struct {

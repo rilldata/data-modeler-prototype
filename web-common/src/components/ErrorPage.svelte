@@ -7,7 +7,7 @@
   import { isEmbedPage } from "../layout/navigation/navigation-utils";
   import AlertCircleOutline from "./icons/AlertCircleOutline.svelte";
 
-  export let statusCode: number | undefined = undefined;
+  export let statusCode: number | null | undefined = undefined;
   export let header: string;
   export let body: string = "";
   export let detail: string | undefined = undefined;

@@ -16,7 +16,7 @@
 <style lang="postcss">
   .component-error {
     @apply flex flex-col gap-y-3 w-full h-full items-center justify-center p-4;
-    @apply text-red-600 bg-red-50/50 rounded-lg border border-red-200;
+    @apply text-red-600 bg-red-50/50;
   }
 
   .error-icon {

@@ -5,7 +5,6 @@
   import { KPI } from "./kpi";
   import { Markdown } from "./markdown";
   import { Table } from "./table";
-
   import { KPIGrid } from "@rilldata/web-common/features/canvas/components/kpi-grid";
   import {
     createQueryServiceResolveComponent,
@@ -24,8 +23,10 @@
     ["image", Image],
   ]);
 
+  $: ({ instanceId } = $runtime);
+
   $: componentQuery = createQueryServiceResolveComponent(
-    $runtime.instanceId,
+    instanceId,
     componentName,
     { args: {} },
   );

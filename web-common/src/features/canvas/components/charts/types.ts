@@ -1,11 +1,14 @@
 import type { ComponentType, SvelteComponent } from "svelte";
 
+export type ChartSortDirection = "x" | "y" | "-x" | "-y";
+
 export interface FieldConfig {
   field: string;
   showAxisTitle?: boolean; // Default is false
   zeroBasedOrigin?: boolean; // Default is false
   type: "quantitative" | "ordinal" | "nominal" | "temporal";
   timeUnit?: string; // For temporal fields
+  sort?: ChartSortDirection;
 }
 
 export interface ChartConfig {

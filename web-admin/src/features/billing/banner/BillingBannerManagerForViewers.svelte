@@ -6,19 +6,13 @@
 
   $: allProjectsHibernating = areAllProjectsHibernating(organization);
 
-  $: if (!$allProjectsHibernating.isFetching) {
-    if ($allProjectsHibernating.data) {
-      // we have a generic banner for viewers when org is defunct for some reason and projects are hibernating
-      eventBus.emit("banner", {
-        type: "default",
-        message:
-          "This org’s projects are hibernating. Please reach out to your administrator to regain access.",
-        iconType: "sleep",
-      });
-    } else {
-      // when switching orgs we need to make sure we clear previous org's banner.
-      // TODO: could this interfere with other banners?
-      eventBus.emit("banner", null);
-    }
+  $: if ($allProjectsHibernating.data) {
+    // we have a generic banner for viewers when org is defunct for some reason and projects are hibernating
+    eventBus.emit("banner", {
+      type: "default",
+      message:
+        "This org’s projects are hibernating. Please reach out to your administrator to regain access.",
+      iconType: "sleep",
+    });
   }
 </script>

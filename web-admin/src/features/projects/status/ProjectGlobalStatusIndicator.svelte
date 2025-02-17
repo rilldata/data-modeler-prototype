@@ -1,13 +1,13 @@
 <script lang="ts">
   import { V1DeploymentStatus } from "@rilldata/web-admin/client";
   import CancelCircle from "@rilldata/web-common/components/icons/CancelCircle.svelte";
+  import CheckCircle from "@rilldata/web-common/components/icons/CheckCircle.svelte";
+  import LoadingSpinner from "@rilldata/web-common/components/icons/LoadingSpinner.svelte";
   import { useProjectParser } from "@rilldata/web-common/features/entity-management/resource-selectors";
   import { createRuntimeServiceListResources } from "@rilldata/web-common/runtime-client";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import { useQueryClient } from "@tanstack/svelte-query";
   import { useProjectDeployment } from "./selectors";
-  import CheckCircle from "@rilldata/web-common/components/icons/CheckCircle.svelte";
-  import LoadingSpinner from "@rilldata/web-common/components/icons/LoadingSpinner.svelte";
 
   const queryClient = useQueryClient();
 
@@ -37,18 +37,29 @@
       },
     },
   );
-  $: hasResourceErrors = $hasResourceErrorsQuery.data;
+  $: ({
+    data: hasResourceErrors,
+    error: hasResourceErrorsError,
+    isLoading: hasResourceErrorsLoading,
+  } = $hasResourceErrorsQuery);
 
   $: projectParserQuery = useProjectParser(queryClient, instanceId, {
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
+  $: ({
+    data: projectParserData,
+    error: projectParserError,
+    isLoading: projectParserLoading,
+  } = $projectParserQuery);
   $: hasParseErrors =
-    $projectParserQuery?.data?.projectParser.state.parseErrors.length > 0;
+    projectParserData?.projectParser.state.parseErrors.length > 0;
 </script>
 
-{#if $projectParserQuery.isLoading || $hasResourceErrorsQuery.isLoading}
+{#if hasResourceErrorsLoading || projectParserLoading}
   <LoadingSpinner />
+{:else if hasResourceErrorsError || projectParserError}
+  <CancelCircle className="text-red-600" />
 {:else if isDeploymentNotOk || hasResourceErrors || hasParseErrors}
   <CancelCircle className="text-red-600" />
 {:else}

@@ -33,14 +33,8 @@
     });
   }
 
-  $: if (!$billingIssueMessage.isFetching) {
-    // is fetching guard is to avoid flicker while the issues are re-fetched
-    if ($billingIssueMessage.data) {
-      showBillingIssueBanner($billingIssueMessage.data);
-    } else {
-      // when switching orgs we need to make sure we clear previous org's banner.
-      eventBus.emit("banner", null);
-    }
+  $: if ($billingIssueMessage.data) {
+    showBillingIssueBanner($billingIssueMessage.data);
   }
 </script>
 

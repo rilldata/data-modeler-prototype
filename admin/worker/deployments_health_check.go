@@ -11,6 +11,9 @@ import (
 	"github.com/rilldata/rill/admin"
 	"github.com/rilldata/rill/admin/database"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
+	"github.com/rilldata/rill/runtime/pkg/observability"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
@@ -39,7 +42,7 @@ func (w *Worker) deploymentsHealthCheck(ctx context.Context) error {
 			d := d
 			if d.Status != database.DeploymentStatusOK {
 				if time.Since(d.UpdatedOn) > time.Hour {
-					w.logger.Error("deployment health check: failing deployment", zap.String("id", d.ID), zap.String("status", d.Status.String()), zap.Duration("duration", time.Since(d.UpdatedOn)))
+					w.logger.Error("deployment health check: deployment not ok", zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.String("status", d.Status.String()), zap.Time("since", d.UpdatedOn), observability.ZapCtx(ctx))
 				}
 				continue
 			}
@@ -87,15 +90,15 @@ func (w *Worker) deploymentsHealthCheck(ctx context.Context) error {
 					// Deployment was deleted
 					continue
 				}
-				w.logger.Error("deployment health check: failed to find deployment", zap.String("instance_id", instance), zap.Error(err))
+				w.logger.Error("deployment health check: failed to find deployment", zap.String("instance_id", instance), zap.Error(err), observability.ZapCtx(ctx))
 				continue
 			}
 			annotations, err := w.annotationsForDeployment(ctx, d)
 			if err != nil {
-				w.logger.Error("deployment health check: failed to find deployment_annotations", zap.String("project", d.ProjectID), zap.String("deployment", d.ID), zap.Error(err))
+				w.logger.Error("deployment health check: failed to find deployment_annotations", zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.Error(err), observability.ZapCtx(ctx))
 				continue
 			}
-			f := []zap.Field{zap.String("host", d.RuntimeHost), zap.String("instance_id", instance)}
+			f := []zap.Field{zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.String("instance_id", instance), zap.String("host", d.RuntimeHost), observability.ZapCtx(ctx)}
 			for k, v := range annotations.ToMap() {
 				f = append(f, zap.String(k, v))
 			}
@@ -106,9 +109,12 @@ func (w *Worker) deploymentsHealthCheck(ctx context.Context) error {
 }
 
 func (w *Worker) deploymentHealthCheck(ctx context.Context, d *database.Deployment) (instances []string, runtimeOK bool) {
+	ctx, span := tracer.Start(ctx, "deploymentHealthCheck", trace.WithAttributes(attribute.String("project_id", d.ID), attribute.String("deployment_id", d.ID)))
+	defer span.End()
+
 	client, err := w.admin.OpenRuntimeClient(d)
 	if err != nil {
-		w.logger.Error("deployment health check: failed to open runtime client", zap.String("host", d.RuntimeHost), zap.Error(err))
+		w.logger.Error("deployment health check: failed to open runtime client", zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.String("host", d.RuntimeHost), zap.Error(err), observability.ZapCtx(ctx))
 		return nil, false
 	}
 	defer client.Close()
@@ -116,7 +122,7 @@ func (w *Worker) deploymentHealthCheck(ctx context.Context, d *database.Deployme
 	resp, err := client.Health(ctx, &runtimev1.HealthRequest{})
 	if err != nil {
 		if status.Code(err) != codes.Unavailable {
-			w.logger.Error("deployment health check: health check call failed", zap.String("host", d.RuntimeHost), zap.Error(err))
+			w.logger.Error("deployment health check: health check call failed", zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.String("host", d.RuntimeHost), zap.Error(err), observability.ZapCtx(ctx))
 			return nil, false
 		}
 		// an unavailable error could also be because the deployment got deleted
@@ -126,18 +132,18 @@ func (w *Worker) deploymentHealthCheck(ctx context.Context, d *database.Deployme
 				// Deployment was deleted
 				return nil, false
 			}
-			w.logger.Error("deployment health check: failed to find deployment", zap.String("deployment", d.ID), zap.Error(dbErr))
+			w.logger.Error("deployment health check: failed to find deployment", zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.Error(dbErr), observability.ZapCtx(ctx))
 			return nil, false
 		}
 		if d.Status == database.DeploymentStatusOK {
-			w.logger.Error("deployment health check: health check call failed", zap.String("host", d.RuntimeHost), zap.Error(err))
+			w.logger.Error("deployment health check: health check call failed", zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.String("host", d.RuntimeHost), zap.Error(err), observability.ZapCtx(ctx))
 		}
 		// Deployment status changed (probably being deleted)
 		return nil, false
 	}
 
 	if runtimeUnhealthy(resp) {
-		f := []zap.Field{zap.String("host", d.RuntimeHost)}
+		f := []zap.Field{zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.String("host", d.RuntimeHost), observability.ZapCtx(ctx)}
 		if resp.LimiterError != "" {
 			f = append(f, zap.String("limiter_error", resp.LimiterError))
 		}
@@ -153,36 +159,41 @@ func (w *Worker) deploymentHealthCheck(ctx context.Context, d *database.Deployme
 		w.logger.Error("deployment health check: runtime is unhealthy", f...)
 		return nil, false
 	}
+
 	for instanceID, health := range resp.InstancesHealth {
 		instances = append(instances, instanceID)
 		if !instanceUnhealthy(health) {
 			continue
 		}
+
 		// In case of multiple instances on same host the runtime API will return health of all instances
 		// But the deployment for instances except one will be different from the deployment passed as argument
 		d := d
 		if d.RuntimeInstanceID != instanceID {
 			d, err = w.admin.DB.FindDeploymentByInstanceID(ctx, instanceID)
 			if err != nil {
-				// NOTE :: In some race conditions this may return a false alert when instance is deleted
+				// NOTE: In some race conditions this may return a false alert when instance is deleted
 				// but we alert on not found errors as well to handle cases when runtime reports extra instance
-				w.logger.Error("deployment health check: failed to find deployment", zap.String("instance_id", instanceID), zap.Error(err))
+				w.logger.Error("deployment health check: failed to find deployment", zap.String("instance_id", instanceID), zap.Error(err), observability.ZapCtx(ctx))
 				continue
 			}
 		}
+
 		annotations, err := w.annotationsForDeployment(ctx, d)
 		if err != nil {
-			w.logger.Error("deployment health check: failed to find deployment_annotations", zap.String("project", d.ProjectID), zap.String("deployment", d.ID), zap.Error(err))
+			w.logger.Error("deployment health check: failed to find deployment_annotations", zap.String("project_id", d.ProjectID), zap.String("deployment_id", d.ID), zap.Error(err), observability.ZapCtx(ctx))
 			continue
 		}
-		f := []zap.Field{zap.String("host", d.RuntimeHost), zap.String("instance_id", instanceID)}
+		f := []zap.Field{zap.String("deployment_id", d.ID), zap.String("host", d.RuntimeHost), zap.String("instance_id", instanceID), observability.ZapCtx(ctx)}
 		for k, v := range annotations.ToMap() {
 			f = append(f, zap.String(k, v))
 		}
 
 		// log metrics view errors separately
 		for d, err := range health.MetricsViewErrors {
-			w.logger.Warn("deployment health check: metrics view error", zap.String("metrics_view", d), zap.String("error", err))
+			f := slices.Clone(f)
+			f = append(f, zap.String("metrics_view", d), zap.String("error", err))
+			w.logger.Warn("deployment health check: metrics view error", f...)
 		}
 
 		logAtError := false

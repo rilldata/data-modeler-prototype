@@ -426,7 +426,7 @@
 
   .table-wrapper {
     @apply overflow-auto h-fit max-h-full w-fit max-w-full;
-    @apply bg-white border z-40;
+    @apply bg-white  z-40;
     width: 100%;
   }
 

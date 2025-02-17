@@ -80,7 +80,7 @@ promtInstallChoice() {
             INSTALL_DIR=$(pwd)
             ;;
         *)
-            printf "\nInvalid option '$ans'\n\n"
+            printf "\nInvalid option '%s'\n\n" "$ans"
             promtInstallChoice
             ;;
     esac
@@ -154,7 +154,7 @@ publishSyftEvent() {
     SYFT_URL=https://event.syftdata.com/log
     SYFT_ID=clp76quhs0006l908bux79l4v
     if [ -z "$RILL_INSTALL_DISABLE_TELEMETRY" ]; then
-        curl --silent --header "Authorization: ${SYFT_ID}" --header "Content-Type: application/json" --data "{\"event_name\":\"$1\"}" $SYFT_URL > /dev/null 2>&1
+        curl --silent --show-error --header "Authorization: ${SYFT_ID}" --header "Content-Type: application/json" --data "{\"event_name\":\"$1\"}" $SYFT_URL > /dev/null || true >&2
     fi
 }
 

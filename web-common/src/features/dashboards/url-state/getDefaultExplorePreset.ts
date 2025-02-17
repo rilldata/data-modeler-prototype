@@ -1,4 +1,5 @@
 import { createAndExpression } from "@rilldata/web-common/features/dashboards/stores/filter-utils";
+import { getValidComparisonOption } from "@rilldata/web-common/features/dashboards/time-controls/time-range-store";
 import { getDefaultTimeGrain } from "@rilldata/web-common/features/dashboards/time-controls/time-range-utils";
 import { TDDChart } from "@rilldata/web-common/features/dashboards/time-dimension-details/types";
 import { ExploreStateDefaultTimezone } from "@rilldata/web-common/features/dashboards/url-state/defaults";
@@ -6,10 +7,10 @@ import {
   ToURLParamTDDChartMap,
   ToURLParamTimeGrainMapMap,
 } from "@rilldata/web-common/features/dashboards/url-state/mappers";
-import { inferCompareTimeRange } from "@rilldata/web-common/lib/time/comparisons";
 import { ISODurationToTimePreset } from "@rilldata/web-common/lib/time/ranges";
 import { isoDurationToFullTimeRange } from "@rilldata/web-common/lib/time/ranges/iso-ranges";
 import { getLocalIANA } from "@rilldata/web-common/lib/time/timezone";
+import { TimeRangePreset } from "@rilldata/web-common/lib/time/types";
 import {
   V1ExploreComparisonMode,
   V1ExploreSortType,
@@ -17,6 +18,7 @@ import {
   type V1ExploreSpec,
   V1ExploreWebView,
   type V1MetricsViewTimeRangeResponse,
+  type V1TimeRangeSummary,
 } from "@rilldata/web-common/runtime-client";
 
 export function getDefaultExplorePreset(
@@ -77,7 +79,11 @@ export function getDefaultExplorePreset(
   if (defaultExplorePreset.comparisonMode) {
     Object.assign(
       defaultExplorePreset,
-      getDefaultComparisonFields(defaultExplorePreset, explore),
+      getDefaultComparisonFields(
+        defaultExplorePreset,
+        explore,
+        fullTimeRange?.timeRangeSummary,
+      ),
     );
   }
 
@@ -114,6 +120,7 @@ function getDefaultPresetTimeGrain(
 function getDefaultComparisonFields(
   defaultExplorePreset: V1ExplorePreset,
   explore: V1ExploreSpec,
+  timeRangeSummary: V1TimeRangeSummary | undefined,
 ): V1ExplorePreset {
   if (
     defaultExplorePreset.comparisonMode ===
@@ -136,7 +143,9 @@ function getDefaultComparisonFields(
 
   if (
     !defaultExplorePreset.timeRange ||
-    defaultExplorePreset.timeRange === "inf"
+    defaultExplorePreset.timeRange === "inf" ||
+    !timeRangeSummary?.min ||
+    !timeRangeSummary?.max
   ) {
     return {};
   }
@@ -149,7 +158,26 @@ function getDefaultComparisonFields(
       true,
     );
     if (!preset) return {};
-    comparisonOption = inferCompareTimeRange(explore.timeRanges, preset);
+
+    const allTimeRange = {
+      name: TimeRangePreset.ALL_TIME,
+      start: new Date(timeRangeSummary.min),
+      end: new Date(timeRangeSummary.max),
+    };
+
+    const timeRange = isoDurationToFullTimeRange(
+      preset,
+      allTimeRange.start,
+      allTimeRange.end,
+      defaultExplorePreset.timezone,
+    );
+
+    comparisonOption = getValidComparisonOption(
+      explore.timeRanges,
+      timeRange,
+      undefined,
+      allTimeRange,
+    );
   }
 
   return {

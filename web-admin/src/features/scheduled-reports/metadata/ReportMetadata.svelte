@@ -4,7 +4,10 @@
   import { extractNotifier } from "@rilldata/web-admin/features/scheduled-reports/metadata/notifiers-utils";
   import IconButton from "@rilldata/web-common/components/button/IconButton.svelte";
   import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
+  import CancelCircle from "@rilldata/web-common/components/icons/CancelCircle.svelte";
   import ThreeDot from "@rilldata/web-common/components/icons/ThreeDot.svelte";
+  import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
+  import TooltipContent from "@rilldata/web-common/components/tooltip/TooltipContent.svelte";
   import { useExploreValidSpec } from "@rilldata/web-common/features/explores/selectors";
   import CreateScheduledReportDialog from "@rilldata/web-common/features/scheduled-reports/ScheduledReportDialog.svelte";
   import { getRuntimeServiceListResourcesQueryKey } from "@rilldata/web-common/runtime-client";
@@ -41,6 +44,7 @@
   $: dashboard = useExploreValidSpec(instanceId, $dashboardName.data);
   $: dashboardTitle =
     $dashboard.data?.explore?.displayName || $dashboardName.data;
+  $: dashboardDoesNotExist = $dashboard.error?.response?.status === 404;
 
   $: reportSpec = $reportQuery.data?.resource?.report?.spec;
 
@@ -130,12 +134,33 @@
     <div class="flex flex-wrap gap-x-16 gap-y-6">
       <!-- Dashboard -->
       <div class="flex flex-col gap-y-3">
-        <MetadataLabel>Dashboard</MetadataLabel>
-        <MetadataValue>
-          <a href={`/${organization}/${project}/explore/${$dashboardName.data}`}
-            >{dashboardTitle}</a
-          >
-        </MetadataValue>
+        {#if dashboardTitle}
+          <MetadataLabel>Dashboard</MetadataLabel>
+          <MetadataValue>
+            {#if dashboardDoesNotExist}
+              <div class="flex items-center gap-x-1">
+                {dashboardTitle}
+                <Tooltip distance={8}>
+                  <CancelCircle size="16px" className="text-red-500" />
+                  <TooltipContent slot="tooltip-content">
+                    Dashboard does not exist
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            {:else}
+              <a
+                href={`/${organization}/${project}/explore/${$dashboardName.data}`}
+              >
+                {dashboardTitle}
+              </a>
+            {/if}
+          </MetadataValue>
+        {:else}
+          <MetadataLabel>Name</MetadataLabel>
+          <MetadataValue>
+            {$reportQuery.data?.resource?.meta?.name?.name}
+          </MetadataValue>
+        {/if}
       </div>
 
       <!-- Frequency -->

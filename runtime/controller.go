@@ -1264,16 +1264,14 @@ func (c *Controller) invoke(r *runtimev1.Resource) error {
 	c.invocations[nameStr(n)] = inv
 
 	// Log invocation
-	if !inv.isHidden {
-		logArgs := []zap.Field{zap.String("name", n.Name), zap.String("type", PrettifyResourceKind(n.Kind))}
-		if inv.isDelete {
-			logArgs = append(logArgs, zap.Bool("deleted", inv.isDelete))
-		}
-		if inv.isRename {
-			logArgs = append(logArgs, zap.String("renamed_from", r.Meta.RenamedFrom.Name))
-		}
-		c.Logger.Info("Reconciling resource", logArgs...)
+	logArgs := []zap.Field{zap.String("name", n.Name), zap.String("type", PrettifyResourceKind(n.Kind))}
+	if inv.isDelete {
+		logArgs = append(logArgs, zap.Bool("deleted", inv.isDelete))
 	}
+	if inv.isRename {
+		logArgs = append(logArgs, zap.String("renamed_from", r.Meta.RenamedFrom.Name))
+	}
+	c.Logger.Info("Reconciling resource", logArgs...)
 
 	// Start reconcile in background
 	ctx = contextWithInvocation(ctx, inv)
@@ -1343,7 +1341,9 @@ func (c *Controller) processCompletedInvocation(inv *invocation) error {
 	if !inv.result.Retrigger.IsZero() {
 		logArgs = append(logArgs, zap.String("retrigger_on", inv.result.Retrigger.Format(time.RFC3339)))
 	}
-	if !inv.cancelledOn.IsZero() {
+	if inv.deletedSelf {
+		logArgs = append(logArgs, zap.Bool("deleted", true))
+	} else if !inv.cancelledOn.IsZero() {
 		logArgs = append(logArgs, zap.Bool("cancelled", true))
 	}
 	errorLevel := false
@@ -1353,7 +1353,7 @@ func (c *Controller) processCompletedInvocation(inv *invocation) error {
 	}
 	if errorLevel {
 		c.Logger.Warn("Reconcile failed", logArgs...)
-	} else if !inv.isHidden {
+	} else {
 		c.Logger.Info("Reconciled resource", logArgs...)
 	}
 
@@ -1370,7 +1370,7 @@ func (c *Controller) processCompletedInvocation(inv *invocation) error {
 		commonDims = append(commonDims, attribute.String("reconcile_operation", "normal"))
 	}
 
-	if !inv.cancelledOn.IsZero() {
+	if !inv.cancelledOn.IsZero() && !inv.deletedSelf {
 		commonDims = append(commonDims, attribute.String("reconcile_result", "canceled"))
 	} else if inv.result.Err != nil {
 		if errors.Is(inv.result.Err, context.Canceled) {

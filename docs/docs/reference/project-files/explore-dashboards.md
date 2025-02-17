@@ -17,6 +17,8 @@ In your Rill project directory, create a explore dashboard, `<dashboard_name>.ya
 
 **`display_name`** - Refers to the display name for the metrics view _(required)_.
 
+**`banner`** - Refers to the custom banner displayed at the header of an explore dashboard  _(optional)_.
+
 **`description`** - A description for the project _(optional)_.
 
 **`dimensions`** - List of dimension names. Use `'*'` to select all dimensions (default) _(optional)_. 

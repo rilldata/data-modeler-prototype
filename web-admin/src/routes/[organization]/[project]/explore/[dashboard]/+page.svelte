@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onNavigate } from "$app/navigation";
   import { page } from "$app/stores";
+  import { errorStore } from "@rilldata/web-admin/components/errors/error-store";
   import DashboardBuilding from "@rilldata/web-admin/features/dashboards/DashboardBuilding.svelte";
   import DashboardErrored from "@rilldata/web-admin/features/dashboards/DashboardErrored.svelte";
-  import { errorStore } from "@rilldata/web-admin/features/errors/error-store";
   import { viewAsUserStore } from "@rilldata/web-admin/features/view-as-user/viewAsUserStore";
   import { Dashboard } from "@rilldata/web-common/features/dashboards";
   import DashboardThemeProvider from "@rilldata/web-common/features/dashboards/DashboardThemeProvider.svelte";
@@ -53,12 +53,12 @@
     },
   });
 
-  $: exploreTitle =
-    $explore.data?.explore?.explore?.state?.validSpec?.displayName;
   $: isDashboardNotFound =
     !$explore.data &&
     $explore.isError &&
     $explore.error?.response?.status === 404;
+  $: exploreTitle =
+    $explore.data?.explore?.explore?.state?.validSpec?.displayName;
   $: metricsViewName = $explore.data?.metricsView?.meta?.name?.name;
   $: hasBanner = !!$explore.data?.explore?.explore?.state?.validSpec?.banner;
 
@@ -80,12 +80,14 @@
     });
   }
 
-  onNavigate(() => {
+  onNavigate(({ from, to }) => {
     viewAsUserStore.set(null);
     errorStore.reset();
 
+    const changedDashboard =
+      !from || !to || from.params.dashboard !== to.params.dashboard;
     // Clear out any dashboard banners
-    if (hasBanner) {
+    if (hasBanner && changedDashboard) {
       eventBus.emit("banner", null);
     }
   });

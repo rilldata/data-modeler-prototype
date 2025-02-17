@@ -1,13 +1,7 @@
-import {
-  DEFAULT_TIME_RANGES,
-  TIME_COMPARISON,
-} from "@rilldata/web-common/lib/time/config";
+import { TIME_COMPARISON } from "@rilldata/web-common/lib/time/config";
 import { prettyFormatTimeRange } from "@rilldata/web-common/lib/time/ranges";
 import { humaniseISODuration } from "@rilldata/web-common/lib/time/ranges/iso-ranges";
-import type {
-  V1ExploreTimeRange,
-  V1TimeRange,
-} from "@rilldata/web-common/runtime-client";
+import type { V1TimeRange } from "@rilldata/web-common/runtime-client";
 import { Duration, Interval } from "luxon";
 import { getTimeWidth, transformDate } from "../transforms";
 import {
@@ -272,19 +266,4 @@ export function getComparisonLabel(comparisonTimeRange: V1TimeRange) {
     default:
       return `Last ${humaniseISODuration(comparisonTimeRange.isoOffset)}`;
   }
-}
-
-export function inferCompareTimeRange(
-  timeRanges: V1ExploreTimeRange[] | undefined,
-  selectedTimeRangeName: string,
-) {
-  const defaultForTimeRange = DEFAULT_TIME_RANGES[
-    selectedTimeRangeName as TimeComparisonOption
-  ]?.defaultComparison as TimeComparisonOption;
-  return (
-    defaultForTimeRange ??
-    timeRanges?.find((tr) => tr.range === selectedTimeRangeName)
-      ?.comparisonTimeRanges?.[0]?.offset ??
-    TimeComparisonOption.CONTIGUOUS
-  );
 }
