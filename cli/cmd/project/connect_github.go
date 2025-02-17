@@ -325,7 +325,9 @@ func createGithubRepoFlow(ctx context.Context, ch *cmdutil.Helper, localGitPath 
 			ch.Print("\t" + res.GrantAccessUrl + "\n\n")
 
 			// Open browser if possible
-			_ = browser.Open(res.GrantAccessUrl)
+			if ch.Interactive {
+				_ = browser.Open(res.GrantAccessUrl)
+			}
 		}
 	}
 
@@ -535,7 +537,9 @@ func githubFlow(ctx context.Context, ch *cmdutil.Helper, githubURL string) (*adm
 		ch.Print("\t" + res.GrantAccessUrl + "\n\n")
 
 		// Open browser if possible
-		_ = browser.Open(res.GrantAccessUrl)
+		if ch.Interactive {
+			_ = browser.Open(res.GrantAccessUrl)
+		}
 
 		// Poll for permission granted
 		pollCtx, cancel := context.WithTimeout(ctx, pollTimeout)

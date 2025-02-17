@@ -144,6 +144,7 @@ setup(
         "--project",
         "openrtb",
         "--github",
+        "--interactive=false",
       ],
       /https?:\/\/[^\s]+/,
     );

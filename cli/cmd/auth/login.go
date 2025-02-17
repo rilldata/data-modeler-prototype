@@ -75,7 +75,9 @@ func Login(ctx context.Context, ch *cmdutil.Helper, redirectURL string) error {
 
 	ch.PrintfBold("\nOpen this URL in your browser to confirm the login: %s\n\n", deviceVerification.VerificationCompleteURL)
 
-	_ = browser.Open(deviceVerification.VerificationCompleteURL)
+	if ch.Interactive {
+		_ = browser.Open(deviceVerification.VerificationCompleteURL)
+	}
 
 	res1, err := authenticator.GetAccessTokenForDevice(ctx, deviceVerification)
 	if err != nil {

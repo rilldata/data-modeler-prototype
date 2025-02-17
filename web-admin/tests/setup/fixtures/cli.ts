@@ -9,7 +9,7 @@ export async function cliLogin(page: Page) {
   // Run the login command and capture the verification URL
   const { process, match }: SpawnAndMatchResult = await spawnAndMatch(
     "rill",
-    ["login"],
+    ["login", "--interactive=false"],
     /Open this URL in your browser to confirm the login: (.*)\n/,
   );
 
