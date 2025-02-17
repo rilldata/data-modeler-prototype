@@ -52,7 +52,7 @@ func (s *Server) S3GetBucketMetadata(ctx context.Context, req *runtimev1.S3GetBu
 	}
 	defer release()
 
-	region, err := s3Conn.GetBucketMetadata(ctx, req)
+	region, err := s3Conn.GetBucketRegion(ctx, req.Bucket)
 	if err != nil {
 		return nil, err
 	}

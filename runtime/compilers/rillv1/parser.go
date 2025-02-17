@@ -828,8 +828,6 @@ func (p *Parser) insertResource(kind ResourceKind, name string, paths []string, 
 		rawRefs: refs,
 	}
 	switch kind {
-	case ResourceKindSource:
-		r.SourceSpec = &runtimev1.SourceSpec{}
 	case ResourceKindModel:
 		r.ModelSpec = &runtimev1.ModelSpec{}
 	case ResourceKindMetricsView:
@@ -902,7 +900,7 @@ func (p *Parser) deleteResource(r *Resource) {
 		rs := p.resourcesForPath[path]
 		idx := slices.Index(rs, r)
 		if idx < 0 {
-			panic(fmt.Errorf("resource %q not found in resourcesForPath", r))
+			panic(fmt.Errorf("resource %q not found in resourcesForPath", r.Name))
 		}
 		if len(rs) == 1 {
 			delete(p.resourcesForPath, path)

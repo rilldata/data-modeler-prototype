@@ -391,6 +391,8 @@ func (c *connection) AsModelExecutor(instanceID string, opts *drivers.ModelExecu
 			return &sqlStoreToSelfExecutor{c}, true
 		case "https":
 			return &httpsToSelfExecutor{c}, true
+		case "motherduck":
+			return &mdToSelfExecutor{c}, true
 		}
 		if _, ok := opts.InputHandle.AsObjectStore(); ok {
 			return &objectStoreToSelfExecutor{c}, true

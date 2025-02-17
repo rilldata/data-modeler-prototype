@@ -396,6 +396,10 @@ func resourceNameFromArgs(parts ...string) (ResourceName, error) {
 		return ResourceName{}, err
 	}
 
+	if kind == ResourceKindSource {
+		kind = ResourceKindModel
+	}
+
 	return ResourceName{
 		Kind: kind,
 		Name: parts[1],

@@ -115,13 +115,13 @@ func (c *Connection) ListObjectsRaw(ctx context.Context, req *runtimev1.S3ListOb
 	return s3Objects, string(nextToken), nil
 }
 
-func (c *Connection) GetBucketMetadata(ctx context.Context, req *runtimev1.S3GetBucketMetadataRequest) (string, error) {
+func (c *Connection) GetBucketRegion(ctx context.Context, bkt string) (string, error) {
 	creds, err := c.newCredentials()
 	if err != nil {
 		return "", err
 	}
 
-	sess, err := c.newSessionForBucket(ctx, req.Bucket, "", "", creds)
+	sess, err := c.newSessionForBucket(ctx, bkt, "", "", creds)
 	if err != nil {
 		return "", err
 	}

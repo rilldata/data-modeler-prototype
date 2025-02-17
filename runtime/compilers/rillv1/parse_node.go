@@ -449,6 +449,12 @@ func parseYAMLRefs(refs []yaml.Node) ([]ResourceName, error) {
 		// ref was neither a string nor a map
 		return nil, fmt.Errorf("invalid refs: %v", ref)
 	}
+	for i := range res {
+		// Source is deprecated but for backwards compatibility, we convert it to model
+		if res[i].Kind == ResourceKindSource {
+			res[i].Kind = ResourceKindModel
+		}
+	}
 	return res, nil
 }
 

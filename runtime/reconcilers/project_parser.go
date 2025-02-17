@@ -674,19 +674,8 @@ func (r *ProjectParserReconciler) attemptRename(ctx context.Context, inst *drive
 }
 
 // applySpecDefaults applies instance-level default properties to a resource spec.
-func applySpecDefaults(inst *drivers.Instance, def *compilerv1.Resource) (*compilerv1.Resource, error) {
-	cfg, err := inst.Config()
-	if err != nil {
-		return nil, err
-	}
-
-	switch def.Name.Kind {
-	case compilerv1.ResourceKindSource:
-		def.SourceSpec.StageChanges = cfg.StageChanges
-	default:
-		// Nothing to do
-	}
-
+func applySpecDefaults(_ *drivers.Instance, def *compilerv1.Resource) (*compilerv1.Resource, error) {
+	// There are no defaults to apply at the moment but it can be used to set defaults in the future.
 	return def, nil
 }
 
