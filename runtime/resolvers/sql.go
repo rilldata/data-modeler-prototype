@@ -32,6 +32,7 @@ type sqlResolver struct {
 type sqlProps struct {
 	Connector string `mapstructure:"connector"`
 	SQL       string `mapstructure:"sql"`
+	Limit     int64  `mapstructure:"limit"`
 }
 
 type sqlArgs struct {
@@ -62,6 +63,11 @@ func newSQL(ctx context.Context, opts *runtime.ResolverOptions) (runtime.Resolve
 		return nil, err
 	}
 
+	interactiveRowLimit := cfg.InteractiveSQLRowLimit
+	if props.Limit != 0 {
+		interactiveRowLimit = props.Limit
+	}
+
 	olap, release, err := opts.Runtime.OLAP(ctx, opts.InstanceID, props.Connector)
 	if err != nil {
 		return nil, err
@@ -77,7 +83,7 @@ func newSQL(ctx context.Context, opts *runtime.ResolverOptions) (runtime.Resolve
 		refs:                refs,
 		olap:                olap,
 		olapRelease:         release,
-		interactiveRowLimit: cfg.InteractiveSQLRowLimit,
+		interactiveRowLimit: interactiveRowLimit,
 		priority:            args.Priority,
 	}, nil
 }

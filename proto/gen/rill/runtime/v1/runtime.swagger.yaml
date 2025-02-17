@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  title: rill/runtime/v1/colors.proto
+  title: rill/runtime/v1/schema.proto
   version: version not set
 tags:
   - name: RuntimeService
@@ -2478,6 +2478,41 @@ paths:
                   $ref: '#/definitions/v1Query'
       tags:
         - QueryService
+  /v1/instances/{instanceId}/query/resolver:
+    post:
+      summary: QueryResolver queries a resolver with the given properties and arguments
+      operationId: RuntimeService_QueryResolver
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/v1QueryResolverResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/rpcStatus'
+      parameters:
+        - name: instanceId
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              resolver:
+                type: string
+              resolverProperties:
+                type: object
+              resolverArgs:
+                type: object
+              limit:
+                type: integer
+                format: int32
+      tags:
+        - RuntimeService
   /v1/instances/{instanceId}/reports/{report}/export:
     post:
       summary: ExportReport builds a URL to download the results of a query as a file.
@@ -5878,6 +5913,15 @@ definitions:
         $ref: '#/definitions/v1QueryResult'
       error:
         type: string
+  v1QueryResolverResponse:
+    type: object
+    properties:
+      schema:
+        $ref: '#/definitions/v1StructType'
+      data:
+        type: array
+        items:
+          type: object
   v1QueryResponse:
     type: object
     properties:

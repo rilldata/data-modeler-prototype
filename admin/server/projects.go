@@ -256,7 +256,7 @@ func (s *Server) GetProject(ctx context.Context, req *adminv1.GetProjectRequest)
 		runtimeauth.ReadAPI,
 	}
 	if permissions.ManageProject {
-		instancePermissions = append(instancePermissions, runtimeauth.EditTrigger)
+		instancePermissions = append(instancePermissions, runtimeauth.EditTrigger, runtimeauth.ReadResolvers)
 	}
 
 	var systemPermissions []runtimeauth.Permission

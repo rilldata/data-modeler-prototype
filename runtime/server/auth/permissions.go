@@ -18,4 +18,5 @@ const (
 	ReadMetrics   Permission = 0x17
 	ReadProfiling Permission = 0x18
 	ReadAPI       Permission = 0x19
+	ReadResolvers Permission = 0x1A
 )

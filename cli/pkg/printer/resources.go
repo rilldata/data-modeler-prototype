@@ -11,6 +11,7 @@ import (
 	adminv1 "github.com/rilldata/rill/proto/gen/rill/admin/v1"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime/metricsview"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func (p *Printer) PrintOrgs(orgs []*adminv1.Organization, defaultOrg string) {
@@ -539,4 +540,21 @@ type billingIssue struct {
 	Level        string `header:"level" json:"level"`
 	Metadata     string `header:"metadata" json:"metadata"`
 	EventTime    string `header:"event_time,timestamp(ms|utc|human)" json:"event_time"`
+}
+
+func (p *Printer) PrintQueryResponse(rows []*structpb.Struct) {
+	if len(rows) == 0 {
+		p.PrintfWarn("No data found\n")
+		return
+	}
+
+	p.PrintData(toQueryResponse(rows))
+}
+
+func toQueryResponse(rows []*structpb.Struct) []map[string]any {
+	data := make([]map[string]any, 0, len(rows))
+	for _, row := range rows {
+		data = append(data, row.AsMap())
+	}
+	return data
 }
