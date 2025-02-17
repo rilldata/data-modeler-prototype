@@ -491,8 +491,7 @@ select 1
 	testruntime.ReconcileParserAndWait(t, rt, id)
 	testruntime.RequireReconcileState(t, rt, id, 2, 0, 0)
 	// Assert that the model is a table now
-	// TODO : fix with information schema fix
-	// testruntime.RequireIsView(t, olap, "bar", false)
+	testruntime.RequireIsView(t, olap, "bar", false)
 
 	// Mark the model as not materialized
 	testruntime.PutFiles(t, rt, id, map[string]string{

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jmoiron/sqlx"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime/drivers"
+	"github.com/rilldata/rill/runtime/pkg/rduckdb"
 )
 
 type informationSchema struct {
@@ -18,41 +18,18 @@ func (c *connection) InformationSchema() drivers.InformationSchema {
 	return &informationSchema{c: c}
 }
 
-func (i informationSchema) All(ctx context.Context, like string) ([]*drivers.Table, error) {
-	conn, release, err := i.c.acquireMetaConn(ctx)
+func (i informationSchema) All(ctx context.Context, ilike string) ([]*drivers.Table, error) {
+	// TODO: this bypasses the acquireMetaConn call in the original implementation. Fix this.
+	db, release, err := i.c.acquireDB()
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = release() }()
 
-	var likeClause string
-	var args []any
-	if like != "" {
-		likeClause = "and (t.table_name ilike ? or concat(t.table_catalog, '.', t.table_schema, '.', t.table_name) ilike ?)"
-		args = []any{like, like}
-	}
-
-	q := fmt.Sprintf(`
-		select
-			coalesce(t.table_catalog, current_database()) as "database",
-			t.table_name as "name",
-			t.table_type as "type", 
-			array_agg(c.column_name order by c.ordinal_position) as "column_names",
-			array_agg(c.data_type order by c.ordinal_position) as "column_types",
-			array_agg(c.is_nullable = 'YES' order by c.ordinal_position) as "column_nullable"
-		from information_schema.tables t
-		join information_schema.columns c on t.table_schema = c.table_schema and t.table_name = c.table_name
-		where database = current_database() and t.table_schema = current_schema()
-		%s
-		group by 1, 2, 3
-		order by 1, 2, 3
-	`, likeClause)
-
-	rows, err := conn.QueryxContext(ctx, q, args...)
+	rows, err := db.Schema(ctx, ilike, false)
 	if err != nil {
 		return nil, i.c.checkErr(err)
 	}
-	defer rows.Close()
 
 	tables, err := i.scanTables(rows)
 	if err != nil {
@@ -62,33 +39,18 @@ func (i informationSchema) All(ctx context.Context, like string) ([]*drivers.Tab
 	return tables, nil
 }
 
-func (i informationSchema) Lookup(ctx context.Context, db, schema, name string) (*drivers.Table, error) {
-	conn, release, err := i.c.acquireMetaConn(ctx)
+func (i informationSchema) Lookup(ctx context.Context, _, _, name string) (*drivers.Table, error) {
+	// TODO: this bypasses the acquireMetaConn call in the original implementation. Fix this.
+	db, release, err := i.c.acquireDB()
 	if err != nil {
 		return nil, err
 	}
 	defer func() { _ = release() }()
 
-	q := `
-		select
-			coalesce(t.table_catalog, current_database()) as "database",
-			t.table_name as "name",
-			t.table_type as "type", 
-			array_agg(c.column_name order by c.ordinal_position) as "column_names",
-			array_agg(c.data_type order by c.ordinal_position) as "column_types",
-			array_agg(c.is_nullable = 'YES' order by c.ordinal_position) as "column_nullable"
-		from information_schema.tables t
-		join information_schema.columns c on t.table_schema = c.table_schema and t.table_name = c.table_name
-		where database = current_database() and t.table_schema = current_schema() and lower(t.table_name) = lower(?)
-		group by 1, 2, 3
-		order by 1, 2, 3
-	`
-
-	rows, err := conn.QueryxContext(ctx, q, name)
+	rows, err := db.Schema(ctx, name, true)
 	if err != nil {
 		return nil, i.c.checkErr(err)
 	}
-	defer rows.Close()
 
 	tables, err := i.scanTables(rows)
 	if err != nil {
@@ -102,43 +64,31 @@ func (i informationSchema) Lookup(ctx context.Context, db, schema, name string) 
 	return tables[0], nil
 }
 
-func (i informationSchema) scanTables(rows *sqlx.Rows) ([]*drivers.Table, error) {
+func (i informationSchema) scanTables(rows []*rduckdb.Table) ([]*drivers.Table, error) {
 	var res []*drivers.Table
 
-	for rows.Next() {
-		var database string
-		var name string
-		var tableType string
-		var columnNames []any
-		var columnTypes []any
-		var columnNullable []any
-
-		err := rows.Scan(&database, &name, &tableType, &columnNames, &columnTypes, &columnNullable)
-		if err != nil {
-			return nil, i.c.checkErr(err)
-		}
-
+	for _, row := range rows {
 		t := &drivers.Table{
-			Database: database,
+			Database: row.Database,
 			// the database schema changes with every ingestion in duckdb(Refer rduckdb pkg for more info)
 			// we pin the read connection to the latest schema and set schema as `main` to give impression that everything is in the same schema
 			// This also means that fully qualified names should not be used anywhere
 			DatabaseSchema:          "main",
 			IsDefaultDatabase:       true,
 			IsDefaultDatabaseSchema: true,
-			Name:                    name,
-			View:                    tableType == "VIEW",
+			Name:                    row.Name,
+			View:                    row.View,
 			Schema:                  &runtimev1.StructType{},
 		}
 
 		// should NEVER happen, but just to be safe
-		if len(columnNames) != len(columnTypes) {
+		if len(row.ColumnNames) != len(row.ColumnTypes) {
 			panic(fmt.Errorf("duckdb: column slices have different length"))
 		}
 
-		for idx, colName := range columnNames {
-			databaseType := columnTypes[idx].(string)
-			nullable := columnNullable[idx].(bool)
+		for idx, colName := range row.ColumnNames {
+			databaseType := row.ColumnTypes[idx].(string)
+			nullable := row.ColumnNullable[idx].(bool)
 			colType, err := databaseTypeToPB(databaseType, nullable)
 			if err != nil {
 				return nil, err
@@ -151,10 +101,6 @@ func (i informationSchema) scanTables(rows *sqlx.Rows) ([]*drivers.Table, error)
 		}
 
 		res = append(res, t)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, i.c.checkErr(err)
 	}
 
 	return res, nil
