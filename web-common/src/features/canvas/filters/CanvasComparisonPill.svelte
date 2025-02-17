@@ -2,7 +2,6 @@
   import Label from "@rilldata/web-common/components/forms/Label.svelte";
   import Switch from "@rilldata/web-common/components/forms/Switch.svelte";
   import { getComparisonOptionsForCanvas } from "@rilldata/web-common/features/canvas/filters/util";
-  import { getCanvasStateManagers } from "@rilldata/web-common/features/canvas/state-managers/state-managers";
   import { Comparison } from "@rilldata/web-common/features/dashboards/time-controls/super-pill/components";
   import {
     TimeComparisonOption,
@@ -15,18 +14,16 @@
   export let allTimeRange: TimeRange;
   export let selectedTimeRange: DashboardTimeControls | undefined;
   export let selectedComparisonTimeRange: DashboardTimeControls | undefined;
-
-  const { canvasEntity } = getCanvasStateManagers();
-
-  const { timeControls } = canvasEntity;
-
-  $: showTimeComparison = timeControls.showTimeComparison;
-  $: activeTimeZone = timeControls?.selectedTimezone;
+  export let showFullRange = true;
+  export let showTimeComparison = false;
+  export let activeTimeZone: string;
+  export let onDisplayTimeComparison: (show: boolean) => void;
+  export let onSetSelectedComparisonRange: (range: TimeRange) => void;
 
   $: interval = selectedTimeRange
     ? Interval.fromDateTimes(
-        DateTime.fromJSDate(selectedTimeRange.start).setZone($activeTimeZone),
-        DateTime.fromJSDate(selectedTimeRange.end).setZone($activeTimeZone),
+        DateTime.fromJSDate(selectedTimeRange.start).setZone(activeTimeZone),
+        DateTime.fromJSDate(selectedTimeRange.end).setZone(activeTimeZone),
       )
     : Interval.fromDateTimes(allTimeRange.start, allTimeRange.end);
 
@@ -39,14 +36,14 @@
     start: Date,
     end: Date,
   ) {
-    timeControls.setSelectedComparisonRange({
+    onSetSelectedComparisonRange({
       name,
       start,
       end,
     });
 
-    if (!$showTimeComparison) {
-      timeControls.displayTimeComparison(!$showTimeComparison);
+    if (!showTimeComparison) {
+      onDisplayTimeComparison(!showTimeComparison);
     }
   }
 
@@ -62,12 +59,12 @@
     {disabled}
     class="flex gap-x-1.5 cursor-pointer"
     on:click={() => {
-      timeControls.displayTimeComparison(!$showTimeComparison);
+      onDisplayTimeComparison(!showTimeComparison);
     }}
   >
     <div class="pointer-events-none flex items-center gap-x-1.5">
       <Switch
-        checked={$showTimeComparison}
+        checked={showTimeComparison}
         id="comparing"
         small
         disabled={disabled ?? false}
@@ -84,11 +81,12 @@
       minDate={DateTime.fromJSDate(allTimeRange.start)}
       timeComparisonOptionsState={comparisonOptions}
       selectedComparison={selectedComparisonTimeRange}
-      showComparison={$showTimeComparison}
+      showComparison={showTimeComparison}
       currentInterval={interval}
       grain={activeTimeGrain}
-      zone={$activeTimeZone}
+      zone={activeTimeZone}
       {onSelectComparisonRange}
+      {showFullRange}
       disabled={disabled ?? false}
     />
   {/if}

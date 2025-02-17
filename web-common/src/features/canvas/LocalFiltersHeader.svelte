@@ -14,16 +14,10 @@
     <TooltipContent slot="tooltip-content">
       <div class="p-2">
         <div class="font-semibold mb-2">Local Filters Applied</div>
-        {#if filters.time_range}
+        {#if filters.time_filters}
           <div>
-            <span class="font-medium">Time Range:</span>
-            {filters.time_range}
-          </div>
-        {/if}
-        {#if filters.comparison_range}
-          <div>
-            <span class="font-medium">Comparison Range:</span>
-            {filters.comparison_range}
+            <span class="font-medium">Time Filters:</span>
+            {filters.time_filters}
           </div>
         {/if}
         {#if filters.dimension_filters}

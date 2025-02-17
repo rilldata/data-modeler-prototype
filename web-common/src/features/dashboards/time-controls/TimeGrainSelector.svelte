@@ -1,11 +1,13 @@
 <script lang="ts">
   import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
+  import CaretDownIcon from "@rilldata/web-common/components/icons/CaretDownIcon.svelte";
   import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
-  import { isGrainBigger } from "@rilldata/web-common/lib/time/grains";
+  import {
+    getAllowedTimeGrains,
+    isGrainBigger,
+  } from "@rilldata/web-common/lib/time/grains";
   import type { AvailableTimeGrain } from "@rilldata/web-common/lib/time/types";
   import type { V1TimeGrain } from "../../../runtime-client";
-  import { getAllowedTimeGrains } from "@rilldata/web-common/lib/time/grains";
-  import CaretDownIcon from "@rilldata/web-common/components/icons/CaretDownIcon.svelte";
 
   export let tdd = false;
   export let activeTimeGrain: V1TimeGrain | undefined;

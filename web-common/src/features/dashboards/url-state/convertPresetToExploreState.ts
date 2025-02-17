@@ -213,7 +213,7 @@ function fromTimeRangesParams(
 
 export const CustomTimeRangeRegex =
   /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z),(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z)/;
-function fromTimeRangeUrlParam(tr: string) {
+export function fromTimeRangeUrlParam(tr: string) {
   const customTimeRangeMatch = CustomTimeRangeRegex.exec(tr);
   if (customTimeRangeMatch?.length) {
     const [, start, end] = customTimeRangeMatch;

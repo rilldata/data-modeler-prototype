@@ -8,9 +8,7 @@
   export let faint: boolean = false;
 
   $: atleastOneFilter = Boolean(
-    filters?.comparison_range ||
-      filters?.dimension_filters ||
-      filters?.time_range,
+    filters?.time_filters || filters?.dimension_filters,
   );
 </script>
 

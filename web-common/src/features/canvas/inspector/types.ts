@@ -16,11 +16,7 @@ export type InputType =
   | CustomInputTypes
   | PositionalInputTypes;
 
-export type FilterInputTypes =
-  | "time_range"
-  | "comparison_range"
-  | "grain"
-  | "dimension_filters";
+export type FilterInputTypes = "time_filters" | "dimension_filters";
 
 export interface ComponentInputParam {
   type: InputType;
@@ -33,7 +29,7 @@ export interface ComponentInputParam {
 
 export interface FilterInputParam {
   type: FilterInputTypes;
-  label: string;
+  meta?: Record<string, any>;
 }
 
 export interface InputParams<T> {

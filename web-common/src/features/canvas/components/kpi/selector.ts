@@ -1,6 +1,7 @@
 import type { KPISpec } from "@rilldata/web-common/features/canvas/components/kpi";
 import { validateMeasures } from "@rilldata/web-common/features/canvas/components/validators";
 import type { StateManagers } from "@rilldata/web-common/features/canvas/state-managers/state-managers";
+import type { TimeAndFilterStore } from "@rilldata/web-common/features/canvas/stores/types";
 import { prepareTimeSeries } from "@rilldata/web-common/features/dashboards/time-series/utils";
 import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
 import {
@@ -15,24 +16,10 @@ import { derived, type Readable } from "svelte/store";
 export function useKPITotals(
   ctx: StateManagers,
   kpiSpec: KPISpec,
+  timeAndFilterStore: Readable<TimeAndFilterStore>,
   enabled: boolean,
 ): CreateQueryResult<number | null, HTTPError> {
-  const { canvasEntity } = ctx;
-
-  const {
-    metrics_view: metricsViewName,
-    measure,
-    time_range: componentTimeRange,
-    dimension_filters: componentFilter,
-  } = kpiSpec;
-
-  const timeAndFilterStore = canvasEntity.createTimeAndFilterStore(
-    metricsViewName,
-    {
-      componentTimeRange,
-      componentFilter,
-    },
-  );
+  const { metrics_view: metricsViewName, measure } = kpiSpec;
 
   return derived(
     [ctx.runtime, timeAndFilterStore],
@@ -47,10 +34,7 @@ export function useKPITotals(
         },
         {
           query: {
-            enabled:
-              enabled &&
-              (!!componentTimeRange ||
-                (!!timeRange?.start && !!timeRange?.end)),
+            enabled: enabled && !!timeRange?.start && !!timeRange?.end,
             select: (data) => {
               return data.data?.[0]?.[measure] ?? null;
             },
@@ -65,30 +49,17 @@ export function useKPITotals(
 export function useKPIComparisonTotal(
   ctx: StateManagers,
   kpiSpec: KPISpec,
+  timeAndFilterStore: Readable<TimeAndFilterStore>,
   enabled: boolean,
 ): CreateQueryResult<number | null, HTTPError> {
   const { canvasEntity } = ctx;
   const { showTimeComparison } = canvasEntity.timeControls;
 
-  const {
-    metrics_view: metricsViewName,
-    measure,
-    comparison_range: componentComparisonRange,
-    dimension_filters: componentFilter,
-  } = kpiSpec;
-
-  // Build the store that yields { finalTimeRange, where }
-  const timeAndFilterStore = canvasEntity.createTimeAndFilterStore(
-    metricsViewName,
-    {
-      componentComparisonRange,
-      componentFilter,
-    },
-  );
+  const { metrics_view: metricsViewName, measure } = kpiSpec;
 
   return derived(
     [ctx.runtime, timeAndFilterStore, showTimeComparison],
-    ([$runtime, { comparisonRange, where }, showComparison], set) => {
+    ([$runtime, { comparisonTimeRange, where }, showComparison], set) => {
       // TODO: Use all time range and then calculate the comparison range
 
       return createQueryServiceMetricsViewAggregation(
@@ -96,17 +67,16 @@ export function useKPIComparisonTotal(
         metricsViewName,
         {
           measures: [{ name: measure }],
-          timeRange: comparisonRange,
+          timeRange: comparisonTimeRange,
           where,
         },
         {
           query: {
             enabled:
               enabled &&
-              (!!componentComparisonRange ||
-                (showComparison &&
-                  !!comparisonRange?.start &&
-                  !!comparisonRange?.end)),
+              showComparison &&
+              !!comparisonTimeRange?.start &&
+              !!comparisonTimeRange?.end,
             select: (data) => {
               return data.data?.[0]?.[measure] ?? null;
             },
@@ -121,26 +91,10 @@ export function useKPIComparisonTotal(
 export function useKPISparkline(
   ctx: StateManagers,
   kpiSpec: KPISpec,
+  timeAndFilterStore: Readable<TimeAndFilterStore>,
   enabled: boolean,
 ): CreateQueryResult<Array<Record<string, unknown>>> {
-  const {
-    canvasEntity: { createTimeAndFilterStore },
-  } = ctx;
-
-  const {
-    metrics_view: metricsViewName,
-    measure,
-    // TODO: Override time range for sparkline when we integrate
-    // time range panel with super pill and in turn can get
-    // start and end time from the super pill instead of ISO
-
-    // time_range: componentTimeRange,
-    dimension_filters: componentFilter,
-  } = kpiSpec;
-
-  const timeAndFilterStore = createTimeAndFilterStore(metricsViewName, {
-    componentFilter,
-  });
+  const { metrics_view: metricsViewName, measure } = kpiSpec;
 
   return derived(
     [ctx.runtime, timeAndFilterStore],

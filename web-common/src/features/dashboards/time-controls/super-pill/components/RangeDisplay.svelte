@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Interval, DateTime } from "luxon";
+  import { DateTime, Interval } from "luxon";
 
   export let interval: Interval<true>;
   export let grain: string;
@@ -19,7 +19,7 @@
   $: time = displayedInterval.toFormat(timeFormat, { separator: "-" });
 </script>
 
-<div class="flex gap-x-1 whitespace-nowrap" title="{date} {time}">
+<div class="flex gap-x-1 whitespace-nowrap truncate" title="{date} {time}">
   <span class="line-clamp-1 text-left">
     {date}
     {#if showTime}

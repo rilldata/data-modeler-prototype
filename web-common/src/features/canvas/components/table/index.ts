@@ -55,7 +55,7 @@ export class TableCanvasComponent extends BaseCanvasComponent<TableSpec> {
         row_dimensions: { type: "multi_dimensions", label: "Row dimensions" },
         ...commonOptions,
       },
-      filter: getFilterOptions(),
+      filter: getFilterOptions(true, false),
     };
   }
 

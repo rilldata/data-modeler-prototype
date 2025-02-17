@@ -2,6 +2,7 @@
   import ComponentError from "@rilldata/web-common/features/canvas/components/ComponentError.svelte";
   import type { TableSpec } from "@rilldata/web-common/features/canvas/components/table";
   import { getCanvasStateManagers } from "@rilldata/web-common/features/canvas/state-managers/state-managers";
+  import type { TimeAndFilterStore } from "@rilldata/web-common/features/canvas/stores/types";
   import { createPivotDataStore } from "@rilldata/web-common/features/dashboards/pivot/pivot-data-store";
   import {
     PivotChipType,
@@ -16,6 +17,7 @@
   import TableRenderer from "./TableRenderer.svelte";
 
   export let rendererProperties: V1ComponentSpecRendererProperties;
+  export let timeAndFilterStore: Readable<TimeAndFilterStore>;
 
   const ctx = getCanvasStateManagers();
 
@@ -68,7 +70,12 @@
       queryClient: ctx.queryClient,
       enabled: !!ctx.canvasEntity.spec.canvasSpec,
     };
-    pivotConfig = getTableConfig(ctx, tableSpec, $pivotState);
+    pivotConfig = getTableConfig(
+      ctx,
+      tableSpec,
+      $pivotState,
+      timeAndFilterStore,
+    );
     pivotDataStore = createPivotDataStore(pivotDashboardContext, pivotConfig);
   }
 </script>
