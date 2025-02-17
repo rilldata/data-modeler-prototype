@@ -1,0 +1,121 @@
+connectors:
+  - clickhouse
+  - mysql
+project_files:
+  all_datatypes_clickhouse.yaml:
+    type: model
+    connector: clickhouse
+    materialize: true
+    sql: "SELECT * FROM mysql('{{.env.connector.mysql.ip}}:3306', 'mysql', 'all_datatypes', 'mysql', 'mysql')"
+  all_datatypes_duckdb.yaml:
+    type: model
+    connector: mysql
+    materialize: true
+    sql: "select * from all_datatypes"
+    output:
+      connector: duckdb
+tests:
+  - name: query_all_result_duckdb
+    resolver: sql
+    properties:
+      sql: "select * from all_datatypes_duckdb order by tinyint_col"
+    result_csv: |
+      tinyint_col,smallint_col,mediumint_col,int_col,bigint_col,float_col,double_col,decimal_col,char_col,varchar_col,tinytext_col,text_col,mediumtext_col,longtext_col,binary_col,varbinary_col,tinyblob_col,blob_col,mediumblob_col,longblob_col,enum_col,set_col,date_col,datetime_col,timestamp_col,time_col,year_col,boolean_col,bit_col,json_col,geometry_col,linestring_col,polygon_col,multipoint_col,multilinestring_col,multipolygon_col,geometrycollection_col
+      0,0,0,0,0,0,0,0,,,,,,,AAAAAAAAAAAAAA==,,,,,,small,,1970-01-01,1970-01-01T00:00:00Z,,00:00:00,1970,false,false,{},,,,,,,
+      127,32767,8388607,2147483647,1000000000000000000,1.100000023841858,2.2,3.3,C,VarChar,Tiny Text,Text,Medium Text,Long text content,QmluYXJ5AAAAAA==,VmFyQmluYXJ5,VGlueSBCbG9i,QmxvYg==,TWVkaXVtIEJsb2I=,TG9uZyBCbG9i,medium,"a,b",2024-02-14,2025-02-14T12:34:56Z,2025-02-14T12:34:56Z,12:34:56,2024,true,true,"{""key"": ""value""}",AAAAAAEBAAAAAAAAAAAA8D8AAAAAAADwPw==,AAAAAAECAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAPA/,AAAAAAEDAAAAAQAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAADwPwAAAAAAAPA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,AAAAAAEEAAAAAgAAAAEBAAAAAAAAAAAA8D8AAAAAAADwPwEBAAAAAAAAAAAAAEAAAAAAAAAAQA==,AAAAAAEFAAAAAgAAAAECAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAPA/AQIAAAACAAAAAAAAAAAA8D8AAAAAAADwPwAAAAAAAABAAAAAAAAAAEA=,AAAAAAEGAAAAAQAAAAEDAAAAAQAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAADwPwAAAAAAAPA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,AAAAAAEHAAAAAgAAAAEBAAAAAAAAAAAA8D8AAAAAAADwPwECAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAPA/
+      ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+  - name: query_all_datatypes_duckdb
+    resolver: sql
+    properties:
+      sql: "describe all_datatypes_duckdb"
+      # TODO: mysql type time is coming as varchar in duckdb
+    result_csv: |
+      column_name,column_type,null,key,default,extra
+      tinyint_col,TINYINT,YES,,,
+      smallint_col,SMALLINT,YES,,,
+      mediumint_col,INTEGER,YES,,,
+      int_col,INTEGER,YES,,,
+      bigint_col,BIGINT,YES,,,
+      float_col,FLOAT,YES,,,
+      double_col,DOUBLE,YES,,,
+      decimal_col,"DECIMAL(10,2)",YES,,,
+      char_col,VARCHAR,YES,,,
+      varchar_col,VARCHAR,YES,,,
+      tinytext_col,VARCHAR,YES,,,
+      text_col,VARCHAR,YES,,,
+      mediumtext_col,VARCHAR,YES,,,
+      longtext_col,VARCHAR,YES,,,
+      binary_col,BLOB,YES,,,
+      varbinary_col,BLOB,YES,,,
+      tinyblob_col,BLOB,YES,,,
+      blob_col,BLOB,YES,,,
+      mediumblob_col,BLOB,YES,,,
+      longblob_col,BLOB,YES,,,
+      enum_col,VARCHAR,YES,,,
+      set_col,VARCHAR,YES,,,
+      date_col,DATE,YES,,,
+      datetime_col,TIMESTAMP,YES,,,
+      timestamp_col,TIMESTAMP WITH TIME ZONE,YES,,,
+      time_col,VARCHAR,YES,,,
+      year_col,INTEGER,YES,,,
+      boolean_col,BOOLEAN,YES,,,
+      bit_col,BOOLEAN,YES,,,
+      json_col,VARCHAR,YES,,,
+      geometry_col,BLOB,YES,,,
+      linestring_col,BLOB,YES,,,
+      polygon_col,BLOB,YES,,,
+      multipoint_col,BLOB,YES,,,
+      multilinestring_col,BLOB,YES,,,
+      multipolygon_col,BLOB,YES,,,
+      geometrycollection_col,BLOB,YES,,,
+  - name: query_all_result_clickhouse
+    resolver: sql
+    properties:
+      sql: "select * from all_datatypes_clickhouse order by tinyint_col"
+      connector: clickhouse
+    result_csv: "tinyint_col,smallint_col,mediumint_col,int_col,bigint_col,float_col,double_col,decimal_col,char_col,varchar_col,tinytext_col,text_col,mediumtext_col,longtext_col,binary_col,varbinary_col,tinyblob_col,blob_col,mediumblob_col,longblob_col,enum_col,set_col,date_col,datetime_col,timestamp_col,time_col,year_col,boolean_col,bit_col,json_col,geometry_col,linestring_col,polygon_col,multipoint_col,multilinestring_col,multipolygon_col,geometrycollection_col\n0,0,0,0,0,0,0,0.00,,,,,,,\0\0\0\0\0\0\0\0\0\0,,,,,,small,,1970-01-01,1970-01-01T00:00:00Z,,00:00:00,1970,0,0,{},,,,,,,\n127,32767,8388607,2147483647,1000000000000000000,1.100000023841858,2.2,3.30,C,VarChar,Tiny Text,Text,Medium Text,Long text content,Binary\0\0\0\0,VarBinary,Tiny Blob,Blob,Medium Blob,Long Blob,medium,\"a,b\",2024-02-14,2025-02-14T12:34:56Z,2025-02-14T12:34:56Z,12:34:56,2024,1,49,\"{\"\"key\"\": \"\"value\"\"}\",\0\0\0\0\x01\x01\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?,\0\0\0\0\x01\x02\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?,\0\0\0\0\x01\x03\0\0\0\x01\0\0\0\x04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?\0\0\0\0\0\0�?\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\x01\x04\0\0\0\x02\0\0\0\x01\x01\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?\x01\x01\0\0\0\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@,\0\0\0\0\x01\x05\0\0\0\x02\0\0\0\x01\x02\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?\x01\x02\0\0\0\x02\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?\0\0\0\0\0\0\0@\0\0\0\0\0\0\0@,\0\0\0\0\x01\x06\0\0\0\x01\0\0\0\x01\x03\0\0\0\x01\0\0\0\x04\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?\0\0\0\0\0\0�?\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0,\0\0\0\0\x01\a\0\0\0\x02\0\0\0\x01\x01\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?\x01\x02\0\0\0\x02\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0�?\0\0\0\0\0\0�?\n,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n"
+  - name: query_all_datatypes_clickhouse
+    resolver: sql
+    properties:
+      sql: |
+        select name, type from system.columns where `table` = 'all_datatypes_clickhouse'
+      connector: clickhouse
+    result_csv: |
+      name,type
+      tinyint_col,Nullable(Int8)
+      smallint_col,Nullable(Int16)
+      mediumint_col,Nullable(Int32)
+      int_col,Nullable(Int32)
+      bigint_col,Nullable(Int64)
+      float_col,Nullable(Float32)
+      double_col,Nullable(Float64)
+      decimal_col,Nullable(String)
+      char_col,Nullable(String)
+      varchar_col,Nullable(String)
+      tinytext_col,Nullable(String)
+      text_col,Nullable(String)
+      mediumtext_col,Nullable(String)
+      longtext_col,Nullable(String)
+      binary_col,Nullable(FixedString(10))
+      varbinary_col,Nullable(String)
+      tinyblob_col,Nullable(String)
+      blob_col,Nullable(String)
+      mediumblob_col,Nullable(String)
+      longblob_col,Nullable(String)
+      enum_col,Nullable(String)
+      set_col,Nullable(String)
+      date_col,Nullable(Date)
+      datetime_col,Nullable(DateTime)
+      timestamp_col,Nullable(DateTime)
+      time_col,Nullable(String)
+      year_col,Nullable(String)
+      boolean_col,Nullable(Int8)
+      bit_col,Nullable(UInt64)
+      json_col,Nullable(String)
+      geometry_col,Nullable(String)
+      linestring_col,Nullable(String)
+      polygon_col,Nullable(String)
+      multipoint_col,Nullable(String)
+      multilinestring_col,Nullable(String)
+      multipolygon_col,Nullable(String)
+      geometrycollection_col,Nullable(String)

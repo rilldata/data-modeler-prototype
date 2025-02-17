@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/clickhouse"
+	"github.com/testcontainers/testcontainers-go/modules/mysql"
 )
 
 // AcquireConnector acquires a test connector by name.
@@ -120,5 +121,36 @@ var Connectors = map[string]ConnectorAcquireFunc{
 			"dsn": pgc.DatabaseURL,
 			"ip":  ip,
 		}
+	},
+	"mysql": func(t TestingT) map[string]string {
+		_, currentFile, _, _ := goruntime.Caller(0)
+		testdataPath := filepath.Join(currentFile, "..", "testdata")
+		mysqlInitData := filepath.Join(testdataPath, "init_data", "mysql_init_data.sql")
+
+		ctx := context.Background()
+		mysqlContainer, err := mysql.Run(ctx,
+			"mysql:8.0.36",
+			mysql.WithUsername("mysql"),
+			mysql.WithPassword("mysql"),
+			mysql.WithDatabase("mysql"),
+			mysql.WithScripts(mysqlInitData),
+		)
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			err := mysqlContainer.Terminate(ctx)
+			require.NoError(t, err)
+		})
+
+		host, err := mysqlContainer.Host(ctx)
+		require.NoError(t, err)
+		port, err := mysqlContainer.MappedPort(ctx, "3306/tcp")
+		require.NoError(t, err)
+
+		dsn := fmt.Sprintf("mysql:mysql@tcp(%v:%v)/mysql", host, port.Port())
+		ip, err := mysqlContainer.ContainerIP(context.Background())
+		require.NoError(t, err)
+
+		return map[string]string{"dsn": dsn, "ip": ip}
 	},
 }
