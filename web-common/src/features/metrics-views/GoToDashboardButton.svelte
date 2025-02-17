@@ -2,7 +2,6 @@
   import { Button } from "@rilldata/web-common/components/button";
   import * as DropdownMenu from "@rilldata/web-common/components/dropdown-menu";
   import Add from "@rilldata/web-common/components/icons/Add.svelte";
-  import CaretDownIcon from "@rilldata/web-common/components/icons/CaretDownIcon.svelte";
   import ExploreIcon from "@rilldata/web-common/components/icons/ExploreIcon.svelte";
   import { removeLeadingSlash } from "@rilldata/web-common/features/entity-management/entity-mappers";
   import { queryClient } from "@rilldata/web-common/lib/svelte-query/globalQueryClient";
@@ -13,6 +12,7 @@
   import { resourceColorMapping } from "../entity-management/resource-icon-mapping";
   import { ResourceKind } from "../entity-management/resource-selectors";
   import { createAndPreviewExplore } from "./create-and-preview-explore";
+  import NavigateOrDropdown from "./NavigateOrDropdown.svelte";
 
   export let resource: V1Resource | undefined;
 
@@ -38,10 +38,7 @@
 {:else}
   <DropdownMenu.Root>
     <DropdownMenu.Trigger asChild let:builder>
-      <Button type="secondary" builders={[builder]}>
-        Go to dashboard
-        <CaretDownIcon />
-      </Button>
+      <NavigateOrDropdown resources={dashboards} {builder} />
     </DropdownMenu.Trigger>
     <DropdownMenu.Content align="end">
       <DropdownMenu.Group>
