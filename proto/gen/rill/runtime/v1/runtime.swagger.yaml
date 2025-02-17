@@ -3554,20 +3554,17 @@ definitions:
     properties:
       component:
         type: string
+        description: Name of the component to render.
       definedInCanvas:
         type: boolean
-      x:
-        type: integer
-        format: int64
-      "y":
-        type: integer
-        format: int64
+        description: Indicates if the component was defined inline as part of the canvas YAML.
       width:
         type: integer
         format: int64
-      height:
-        type: integer
-        format: int64
+        description: Width of the item. The unit is given in width_unit.
+      widthUnit:
+        type: string
+        description: Unit of the width. Currently it's always empty, indicating relative units.
   v1CanvasPreset:
     type: object
     properties:
@@ -3585,12 +3582,31 @@ definitions:
       comparisonDimension:
         type: string
         description: If comparison_mode is EXPLORE_COMPARISON_MODE_DIMENSION, this indicates the dimension to use.
+  v1CanvasRow:
+    type: object
+    properties:
+      height:
+        type: integer
+        format: int64
+        description: Height of the row. The unit is given in height_unit.
+      heightUnit:
+        type: string
+        description: Unit of the height. Currently it's always "px".
+      items:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/v1CanvasItem'
+        description: Items to render in the row.
   v1CanvasSpec:
     type: object
     properties:
       displayName:
         type: string
         description: Display name for the canvas.
+      banner:
+        type: string
+        description: Banner text that can be displayed in Rill Cloud.
       maxWidth:
         type: integer
         format: int64
@@ -3638,23 +3654,18 @@ definitions:
           type: object
           $ref: '#/definitions/v1ComponentVariable'
         description: Variables that can be used in the canvas.
-      items:
+      rows:
         type: array
         items:
           type: object
-          $ref: '#/definitions/v1CanvasItem'
-        title: Items to render on the canvas
-      layout:
-        description: Layout is an untyped object pending a formal definition.
+          $ref: '#/definitions/v1CanvasRow'
+        title: Rows to render on the canvas
       securityRules:
         type: array
         items:
           type: object
           $ref: '#/definitions/v1SecurityRule'
         description: Security rules to apply for access to the canvas.
-      banner:
-        type: string
-        description: Banner text that can be displayed in Rill Cloud.
   v1CanvasState:
     type: object
     properties:

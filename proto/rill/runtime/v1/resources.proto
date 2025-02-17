@@ -703,6 +703,8 @@ message Canvas {
 message CanvasSpec {
   // Display name for the canvas.
   string display_name = 1;
+  // Banner text that can be displayed in Rill Cloud.
+  string banner = 17; 
   // Max width in pixels of the canvas.
   uint32 max_width = 2;
   // Horizontal gap in pixels of the canvas.
@@ -727,27 +729,34 @@ message CanvasSpec {
   CanvasPreset default_preset = 15;
   // Variables that can be used in the canvas.
   repeated ComponentVariable variables = 5;
-  // Items to render on the canvas
-  repeated CanvasItem items = 4;
-  // Layout is an untyped object pending a formal definition.
-  google.protobuf.Value layout = 16;
+  // Rows to render on the canvas
+  repeated CanvasRow rows = 18;
   // Security rules to apply for access to the canvas.
   repeated SecurityRule security_rules = 6;
-  // Banner text that can be displayed in Rill Cloud.
-  string banner = 17; 
 }
 
 message CanvasState {
   CanvasSpec valid_spec = 1;
 }
 
+message CanvasRow {
+  // Height of the row. The unit is given in height_unit.
+  uint32 height = 1;
+  // Unit of the height. Currently it's always "px".
+  string height_unit = 2;
+  // Items to render in the row.
+  repeated CanvasItem items = 3;
+}
+
 message CanvasItem {
+  // Name of the component to render.
   string component = 1;
+  // Indicates if the component was defined inline as part of the canvas YAML.
   bool defined_in_canvas = 8;
-  optional uint32 x = 2;
-  optional uint32 y = 3;
-  optional uint32 width = 4;
-  optional uint32 height = 5;
+  // Width of the item. The unit is given in width_unit.
+  uint32 width = 9;
+  // Unit of the width. Currently it's always empty, indicating relative units.
+  string width_unit = 10;
 }
 
 message CanvasPreset {

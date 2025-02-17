@@ -4497,6 +4497,13 @@ export class CanvasSpec extends Message<CanvasSpec> {
   displayName = "";
 
   /**
+   * Banner text that can be displayed in Rill Cloud.
+   *
+   * @generated from field: string banner = 17;
+   */
+  banner = "";
+
+  /**
    * Max width in pixels of the canvas.
    *
    * @generated from field: uint32 max_width = 2;
@@ -4571,18 +4578,11 @@ export class CanvasSpec extends Message<CanvasSpec> {
   variables: ComponentVariable[] = [];
 
   /**
-   * Items to render on the canvas
+   * Rows to render on the canvas
    *
-   * @generated from field: repeated rill.runtime.v1.CanvasItem items = 4;
+   * @generated from field: repeated rill.runtime.v1.CanvasRow rows = 18;
    */
-  items: CanvasItem[] = [];
-
-  /**
-   * Layout is an untyped object pending a formal definition.
-   *
-   * @generated from field: google.protobuf.Value layout = 16;
-   */
-  layout?: Value;
+  rows: CanvasRow[] = [];
 
   /**
    * Security rules to apply for access to the canvas.
@@ -4590,13 +4590,6 @@ export class CanvasSpec extends Message<CanvasSpec> {
    * @generated from field: repeated rill.runtime.v1.SecurityRule security_rules = 6;
    */
   securityRules: SecurityRule[] = [];
-
-  /**
-   * Banner text that can be displayed in Rill Cloud.
-   *
-   * @generated from field: string banner = 17;
-   */
-  banner = "";
 
   constructor(data?: PartialMessage<CanvasSpec>) {
     super();
@@ -4607,6 +4600,7 @@ export class CanvasSpec extends Message<CanvasSpec> {
   static readonly typeName = "rill.runtime.v1.CanvasSpec";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "display_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 17, name: "banner", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "max_width", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 9, name: "gap_x", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
     { no: 10, name: "gap_y", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
@@ -4617,10 +4611,8 @@ export class CanvasSpec extends Message<CanvasSpec> {
     { no: 13, name: "filters_enabled", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 15, name: "default_preset", kind: "message", T: CanvasPreset },
     { no: 5, name: "variables", kind: "message", T: ComponentVariable, repeated: true },
-    { no: 4, name: "items", kind: "message", T: CanvasItem, repeated: true },
-    { no: 16, name: "layout", kind: "message", T: Value },
+    { no: 18, name: "rows", kind: "message", T: CanvasRow, repeated: true },
     { no: 6, name: "security_rules", kind: "message", T: SecurityRule, repeated: true },
-    { no: 17, name: "banner", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CanvasSpec {
@@ -4678,38 +4670,91 @@ export class CanvasState extends Message<CanvasState> {
 }
 
 /**
+ * @generated from message rill.runtime.v1.CanvasRow
+ */
+export class CanvasRow extends Message<CanvasRow> {
+  /**
+   * Height of the row. The unit is given in height_unit.
+   *
+   * @generated from field: uint32 height = 1;
+   */
+  height = 0;
+
+  /**
+   * Unit of the height. Currently it's always "px".
+   *
+   * @generated from field: string height_unit = 2;
+   */
+  heightUnit = "";
+
+  /**
+   * Items to render in the row.
+   *
+   * @generated from field: repeated rill.runtime.v1.CanvasItem items = 3;
+   */
+  items: CanvasItem[] = [];
+
+  constructor(data?: PartialMessage<CanvasRow>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "rill.runtime.v1.CanvasRow";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "height", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 2, name: "height_unit", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 3, name: "items", kind: "message", T: CanvasItem, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CanvasRow {
+    return new CanvasRow().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CanvasRow {
+    return new CanvasRow().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CanvasRow {
+    return new CanvasRow().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: CanvasRow | PlainMessage<CanvasRow> | undefined, b: CanvasRow | PlainMessage<CanvasRow> | undefined): boolean {
+    return proto3.util.equals(CanvasRow, a, b);
+  }
+}
+
+/**
  * @generated from message rill.runtime.v1.CanvasItem
  */
 export class CanvasItem extends Message<CanvasItem> {
   /**
+   * Name of the component to render.
+   *
    * @generated from field: string component = 1;
    */
   component = "";
 
   /**
+   * Indicates if the component was defined inline as part of the canvas YAML.
+   *
    * @generated from field: bool defined_in_canvas = 8;
    */
   definedInCanvas = false;
 
   /**
-   * @generated from field: optional uint32 x = 2;
+   * Width of the item. The unit is given in width_unit.
+   *
+   * @generated from field: uint32 width = 4;
    */
-  x?: number;
+  width = 0;
 
   /**
-   * @generated from field: optional uint32 y = 3;
+   * Unit of the width. Currently it's always empty, indicating relative units.
+   *
+   * @generated from field: string width_unit = 6;
    */
-  y?: number;
-
-  /**
-   * @generated from field: optional uint32 width = 4;
-   */
-  width?: number;
-
-  /**
-   * @generated from field: optional uint32 height = 5;
-   */
-  height?: number;
+  widthUnit = "";
 
   constructor(data?: PartialMessage<CanvasItem>) {
     super();
@@ -4721,10 +4766,8 @@ export class CanvasItem extends Message<CanvasItem> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "component", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 8, name: "defined_in_canvas", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-    { no: 2, name: "x", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-    { no: 3, name: "y", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-    { no: 4, name: "width", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
-    { no: 5, name: "height", kind: "scalar", T: 13 /* ScalarType.UINT32 */, opt: true },
+    { no: 4, name: "width", kind: "scalar", T: 13 /* ScalarType.UINT32 */ },
+    { no: 6, name: "width_unit", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CanvasItem {

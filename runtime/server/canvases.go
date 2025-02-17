@@ -64,45 +64,47 @@ func (s *Server) ResolveCanvas(ctx context.Context, req *runtimev1.ResolveCanvas
 
 	// Build map of referenced components.
 	components := make(map[string]*runtimev1.Resource)
-	for _, item := range spec.Items {
-		// Skip if already resolved.
-		if _, ok := components[item.Component]; ok {
-			continue
-		}
-
-		// Get component resource.
-		// NOTE: By passing true, we get a cloned object that is safe to modify in-place.
-		cmp, err := ctrl.Get(ctx, &runtimev1.ResourceName{Kind: runtime.ResourceKindComponent, Name: item.Component}, true)
-		if err != nil {
-			if errors.Is(err, drivers.ErrResourceNotFound) {
-				return nil, status.Errorf(codes.Internal, "component %q in valid spec not found", item.Component)
+	for _, row := range spec.Rows {
+		for _, item := range row.Items {
+			// Skip if already resolved.
+			if _, ok := components[item.Component]; ok {
+				continue
 			}
-			return nil, err
-		}
 
-		// Resolve the renderer properties in the valid_spec.
-		validSpec := cmp.GetComponent().State.ValidSpec
-		if validSpec != nil && validSpec.RendererProperties != nil {
-			v, err := rillv1.ResolveTemplateRecursively(validSpec.RendererProperties.AsMap(), td)
+			// Get component resource.
+			// NOTE: By passing true, we get a cloned object that is safe to modify in-place.
+			cmp, err := ctrl.Get(ctx, &runtimev1.ResourceName{Kind: runtime.ResourceKindComponent, Name: item.Component}, true)
 			if err != nil {
-				return nil, status.Errorf(codes.InvalidArgument, "component %q: failed to resolve templating: %s", item.Component, err.Error())
+				if errors.Is(err, drivers.ErrResourceNotFound) {
+					return nil, status.Errorf(codes.Internal, "component %q in valid spec not found", item.Component)
+				}
+				return nil, err
 			}
 
-			props, ok := v.(map[string]any)
-			if !ok {
-				return nil, status.Errorf(codes.Internal, "component %q: failed to convert resolved renderer properties to map: %v", item.Component, v)
+			// Resolve the renderer properties in the valid_spec.
+			validSpec := cmp.GetComponent().State.ValidSpec
+			if validSpec != nil && validSpec.RendererProperties != nil {
+				v, err := rillv1.ResolveTemplateRecursively(validSpec.RendererProperties.AsMap(), td)
+				if err != nil {
+					return nil, status.Errorf(codes.InvalidArgument, "component %q: failed to resolve templating: %s", item.Component, err.Error())
+				}
+
+				props, ok := v.(map[string]any)
+				if !ok {
+					return nil, status.Errorf(codes.Internal, "component %q: failed to convert resolved renderer properties to map: %v", item.Component, v)
+				}
+
+				propsPB, err := structpb.NewStruct(props)
+				if err != nil {
+					return nil, status.Errorf(codes.Internal, "component %q: failed to convert renderer properties to struct: %s", item.Component, err.Error())
+				}
+
+				validSpec.RendererProperties = propsPB
 			}
 
-			propsPB, err := structpb.NewStruct(props)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, "component %q: failed to convert renderer properties to struct: %s", item.Component, err.Error())
-			}
-
-			validSpec.RendererProperties = propsPB
+			// Add to map.
+			components[item.Component] = cmp
 		}
-
-		// Add to map.
-		components[item.Component] = cmp
 	}
 
 	// Build map of referenced metrics views.

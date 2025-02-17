@@ -3,6 +3,8 @@ package rillv1
 import (
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -10,7 +12,6 @@ import (
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime/pkg/rilltime"
 	"golang.org/x/exp/maps"
-	"google.golang.org/protobuf/types/known/structpb"
 	"gopkg.in/yaml.v3"
 )
 
@@ -33,14 +34,13 @@ type CanvasYAML struct {
 		ComparisonDimension string `yaml:"comparison_dimension"`
 	} `yaml:"defaults"`
 	Variables []*ComponentVariableYAML `yaml:"variables"`
-	Items     []*struct {
-		Component yaml.Node `yaml:"component"` // Can be a name (string) or inline component definition (map)
-		X         *uint32   `yaml:"x"`
-		Y         *uint32   `yaml:"y"`
-		Width     *uint32   `yaml:"width"`
-		Height    *uint32   `yaml:"height"`
-	} `yaml:"items"`
-	Layout   any                 `yaml:"layout"` // Untyped pending a formal definition
+	Rows      []*struct {
+		Height string `yaml:"height"`
+		Items  []*struct {
+			Width     string    `yaml:"width"`
+			Component yaml.Node `yaml:"component"` // Can be a name (string) or inline component definition (map)
+		} `yaml:"items"`
+	}
 	Security *SecurityPolicyYAML `yaml:"security"`
 }
 
@@ -115,44 +115,62 @@ func (p *Parser) parseCanvas(node *Node) error {
 		}
 	}
 
-	// Parse items.
-	// Each item can either reference an externally defined component by name or define a component inline.
-	var items []*runtimev1.CanvasItem
+	// Parse rows and items.
+	// Items have position and size, and either reference an externally defined component by name or define a component inline.
+	var rows []*runtimev1.CanvasRow
 	var inlineComponentDefs []*componentDef
-	for i, item := range tmp.Items {
-		if item == nil {
-			return fmt.Errorf("item at index %d is nil", i)
+	for i, row := range tmp.Rows {
+		if row == nil {
+			return fmt.Errorf("row at index %d is empty", i)
 		}
 
-		component, inlineComponentDef, err := p.parseCanvasItemComponent(node.Name, i, item.Component)
+		height, heightUnit, err := parseItemSize(row.Height)
 		if err != nil {
-			return fmt.Errorf("invalid component at index %d: %w", i, err)
+			return fmt.Errorf("invalid height for row %d: %w", i, err)
+		}
+		if height != 0 && heightUnit != "px" {
+			return fmt.Errorf("invalid height unit %q for row %d: unit must be 'px'", heightUnit, i)
 		}
 
-		// Track inline component definitions so we can insert them after we have validated all components
-		if inlineComponentDef != nil {
-			inlineComponentDefs = append(inlineComponentDefs, inlineComponentDef)
+		var items []*runtimev1.CanvasItem
+		for j, item := range row.Items {
+			if item == nil {
+				return fmt.Errorf("item %d in row %d is empty", j, i)
+			}
+
+			width, widthUnit, err := parseItemSize(item.Width)
+			if err != nil {
+				return fmt.Errorf("invalid width for item %d in row %d: %w", j, i, err)
+			}
+			if widthUnit != "" {
+				return fmt.Errorf("invalid width unit %q for item %d in row %d: 'width' cannot have a unit", widthUnit, j, i)
+			}
+
+			component, inlineComponentDef, err := p.parseCanvasItemComponent(node.Name, i, j, item.Component)
+			if err != nil {
+				return fmt.Errorf("invalid component for item %d in row %d: %w", j, i, err)
+			}
+
+			// Track inline component definitions so we can insert them after we have validated all components
+			if inlineComponentDef != nil {
+				inlineComponentDefs = append(inlineComponentDefs, inlineComponentDef)
+			}
+
+			items = append(items, &runtimev1.CanvasItem{
+				Component:       component,
+				DefinedInCanvas: inlineComponentDef != nil,
+				Width:           width,
+				WidthUnit:       widthUnit,
+			})
+
+			node.Refs = append(node.Refs, ResourceName{Kind: ResourceKindComponent, Name: component})
 		}
 
-		items = append(items, &runtimev1.CanvasItem{
-			Component:       component,
-			DefinedInCanvas: inlineComponentDef != nil,
-			X:               item.X,
-			Y:               item.Y,
-			Width:           item.Width,
-			Height:          item.Height,
+		rows = append(rows, &runtimev1.CanvasRow{
+			Height:     height,
+			HeightUnit: heightUnit,
+			Items:      items,
 		})
-
-		node.Refs = append(node.Refs, ResourceName{Kind: ResourceKindComponent, Name: component})
-	}
-
-	// Parse layout (currently untyped pending a formal definition)
-	var layout *structpb.Value
-	if tmp.Layout != nil {
-		layout, err = structpb.NewValue(tmp.Layout)
-		if err != nil {
-			return fmt.Errorf("invalid layout: %w", err)
-		}
 	}
 
 	// Build and validate presets
@@ -218,8 +236,7 @@ func (p *Parser) parseCanvas(node *Node) error {
 	r.CanvasSpec.DefaultPreset = defaultPreset
 	r.CanvasSpec.EmbeddedTheme = themeSpec
 	r.CanvasSpec.Variables = variables
-	r.CanvasSpec.Items = items
-	r.CanvasSpec.Layout = layout
+	r.CanvasSpec.Rows = rows
 	r.CanvasSpec.SecurityRules = rules
 
 	// Track inline components
@@ -239,7 +256,7 @@ func (p *Parser) parseCanvas(node *Node) error {
 
 // parseCanvasItemComponent parses a canvas item's "component" property.
 // It may be a string (name of an externally defined component) or an inline component definition.
-func (p *Parser) parseCanvasItemComponent(canvasName string, idx int, n yaml.Node) (string, *componentDef, error) {
+func (p *Parser) parseCanvasItemComponent(canvasName string, rowIdx, itemIdx int, n yaml.Node) (string, *componentDef, error) {
 	if n.Kind == yaml.ScalarNode {
 		var name string
 		err := n.Decode(&name)
@@ -247,6 +264,10 @@ func (p *Parser) parseCanvasItemComponent(canvasName string, idx int, n yaml.Nod
 			return "", nil, err
 		}
 		return name, nil, nil
+	}
+
+	if n.IsZero() {
+		return "", nil, errors.New("missing component definition")
 	}
 
 	if n.Kind != yaml.MappingNode {
@@ -266,11 +287,11 @@ func (p *Parser) parseCanvasItemComponent(canvasName string, idx int, n yaml.Nod
 
 	spec.DefinedInCanvas = true
 
-	name := fmt.Sprintf("%s--component-%d", canvasName, idx)
+	name := fmt.Sprintf("%s--component-%d-%d", canvasName, rowIdx, itemIdx)
 
 	err = p.insertDryRun(ResourceKindComponent, name)
 	if err != nil {
-		name = fmt.Sprintf("%s--component-%d-%s", canvasName, idx, uuid.New())
+		name = fmt.Sprintf("%s--component-%d-%d-%s", canvasName, rowIdx, itemIdx, uuid.New())
 		err = p.insertDryRun(ResourceKindComponent, name)
 		if err != nil {
 			return "", nil, err
@@ -290,6 +311,29 @@ type componentDef struct {
 	name string
 	refs []ResourceName
 	spec *runtimev1.ComponentSpec
+}
+
+// itemSizeRegex is used for parseItemSize.
+var itemSizeRegex = regexp.MustCompile(`^(\d+)\s*(.*)$`)
+
+// parseItemSize parses a string of the format "<int><space?><unit?>".
+// Examples: "100", "100px", "100 px".
+func parseItemSize(s string) (uint32, string, error) {
+	if s == "" {
+		return 0, "", nil
+	}
+
+	matches := itemSizeRegex.FindStringSubmatch(s)
+	if matches == nil {
+		return 0, "", fmt.Errorf("invalid size %q", s)
+	}
+
+	size, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return 0, "", fmt.Errorf("invalid size %q: %w", s, err)
+	}
+
+	return uint32(size), matches[2], nil
 }
 
 func pointerIfNotEmpty(v string) *string {

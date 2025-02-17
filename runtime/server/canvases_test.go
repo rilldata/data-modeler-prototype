@@ -35,15 +35,16 @@ measures:
 			// Canvas
 			"c1.yaml": `
 type: canvas
-items:
-- component:
-    kpi:
-      metrics_view: mv1
-- component:
-    kpi:
-      metrics_view: mv1
-      foo: "{{ .args.foo }}"
-      bar: "{{ .env.bar }}"
+rows:
+- items:
+  - component:
+      kpi:
+        metrics_view: mv1
+  - component:
+      kpi:
+        metrics_view: mv1
+        foo: "{{ .args.foo }}"
+        bar: "{{ .env.bar }}"
 `,
 		},
 		Variables: map[string]string{
@@ -70,10 +71,10 @@ items:
 
 	// Check components resolved correctly
 	require.Len(t, res.ResolvedComponents, 2)
-	comp0Props := res.ResolvedComponents["c1--component-0"].GetComponent().State.ValidSpec.RendererProperties.AsMap()
+	comp0Props := res.ResolvedComponents["c1--component-0-0"].GetComponent().State.ValidSpec.RendererProperties.AsMap()
 	require.Len(t, comp0Props, 1)
 	require.Equal(t, "mv1", comp0Props["metrics_view"])
-	comp1Props := res.ResolvedComponents["c1--component-1"].GetComponent().State.ValidSpec.RendererProperties.AsMap()
+	comp1Props := res.ResolvedComponents["c1--component-0-1"].GetComponent().State.ValidSpec.RendererProperties.AsMap()
 	require.Len(t, comp1Props, 3)
 	require.Equal(t, "mv1", comp1Props["metrics_view"])
 	require.Equal(t, "foo", comp1Props["foo"])
