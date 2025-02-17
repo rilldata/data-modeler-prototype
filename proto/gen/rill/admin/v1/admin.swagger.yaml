@@ -1517,6 +1517,11 @@ paths:
           required: true
           schema:
             type: object
+            properties:
+              email:
+                type: string
+              slackUser:
+                type: string
       tags:
         - AdminService
   /v1/organizations/{organization}/projects/{project}/request-access:
@@ -1615,7 +1620,7 @@ paths:
                 description: TTL for the token in minutes. Set to 0 for no expiry. Defaults to no expiry.
               resourceType:
                 type: string
-                description: Type of resource to grant access to. Currently only supports "rill.runtime.v1.Explore".
+                description: Type of resource to grant access to.
               resourceName:
                 type: string
                 description: Name of the resource to grant access to.
@@ -1637,6 +1642,12 @@ paths:
               displayName:
                 type: string
                 description: Optional display name to store with the token.
+              resources:
+                type: array
+                items:
+                  type: object
+                  $ref: '#/definitions/v1ResourceName'
+                description: list of resources to grant access to.
       tags:
         - AdminService
   /v1/organizations/{organization}/projects/{project}/upload-assets:
@@ -3045,6 +3056,15 @@ paths:
                 type: array
                 items:
                   type: string
+              anonRecipients:
+                type: boolean
+              resources:
+                type: array
+                items:
+                  type: object
+                  $ref: '#/definitions/v1ResourceName'
+              webOpenMode:
+                $ref: '#/definitions/ReportOptionsOpenMode'
       tags:
         - AdminService
   /v1/services/tokens/{tokenId}:
@@ -3657,6 +3677,8 @@ definitions:
         type: string
       editUrl:
         type: string
+      unsubscribeUrl:
+        type: string
   ListGithubUserReposResponseRepo:
     type: object
     properties:
@@ -3670,6 +3692,20 @@ definitions:
         type: string
       defaultBranch:
         type: string
+  ReportOptionsOpenMode:
+    type: string
+    enum:
+      - OPEN_MODE_UNSPECIFIED
+      - OPEN_MODE_LEGACY
+      - OPEN_MODE_CREATOR
+      - OPEN_MODE_NONE
+      - OPEN_MODE_FILTERED
+    default: OPEN_MODE_UNSPECIFIED
+    title: |-
+      - OPEN_MODE_LEGACY: send this for older reports
+       - OPEN_MODE_CREATOR: send this for reports that should be opened with creators permissions
+       - OPEN_MODE_NONE: send this for reports that should not be opened or older reports which do not have any web_open_path
+       - OPEN_MODE_FILTERED: send this for reports that should be opened with creators permissions but with locked filters
   protobufAny:
     type: object
     properties:
@@ -4339,8 +4375,6 @@ definitions:
   v1GetReportMetaResponse:
     type: object
     properties:
-      baseUrls:
-        $ref: '#/definitions/GetReportMetaResponseURLs'
       recipientUrls:
         type: object
         additionalProperties:
@@ -4591,6 +4625,11 @@ definitions:
         type: string
       attributes:
         type: object
+      resources:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/v1ResourceName'
       resourceType:
         type: string
       resourceName:
@@ -4983,8 +5022,25 @@ definitions:
       webOpenState:
         type: string
         description: Annotation for the base64-encoded UI state to open for the report.
+      explore:
+        type: string
+        title: either canvas or explore should be set
+      canvas:
+        type: string
+      webOpenMode:
+        $ref: '#/definitions/ReportOptionsOpenMode'
+      filter:
+        $ref: '#/definitions/v1Expression'
+        title: use with OPEN_MODE_FILTERED
   v1RequestProjectAccessResponse:
     type: object
+  v1ResourceName:
+    type: object
+    properties:
+      type:
+        type: string
+      name:
+        type: string
   v1RevokeCurrentAuthTokenResponse:
     type: object
     properties:

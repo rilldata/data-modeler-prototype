@@ -27,10 +27,10 @@ type AlertStatus struct {
 }
 
 type ScheduledReport struct {
-	DisplayName    string
-	ReportTime     time.Time
-	DownloadFormat string
-	OpenLink       string
-	DownloadLink   string
-	EditLink       string
+	DisplayName     string
+	ReportTime      time.Time
+	DownloadFormat  string
+	OpenLink        string
+	DownloadLink    string
+	UnsubscribeLink string
 }

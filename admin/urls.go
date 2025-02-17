@@ -309,26 +309,29 @@ func (u *URLs) DenyProjectAccess(org, project, id string) string {
 }
 
 // ReportOpen returns the URL for opening a report in the frontend.
-func (u *URLs) ReportOpen(org, project, report string, executionTime time.Time) string {
-	reportURL := urlutil.MustJoinURL(u.Frontend(), org, project, "-", "reports", report, "open")
-	reportURL += fmt.Sprintf("?execution_time=%s", executionTime.UTC().Format(time.RFC3339))
-	return reportURL
+func (u *URLs) ReportOpen(org, project, report, token string, executionTime time.Time) string {
+	if token == "" {
+		return urlutil.MustWithQuery(urlutil.MustJoinURL(u.Frontend(), org, project, "-", "reports", report, "open"), map[string]string{"execution_time": executionTime.UTC().Format(time.RFC3339)})
+	}
+	return urlutil.MustWithQuery(urlutil.MustJoinURL(u.Frontend(), org, project, "-", "reports", report, "open"), map[string]string{"execution_time": executionTime.UTC().Format(time.RFC3339), "token": token})
 }
 
 // ReportExport returns the URL for exporting a report in the frontend.
 func (u *URLs) ReportExport(org, project, report, token string) string {
-	exportURL := urlutil.MustJoinURL(u.Frontend(), org, project, "-", "reports", report, "export")
-	if token != "" {
-		exportURL += fmt.Sprintf("?token=%s", token)
-	}
-	return exportURL
+	return urlutil.MustWithQuery(urlutil.MustJoinURL(u.Frontend(), org, project, "-", "reports", report, "export"), map[string]string{"token": token})
 }
 
-// ReportEdit returns the URL for editing a report in the frontend or unsubscribe for non-rill recipients.
-func (u *URLs) ReportEdit(org, project, report, token string) string {
-	if token != "" {
-		return urlutil.MustWithQuery(urlutil.MustJoinURL(u.Frontend(), org, project, "-", "reports", report, "unsubscribe"), map[string]string{"token": token})
+// ReportUnsubscribe returns the URL for unsubscribing from the report.
+func (u *URLs) ReportUnsubscribe(org, project, report, token, email string) string {
+	queryParams := map[string]string{"token": token}
+	if email != "" {
+		queryParams["email"] = email
 	}
+	return urlutil.MustWithQuery(urlutil.MustJoinURL(u.Frontend(), org, project, "-", "reports", report, "unsubscribe"), queryParams)
+}
+
+// ReportEdit returns the URL for editing a report in the frontend.
+func (u *URLs) ReportEdit(org, project, report string) string {
 	return urlutil.MustJoinURL(u.Frontend(), org, project, "-", "reports", report)
 }
 

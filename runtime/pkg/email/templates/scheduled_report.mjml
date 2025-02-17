@@ -47,7 +47,7 @@
         <mj-spacer height="20px" />
         
         <mj-text align="center" font-size="12px">
-          To{{ if not .External}} edit or{{ end }} unsubscribe from this report, <a href="{{ .EditLink }}">click here</a>.
+          {{ if .EditLink }} To edit this report, <a href="{{ .EditLink }}">click here</a>. {{ end }} To unsubscribe from this report, <a href="{{ .UnsubscribeLink }}">click here</a>.
         </mj-text>
 
         <mj-text align="center" font-size="12px" line-height="1.5">

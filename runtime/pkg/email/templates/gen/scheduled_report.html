@@ -187,7 +187,7 @@
                     </tr>
                     <tr>
                       <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Helvetica;font-size:12px;line-height:1.25;text-align:center;color:#000000;">To{{ if not .External}} edit or{{ end }} unsubscribe from this report, <a href="{{ .EditLink }}">click here</a>.</div>
+                        <div style="font-family:Helvetica;font-size:12px;line-height:1.25;text-align:center;color:#000000;">{{ if .EditLink }} To edit this report, <a href="{{ .EditLink }}">click here</a>. {{ end }} To unsubscribe from this report, <a href="{{ .UnsubscribeLink }}">click here</a>.</div>
                       </td>
                     </tr>
                     <tr>

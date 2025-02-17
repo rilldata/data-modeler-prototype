@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/rilldata/rill/admin"
 	"github.com/rilldata/rill/admin/database"
-	"github.com/rilldata/rill/admin/pkg/authtoken"
 	"github.com/rilldata/rill/admin/server/auth"
 	adminv1 "github.com/rilldata/rill/proto/gen/rill/admin/v1"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
@@ -36,6 +35,8 @@ func (s *Server) GetReportMeta(ctx context.Context, req *adminv1.GetReportMetaRe
 		attribute.String("args.report", req.Report),
 		attribute.StringSlice("args.email_recipients", req.EmailRecipients),
 		attribute.String("args.execution_time", req.ExecutionTime.String()),
+		attribute.Bool("args.anon_recipients", req.AnonRecipients),
+		attribute.String("args.owner_id", req.OwnerId),
 	)
 
 	proj, err := s.admin.DB.FindProject(ctx, req.ProjectId)
@@ -57,48 +58,57 @@ func (s *Server) GetReportMeta(ctx context.Context, req *adminv1.GetReportMetaRe
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	if len(req.EmailRecipients) == 0 {
-		return &adminv1.GetReportMetaResponse{
-			BaseUrls: &adminv1.GetReportMetaResponse_URLs{
-				OpenUrl:   s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportOpen(org.Name, proj.Name, req.Report, req.ExecutionTime.AsTime()),
-				ExportUrl: s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportExport(org.Name, proj.Name, req.Report, ""),
-				EditUrl:   s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportEdit(org.Name, proj.Name, req.Report, ""),
-			},
-		}, nil
+	urls := make(map[string]*adminv1.GetReportMetaResponse_URLs)
+
+	var recipients []string
+	recipients = append(recipients, req.EmailRecipients...)
+	if req.AnonRecipients {
+		// add empty email for slack and other notifiers token
+		recipients = append(recipients, "")
 	}
 
-	var externalEmails []string
-	for _, email := range req.EmailRecipients {
-		_, err := s.admin.DB.FindUserByEmail(ctx, email)
-		if err != nil {
-			if errors.Is(err, database.ErrNotFound) {
-				externalEmails = append(externalEmails, email)
-			} else {
-				return nil, fmt.Errorf("failed to find user by email: %w", err)
-			}
-		}
-	}
-
-	externalUrls := make(map[string]*adminv1.GetReportMetaResponse_URLs, len(externalEmails))
-	emailTokens, err := s.reconcileMagicTokensForExternalEmails(ctx, proj.OrganizationID, proj.ID, req.Report, req.OwnerId, externalEmails)
+	tokens, ownerEmail, err := s.createMagicTokens(ctx, proj.OrganizationID, proj.ID, req.Report, req.OwnerId, recipients, req.Resources)
 	if err != nil {
 		return nil, fmt.Errorf("failed to issue magic auth tokens: %w", err)
 	}
 
-	for email, token := range emailTokens {
-		externalUrls[email] = &adminv1.GetReportMetaResponse_URLs{
-			ExportUrl: s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportExport(org.Name, proj.Name, req.Report, token),
-			EditUrl:   s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportEdit(org.Name, proj.Name, req.Report, token),
+	externalEmailSet := make(map[string]bool)
+	if req.WebOpenMode == adminv1.ReportOptions_OPEN_MODE_LEGACY {
+		for _, email := range req.EmailRecipients {
+			_, err := s.admin.DB.FindUserByEmail(ctx, email)
+			if err != nil {
+				if errors.Is(err, database.ErrNotFound) {
+					externalEmailSet[email] = true
+				} else {
+					return nil, fmt.Errorf("failed to find user by email: %w", err)
+				}
+			}
+		}
+	}
+
+	for _, recipient := range recipients {
+		if recipient == ownerEmail {
+			urls[recipient] = &adminv1.GetReportMetaResponse_URLs{
+				OpenUrl:        s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportOpen(org.Name, proj.Name, req.Report, tokens[recipient], req.ExecutionTime.AsTime()),
+				ExportUrl:      s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportExport(org.Name, proj.Name, req.Report, tokens[recipient]),
+				EditUrl:        s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportEdit(org.Name, proj.Name, req.Report),
+				UnsubscribeUrl: s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportUnsubscribe(org.Name, proj.Name, req.Report, tokens[recipient], recipient),
+			}
+			continue
+		}
+		urls[recipient] = &adminv1.GetReportMetaResponse_URLs{
+			ExportUrl:      s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportExport(org.Name, proj.Name, req.Report, tokens[recipient]),
+			UnsubscribeUrl: s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportUnsubscribe(org.Name, proj.Name, req.Report, tokens[recipient], recipient),
+		}
+		if req.WebOpenMode == adminv1.ReportOptions_OPEN_MODE_CREATOR {
+			urls[recipient].OpenUrl = s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportOpen(org.Name, proj.Name, req.Report, tokens[recipient], req.ExecutionTime.AsTime())
+		} else if req.WebOpenMode == adminv1.ReportOptions_OPEN_MODE_LEGACY && !externalEmailSet[recipient] {
+			urls[recipient].OpenUrl = s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportOpen(org.Name, proj.Name, req.Report, "", req.ExecutionTime.AsTime())
 		}
 	}
 
 	return &adminv1.GetReportMetaResponse{
-		BaseUrls: &adminv1.GetReportMetaResponse_URLs{
-			OpenUrl:   s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportOpen(org.Name, proj.Name, req.Report, req.ExecutionTime.AsTime()),
-			ExportUrl: s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportExport(org.Name, proj.Name, req.Report, ""),
-			EditUrl:   s.admin.URLs.WithCustomDomain(org.CustomDomain).ReportEdit(org.Name, proj.Name, req.Report, ""),
-		},
-		RecipientUrls: externalUrls,
+		RecipientUrls: urls,
 	}, nil
 }
 
@@ -269,6 +279,7 @@ func (s *Server) UnsubscribeReport(ctx context.Context, req *adminv1.Unsubscribe
 	}
 
 	var userEmail string
+	var slackEmail string
 	if claims.OwnerType() == auth.OwnerTypeUser {
 		user, err := s.admin.DB.FindUser(ctx, claims.OwnerID())
 		if err != nil {
@@ -283,7 +294,23 @@ func (s *Server) UnsubscribeReport(ctx context.Context, req *adminv1.Unsubscribe
 			return nil, status.Errorf(codes.InvalidArgument, "failed to find report token: %s", err.Error())
 		}
 
-		userEmail = reportTkn.RecipientEmail
+		if reportTkn.RecipientEmail == "" {
+			if req.Email != nil {
+				return nil, status.Error(codes.InvalidArgument, "anon token cannot be used for unsubscribing email recipients")
+			}
+			if req.SlackUser == nil {
+				return nil, status.Error(codes.InvalidArgument, "no slack user provided for unsubscribing")
+			}
+			slackEmail = *req.SlackUser
+		} else {
+			userEmail = reportTkn.RecipientEmail
+			if req.Email == nil {
+				return nil, status.Error(codes.InvalidArgument, "no email provided for unsubscribing")
+			}
+			if !strings.EqualFold(userEmail, *req.Email) {
+				return nil, status.Error(codes.InvalidArgument, "email does not match token")
+			}
+		}
 	}
 
 	opts, err := recreateReportOptionsFromSpec(spec)
@@ -300,7 +327,7 @@ func (s *Server) UnsubscribeReport(ctx context.Context, req *adminv1.Unsubscribe
 		}
 	}
 	for idx, email := range opts.SlackUsers {
-		if strings.EqualFold(userEmail, email) {
+		if strings.EqualFold(slackEmail, email) {
 			opts.SlackUsers = slices.Delete(opts.SlackUsers, idx, idx+1)
 			found = true
 			break
@@ -315,10 +342,6 @@ func (s *Server) UnsubscribeReport(ctx context.Context, req *adminv1.Unsubscribe
 		err = s.admin.DB.UpdateVirtualFileDeleted(ctx, proj.ID, proj.ProdBranch, virtualFilePathForManagedReport(req.Name))
 		if err != nil {
 			return nil, fmt.Errorf("failed to update virtual file: %w", err)
-		}
-		_, err = s.reconcileMagicTokensForExternalEmails(ctx, proj.OrganizationID, proj.ID, req.Name, annotations.AdminOwnerUserID, nil)
-		if err != nil {
-			return nil, fmt.Errorf("failed to clean up report tokens: %w", err)
 		}
 	} else {
 		data, err := s.yamlForManagedReport(opts, annotations.AdminOwnerUserID)
@@ -390,11 +413,6 @@ func (s *Server) DeleteReport(ctx context.Context, req *adminv1.DeleteReportRequ
 	err = s.admin.DB.UpdateVirtualFileDeleted(ctx, proj.ID, proj.ProdBranch, virtualFilePathForManagedReport(req.Name))
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete virtual file: %w", err)
-	}
-
-	_, err = s.reconcileMagicTokensForExternalEmails(ctx, proj.OrganizationID, proj.ID, req.Name, annotations.AdminOwnerUserID, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to clean up report tokens: %w", err)
 	}
 
 	err = s.admin.TriggerParserAndAwaitResource(ctx, depl, req.Name, runtime.ResourceKindReport)
@@ -488,6 +506,23 @@ func (s *Server) yamlForManagedReport(opts *adminv1.ReportOptions, ownerUserID s
 	res.Annotations.AdminNonce = time.Now().Format(time.RFC3339Nano)
 	res.Annotations.WebOpenPath = opts.WebOpenPath
 	res.Annotations.WebOpenState = opts.WebOpenState
+	switch opts.WebOpenMode {
+	case adminv1.ReportOptions_OPEN_MODE_LEGACY, adminv1.ReportOptions_OPEN_MODE_UNSPECIFIED: // backwards compatibility
+		res.Annotations.WebOpenMode = WebOpenModeLegacy
+	case adminv1.ReportOptions_OPEN_MODE_CREATOR:
+		res.Annotations.WebOpenMode = WebOpenModeCreator
+	case adminv1.ReportOptions_OPEN_MODE_NONE:
+		res.Annotations.WebOpenMode = WebOpenModeNone
+	case adminv1.ReportOptions_OPEN_MODE_FILTERED:
+		res.Annotations.WebOpenMode = WebOpenModeFiltered
+	default:
+		return nil, fmt.Errorf("unknown open mode: %v", opts.WebOpenMode)
+	}
+	if opts.Explore != "" && opts.Canvas != "" {
+		return nil, fmt.Errorf("cannot set both explore and canvas")
+	}
+	res.Annotations.Explore = opts.Explore
+	res.Annotations.Canvas = opts.Canvas
 	return yaml.Marshal(res)
 }
 
@@ -531,6 +566,18 @@ func (s *Server) yamlForCommittedReport(opts *adminv1.ReportOptions) ([]byte, er
 	res.Notify.Slack.Webhooks = opts.SlackWebhooks
 	res.Annotations.WebOpenPath = opts.WebOpenPath
 	res.Annotations.WebOpenState = opts.WebOpenState
+	switch opts.WebOpenMode {
+	case adminv1.ReportOptions_OPEN_MODE_LEGACY, adminv1.ReportOptions_OPEN_MODE_UNSPECIFIED: // backwards compatibility
+		res.Annotations.WebOpenMode = WebOpenModeLegacy
+	case adminv1.ReportOptions_OPEN_MODE_CREATOR:
+		res.Annotations.WebOpenMode = WebOpenModeCreator
+	case adminv1.ReportOptions_OPEN_MODE_NONE:
+		res.Annotations.WebOpenMode = WebOpenModeNone
+	case adminv1.ReportOptions_OPEN_MODE_FILTERED:
+		res.Annotations.WebOpenMode = WebOpenModeFiltered
+	default:
+		return nil, fmt.Errorf("unknown open mode: %v", opts.WebOpenMode)
+	}
 	return yaml.Marshal(res)
 }
 
@@ -555,74 +602,43 @@ func (s *Server) generateReportName(ctx context.Context, depl *database.Deployme
 	return uuid.New().String(), nil
 }
 
-func (s *Server) reconcileMagicTokensForExternalEmails(ctx context.Context, orgID, projectID, reportName, ownerID string, emails []string) (map[string]string, error) {
-	emailSet := make(map[string]struct{}, len(emails))
-	for _, email := range emails {
-		emailSet[strings.ToLower(email)] = struct{}{}
-	}
-
-	emailTokens := make(map[string]string, len(emails))
-
-	// check if magic token already exists for the recipient, recipient list might have changed
-	tkns, err := s.admin.DB.FindReportTokensWithSecret(ctx, reportName)
-	if err != nil {
-		if !errors.Is(err, database.ErrNotFound) {
-			return nil, fmt.Errorf("failed to find report tokens: %w", err)
-		}
-	}
-
-	var unusedTknIDs []string
-	for _, tkn := range tkns {
-		if _, ok := emailSet[strings.ToLower(tkn.RecipientEmail)]; ok {
-			id, err := uuid.Parse(tkn.MagicAuthTokenID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse token ID: %w", err)
-			}
-			token, err := authtoken.FromParts(authtoken.TypeMagic, id, tkn.MagicAuthTokenSecret)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create magic auth token from parts: %w", err)
-			}
-			emailTokens[strings.ToLower(tkn.RecipientEmail)] = token.String()
-			delete(emailSet, tkn.RecipientEmail)
-		} else {
-			unusedTknIDs = append(unusedTknIDs, tkn.MagicAuthTokenID)
-		}
-	}
-
-	// cleanup unused tokens
-	if len(unusedTknIDs) > 0 {
-		err = s.admin.DB.DeleteMagicAuthTokens(ctx, unusedTknIDs)
-		if err != nil {
-			return nil, fmt.Errorf("failed to delete unused report tokens: %w", err)
-		}
-	}
-
-	// return early after cleaning up unused tokens if no external emails
-	if len(emailSet) == 0 {
-		return emailTokens, nil
-	}
-
+func (s *Server) createMagicTokens(ctx context.Context, orgID, projectID, reportName, ownerID string, emails []string, resources []*adminv1.ResourceName) (map[string]string, string, error) {
 	var createdByUserID *string
 	if ownerID != "" {
 		createdByUserID = &ownerID
 	}
+	ttl := 3 * 30 * 24 * time.Hour // approx 3 months
 	mgcOpts := &admin.IssueMagicAuthTokenOptions{
 		ProjectID:       projectID,
 		CreatedByUserID: createdByUserID,
-		ResourceType:    runtime.ResourceKindReport,
-		ResourceName:    reportName,
 		Internal:        true,
+		TTL:             &ttl,
 	}
 
+	res := make([]database.ResourceName, len(resources)+1)
+	res = append(res, database.ResourceName{
+		Type: runtime.ResourceKindReport,
+		Name: reportName,
+	})
+	for _, r := range resources {
+		res = append(res, database.ResourceName{
+			Type: r.Type,
+			Name: r.Name,
+		})
+	}
+
+	mgcOpts.Resources = res
+
+	ownerEmail := ""
 	if ownerID != "" {
 		// Get the project-level permissions for the creating user.
 		orgPerms, err := s.admin.OrganizationPermissionsForUser(ctx, orgID, ownerID)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		projectPermissions, err := s.admin.ProjectPermissionsForUser(ctx, projectID, ownerID, orgPerms)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		// Generate JWT attributes based on the creating user's, but with limited project-level permissions.
@@ -632,19 +648,21 @@ func (s *Server) reconcileMagicTokensForExternalEmails(ctx context.Context, orgI
 		// NOTE: Another problem is that if the creator is an admin, attrs["admin"] will be true. It shouldn't be a problem today, but could end up leaking some privileges in the future if we're not careful.
 		attrs, err := s.jwtAttributesForUser(ctx, ownerID, orgID, projectPermissions)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		mgcOpts.Attributes = attrs
+		ownerEmail = attrs["email"].(string)
 	}
 
 	// issue magic tokens for new external emails
 	cctx, tx, err := s.admin.DB.NewTx(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to start transaction: %w", err)
+		return nil, "", fmt.Errorf("failed to start transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	for email := range emailSet {
+	emailTokens := make(map[string]string)
+	for _, email := range emails {
 		if ownerID == "" {
 			// set user attrs as per the email
 			mgcOpts.Attributes = map[string]interface{}{
@@ -658,7 +676,7 @@ func (s *Server) reconcileMagicTokensForExternalEmails(ctx context.Context, orgI
 
 		tkn, err := s.admin.IssueMagicAuthToken(cctx, mgcOpts)
 		if err != nil {
-			return nil, fmt.Errorf("failed to issue magic auth token for email %s: %w", email, err)
+			return nil, "", fmt.Errorf("failed to issue magic auth token for email %s: %w", email, err)
 		}
 
 		emailTokens[email] = tkn.Token().String()
@@ -669,16 +687,16 @@ func (s *Server) reconcileMagicTokensForExternalEmails(ctx context.Context, orgI
 			MagicAuthTokenID: tkn.Token().ID.String(),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to insert report token for email %s: %w", email, err)
+			return nil, "", fmt.Errorf("failed to insert report token for email %s: %w", email, err)
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+		return nil, "", fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	return emailTokens, nil
+	return emailTokens, ownerEmail, nil
 }
 
 var reportNameToDashCharsRegexp = regexp.MustCompile(`[ _]+`)
@@ -730,6 +748,18 @@ func recreateReportOptionsFromSpec(spec *runtimev1.ReportSpec) (*adminv1.ReportO
 	}
 	opts.WebOpenPath = annotations.WebOpenPath
 	opts.WebOpenState = annotations.WebOpenState
+	switch annotations.WebOpenMode {
+	case WebOpenModeLegacy:
+		opts.WebOpenMode = adminv1.ReportOptions_OPEN_MODE_LEGACY
+	case WebOpenModeCreator:
+		opts.WebOpenMode = adminv1.ReportOptions_OPEN_MODE_CREATOR
+	case WebOpenModeNone:
+		opts.WebOpenMode = adminv1.ReportOptions_OPEN_MODE_NONE
+	case WebOpenModeFiltered:
+		opts.WebOpenMode = adminv1.ReportOptions_OPEN_MODE_FILTERED
+	default:
+		return nil, fmt.Errorf("unknown web open mode: %s", annotations.WebOpenMode)
+	}
 	return opts, nil
 }
 
@@ -769,12 +799,24 @@ type reportYAML struct {
 }
 
 type reportAnnotations struct {
-	AdminOwnerUserID string `yaml:"admin_owner_user_id"`
-	AdminManaged     bool   `yaml:"admin_managed"`
-	AdminNonce       string `yaml:"admin_nonce"` // To ensure spec version gets updated on writes, to enable polling in TriggerReconcileAndAwaitReport
-	WebOpenPath      string `yaml:"web_open_path"`
-	WebOpenState     string `yaml:"web_open_state"`
+	AdminOwnerUserID string      `yaml:"admin_owner_user_id"`
+	AdminManaged     bool        `yaml:"admin_managed"`
+	AdminNonce       string      `yaml:"admin_nonce"` // To ensure spec version gets updated on writes, to enable polling in TriggerReconcileAndAwaitReport
+	WebOpenPath      string      `yaml:"web_open_path"`
+	WebOpenState     string      `yaml:"web_open_state"`
+	WebOpenMode      WebOpenMode `yaml:"web_open_mode,omitempty"`
+	Explore          string      `yaml:"explore,omitempty"`
+	Canvas           string      `yaml:"canvas,omitempty"`
 }
+
+type WebOpenMode string
+
+const (
+	WebOpenModeLegacy   WebOpenMode = "legacy"
+	WebOpenModeCreator  WebOpenMode = "creator"
+	WebOpenModeNone     WebOpenMode = "none"
+	WebOpenModeFiltered WebOpenMode = "filtered"
+)
 
 func parseReportAnnotations(annotations map[string]string) reportAnnotations {
 	if annotations == nil {
@@ -787,6 +829,20 @@ func parseReportAnnotations(annotations map[string]string) reportAnnotations {
 	res.AdminNonce = annotations["admin_nonce"]
 	res.WebOpenPath = annotations["web_open_path"]
 	res.WebOpenState = annotations["web_open_state"]
+	res.Explore = annotations["explore"]
+	res.Canvas = annotations["canvas"]
+	switch annotations["web_open_mode"] {
+	case "legacy":
+		res.WebOpenMode = WebOpenModeLegacy
+	case "creator":
+		res.WebOpenMode = WebOpenModeCreator
+	case "none":
+		res.WebOpenMode = WebOpenModeNone
+	case "filtered":
+		res.WebOpenMode = WebOpenModeFiltered
+	case "": // backwards compatibility
+		res.WebOpenMode = WebOpenModeLegacy
+	}
 
 	return res
 }

@@ -29,8 +29,6 @@ func (s *Server) IssueMagicAuthToken(ctx context.Context, req *adminv1.IssueMagi
 		attribute.String("args.organization", req.Organization),
 		attribute.String("args.project", req.Project),
 		attribute.String("args.display_name", req.DisplayName),
-		attribute.String("args.resource_type", req.ResourceType),
-		attribute.String("args.resource_name", req.ResourceName),
 	)
 
 	proj, err := s.admin.DB.FindProjectByName(ctx, req.Organization, req.Project)
@@ -49,13 +47,35 @@ func (s *Server) IssueMagicAuthToken(ctx context.Context, req *adminv1.IssueMagi
 		return nil, status.Error(codes.PermissionDenied, "not allowed to create a magic auth token")
 	}
 
+	if req.ResourceName != "" && req.ResourceType != "" { // nolint:staticcheck // for backwards compatibility
+		addResource := true
+		for _, r := range req.Resources {
+			if r.Type == req.ResourceType && r.Name == req.ResourceName { // nolint:staticcheck // for backwards compatibility
+				addResource = false
+				break
+			}
+		}
+		if addResource {
+			req.Resources = append(req.Resources, &adminv1.ResourceName{
+				Type: req.ResourceType, // nolint:staticcheck // for backwards compatibility
+				Name: req.ResourceName, // nolint:staticcheck // for backwards compatibility
+			})
+		}
+	}
+
+	resources := make([]database.ResourceName, len(req.Resources))
+	for i, r := range req.Resources {
+		resources[i] = database.ResourceName{
+			Type: r.Type,
+			Name: r.Name,
+		}
+	}
 	opts := &admin.IssueMagicAuthTokenOptions{
-		ProjectID:    proj.ID,
-		ResourceType: req.ResourceType,
-		ResourceName: req.ResourceName,
-		Fields:       req.Fields,
-		State:        req.State,
-		DisplayName:  req.DisplayName,
+		ProjectID:   proj.ID,
+		Fields:      req.Fields,
+		State:       req.State,
+		DisplayName: req.DisplayName,
+		Resources:   resources,
 	}
 
 	if req.TtlMinutes != 0 {
@@ -273,6 +293,14 @@ func (s *Server) magicAuthTokenToPB(tkn *database.MagicAuthTokenWithUser, org *d
 		url = s.admin.URLs.WithCustomDomain(org.CustomDomain).MagicAuthTokenOpen(org.Name, proj.Name, tokenStr)
 	}
 
+	rs := make([]*adminv1.ResourceName, len(tkn.Resources))
+	for i, r := range tkn.Resources {
+		rs[i] = &adminv1.ResourceName{
+			Type: r.Type,
+			Name: r.Name,
+		}
+	}
+
 	res := &adminv1.MagicAuthToken{
 		Id:                 tkn.ID,
 		ProjectId:          tkn.ProjectID,
@@ -284,8 +312,7 @@ func (s *Server) magicAuthTokenToPB(tkn *database.MagicAuthTokenWithUser, org *d
 		CreatedByUserId:    safeStr(tkn.CreatedByUserID),
 		CreatedByUserEmail: tkn.CreatedByUserEmail,
 		Attributes:         attrs,
-		ResourceType:       tkn.ResourceType,
-		ResourceName:       tkn.ResourceName,
+		Resources:          rs,
 		Filter:             filter,
 		Fields:             tkn.Fields,
 		State:              tkn.State,
