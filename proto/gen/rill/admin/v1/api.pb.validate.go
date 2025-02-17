@@ -33270,6 +33270,14 @@ func (m *Organization) validate(all bool) error {
 		}
 	}
 
+	if m.BillingPlanName != nil {
+		// no validation rules for BillingPlanName
+	}
+
+	if m.BillingPlanDisplayName != nil {
+		// no validation rules for BillingPlanDisplayName
+	}
+
 	if len(errors) > 0 {
 		return OrganizationMultiError(errors)
 	}

@@ -81,6 +81,8 @@ func (w *SubscriptionCancellationCheckWorker) subscriptionCancellationCheck(ctx 
 			BillingCustomerID:                   org.BillingCustomerID,
 			PaymentCustomerID:                   org.PaymentCustomerID,
 			BillingEmail:                        org.BillingEmail,
+			BillingPlanName:                     org.BillingPlanName,
+			BillingPlanDisplayName:              org.BillingPlanDisplayName,
 			CreatedByUserID:                     org.CreatedByUserID,
 		})
 		if err != nil {

@@ -3,13 +3,13 @@ package payment
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/rilldata/rill/admin/jobs"
 	"github.com/rilldata/rill/runtime/pkg/httputil"
+	"github.com/rilldata/rill/runtime/pkg/observability"
 	"github.com/stripe/stripe-go/v79"
 	"github.com/stripe/stripe-go/v79/webhook"
 	"go.uber.org/zap"
@@ -96,7 +96,8 @@ func (s *stripeWebhook) handleWebhook(w http.ResponseWriter, r *http.Request) er
 func (s *stripeWebhook) handlePaymentMethodAdded(ctx context.Context, eventID string, method *stripe.PaymentMethod) error {
 	res, err := s.jobs.PaymentMethodAdded(ctx, method.ID, method.Customer.ID, string(method.Type), time.UnixMilli(method.Created*1000))
 	if err != nil {
-		return fmt.Errorf("failed to add payment method added: %w", err)
+		s.stripe.logger.Error("failed to add payment method added job", zap.String("payment_customer_id", method.Customer.ID), zap.Error(err), observability.ZapCtx(ctx))
+		return err
 	}
 	if res.Duplicate {
 		s.stripe.logger.Debug("duplicate payment_method.attached event", zap.String("event_id", eventID))
@@ -108,7 +109,8 @@ func (s *stripeWebhook) handlePaymentMethodAdded(ctx context.Context, eventID st
 func (s *stripeWebhook) handlePaymentMethodRemoved(ctx context.Context, eventID, customerID string, method *stripe.PaymentMethod) error {
 	res, err := s.jobs.PaymentMethodRemoved(ctx, method.ID, customerID, time.UnixMilli(method.Created*1000))
 	if err != nil {
-		return fmt.Errorf("failed to add payment method added: %w", err)
+		s.stripe.logger.Error("failed to add payment method removed job", zap.String("payment_customer_id", customerID), zap.Error(err), observability.ZapCtx(ctx))
+		return err
 	}
 	if res.Duplicate {
 		s.stripe.logger.Debug("duplicate payment_method.detached event", zap.String("event_id", eventID))
@@ -120,7 +122,8 @@ func (s *stripeWebhook) handlePaymentMethodRemoved(ctx context.Context, eventID,
 func (s *stripeWebhook) handleCustomerAddressUpdated(ctx context.Context, eventID string, eventTime time.Time, customer *stripe.Customer) error {
 	res, err := s.jobs.CustomerAddressUpdated(ctx, customer.ID, eventTime)
 	if err != nil {
-		return fmt.Errorf("failed to add customer updated event: %w", err)
+		s.stripe.logger.Error("failed to add customer updated job", zap.String("payment_customer_id", customer.ID), zap.Error(err), observability.ZapCtx(ctx))
+		return err
 	}
 	if res.Duplicate {
 		s.stripe.logger.Debug("duplicate customer.updated event", zap.String("event_d", eventID))

@@ -4684,6 +4684,10 @@ definitions:
         type: string
       billingEmail:
         type: string
+      billingPlanName:
+        type: string
+      billingPlanDisplayName:
+        type: string
       createdOn:
         type: string
         format: date-time

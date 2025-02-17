@@ -59,6 +59,8 @@ func (s *Service) InitOrganizationBilling(ctx context.Context, org *database.Org
 		BillingCustomerID:                   org.BillingCustomerID,
 		PaymentCustomerID:                   org.PaymentCustomerID,
 		BillingEmail:                        org.BillingEmail,
+		BillingPlanName:                     org.BillingPlanName,
+		BillingPlanDisplayName:              org.BillingPlanDisplayName,
 		CreatedByUserID:                     org.CreatedByUserID,
 	})
 	if err != nil {
@@ -162,6 +164,8 @@ func (s *Service) RepairOrganizationBilling(ctx context.Context, org *database.O
 		BillingCustomerID:                   org.BillingCustomerID,
 		PaymentCustomerID:                   org.PaymentCustomerID,
 		BillingEmail:                        org.BillingEmail,
+		BillingPlanName:                     org.BillingPlanName,
+		BillingPlanDisplayName:              org.BillingPlanDisplayName,
 		CreatedByUserID:                     org.CreatedByUserID,
 	})
 	if err != nil {
@@ -221,6 +225,8 @@ func (s *Service) RepairOrganizationBilling(ctx context.Context, org *database.O
 			BillingCustomerID:                   org.BillingCustomerID,
 			PaymentCustomerID:                   org.PaymentCustomerID,
 			BillingEmail:                        org.BillingEmail,
+			BillingPlanName:                     org.BillingPlanName,
+			BillingPlanDisplayName:              org.BillingPlanDisplayName,
 			CreatedByUserID:                     org.CreatedByUserID,
 		})
 		if err != nil {
@@ -294,6 +300,8 @@ func (s *Service) StartTrial(ctx context.Context, org *database.Organization) (*
 		BillingCustomerID:                   org.BillingCustomerID,
 		PaymentCustomerID:                   org.PaymentCustomerID,
 		BillingEmail:                        org.BillingEmail,
+		BillingPlanName:                     &plan.Name,
+		BillingPlanDisplayName:              &plan.DisplayName,
 		CreatedByUserID:                     org.CreatedByUserID,
 	})
 	if err != nil {

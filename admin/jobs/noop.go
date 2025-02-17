@@ -67,3 +67,7 @@ func (n *noop) StartOrgTrial(ctx context.Context, orgID string) (*InsertResult, 
 func (n *noop) DeleteOrg(ctx context.Context, orgID string) (*InsertResult, error) {
 	return nil, nil
 }
+
+func (n *noop) PlanChanged(ctx context.Context, billingCustomerID string) (*InsertResult, error) {
+	return nil, nil
+}

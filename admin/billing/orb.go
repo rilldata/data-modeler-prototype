@@ -219,6 +219,7 @@ func (o *Orb) ChangeSubscriptionPlan(ctx context.Context, subscriptionID string,
 	if err != nil {
 		return nil, err
 	}
+
 	return &Subscription{
 		ID:                           s.ID,
 		Customer:                     getBillingCustomerFromOrbCustomer(&s.Customer),
@@ -282,6 +283,7 @@ func (o *Orb) CancelSubscriptionsForCustomer(ctx context.Context, customerID str
 			cancelDate = sub.EndDate
 		}
 	}
+
 	return cancelDate, nil
 }
 
