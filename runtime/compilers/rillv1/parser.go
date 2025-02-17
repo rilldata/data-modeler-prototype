@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
 	"os"
 	"reflect"
 	"regexp"
@@ -168,6 +167,10 @@ type Diff struct {
 	Deleted        []ResourceName
 }
 
+// DotEnvMap is a map of environment variables for a specific path.
+// The key is the path, and the value is a map of environment variable names to values.
+type DotEnvMap map[string]map[string]string
+
 // Parser parses a Rill project directory into a set of resources.
 // After the initial parse, the parser can be used to incrementally reparse a subset of files.
 // Parser is not concurrency safe.
@@ -180,7 +183,7 @@ type Parser struct {
 
 	// Output
 	RillYAML  *RillYAML
-	DotEnv    map[string]string
+	DotEnv    DotEnvMap
 	Resources map[ResourceName]*Resource
 	Errors    []*runtimev1.ParseError
 
@@ -302,11 +305,22 @@ func (p *Parser) TrackedPathsInDir(dir string) []string {
 	return paths
 }
 
+// GetDotEnv returns all the project's environment variables
+func (p *Parser) GetDotEnv() map[string]string {
+	env := make(map[string]string)
+	for _, envMap := range p.DotEnv {
+		for k, v := range envMap {
+			env[k] = v
+		}
+	}
+	return env
+}
+
 // reload resets the parser's state and then parses the entire project.
 func (p *Parser) reload(ctx context.Context) error {
 	// Reset state
 	p.RillYAML = nil
-	p.DotEnv = nil
+	p.DotEnv = make(map[string]map[string]string)
 	p.Resources = make(map[ResourceName]*Resource)
 	p.Errors = nil
 	p.resourceNamesForDataPaths = make(map[string][]ResourceName)
@@ -414,7 +428,7 @@ func (p *Parser) reparseExceptRillYAML(ctx context.Context, paths []string) (*Di
 			oldDotEnv := p.DotEnv
 			err := p.parseDotEnv(ctx, checkPaths[i])
 			if err == nil {
-				modifiedDotEnv = !maps.Equal(p.DotEnv, oldDotEnv)
+				modifiedDotEnv = !reflect.DeepEqual(p.DotEnv, oldDotEnv)
 			} else {
 				// any error means .env is under change
 				modifiedDotEnv = true
@@ -563,6 +577,24 @@ func (p *Parser) parsePaths(ctx context.Context, paths []string) error {
 		if pathIsRillYAML(b) {
 			return 1
 		}
+
+		// Sort .env files by path depth with always root first. This ensures that .env files are parsed in order from root to deepest nested
+		aIsDotEnv := pathIsDotEnv(a)
+		bIsDotEnv := pathIsDotEnv(b)
+		if aIsDotEnv && !bIsDotEnv {
+			return -1
+		}
+		if !aIsDotEnv && bIsDotEnv {
+			return 1
+		}
+		if aIsDotEnv && bIsDotEnv {
+			aDepth := strings.Count(a, "/")
+			bDepth := strings.Count(b, "/")
+			if aDepth != bDepth {
+				return aDepth - bDepth
+			}
+		}
+
 		return strings.Compare(a, b)
 	})
 
@@ -709,7 +741,7 @@ func (p *Parser) parseStemPaths(ctx context.Context, paths []string) error {
 				}
 			}
 		} else {
-			// Not a path error – we add the error to all paths
+			// Not a path error – we add the error to all paths
 			for _, path := range paths {
 				p.addParseError(path, err, false)
 			}
@@ -1045,9 +1077,9 @@ func pathIsRillYAML(path string) bool {
 	return path == "/rill.yaml" || path == "/rill.yml"
 }
 
-// pathIsDotEnv returns true if the path is .env
+// pathIsDotEnv returns true if the path is a .env file (in any directory)
 func pathIsDotEnv(path string) bool {
-	return path == "/.env"
+	return strings.HasSuffix(path, "/.env")
 }
 
 // pathIsIgnored returns true if the path should be ignored by the parser.

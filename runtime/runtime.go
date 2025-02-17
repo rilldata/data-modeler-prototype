@@ -119,7 +119,7 @@ func (r *Runtime) UpdateInstanceWithRillYAML(ctx context.Context, instanceID str
 	}
 
 	rillYAML := parser.RillYAML
-	dotEnv := parser.DotEnv
+	dotEnv := parser.GetDotEnv()
 
 	inst, err := r.Instance(ctx, instanceID)
 	if err != nil {
